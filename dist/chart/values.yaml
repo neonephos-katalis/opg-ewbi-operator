@@ -1,0 +1,119 @@
+# [MANAGER]: Manager Deployment Configurations
+controllerManager:
+  replicas: 1
+  container:
+    enable: true
+    image:
+      repository: registry.example.com/operators/opg-ewbi-operator
+      tag: neonephos
+    args:
+      - "--leader-elect"
+      - "--metrics-bind-address=:8443"
+      - "--health-probe-bind-address=:8081"
+    opgInsecureSkipVerify: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    livenessProbe:
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      httpGet:
+        path: /healthz
+        port: 8081
+    readinessProbe:
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      httpGet:
+        path: /readyz
+        port: 8081
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - "ALL"
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  terminationGracePeriodSeconds: 10
+  serviceAccountName: opg-ewbi-operator-controller-manager
+
+federation:
+  enable: true
+  replicas: 1
+  image:
+    repository: registry.example.com/nearbyone/ewbi-opg-federation-api
+    tag: neonephos
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - "ALL"
+  serviceAccountName: opg-ewbi-operator-controller-manager
+  terminationGracePeriodSeconds: 10
+  log:
+    level: "info"
+  externalServices:
+    hydra:
+      name: nearbyone-hydra-admin
+      port: 4445
+    userBuster:
+      name: nearbyone-user-buster
+      port: 80
+  services:
+    federation:
+      name: nearbyone-federation-api
+      port: 8080
+      nodePort: 30081  # Optional: specify a specific nodePort (30000-32767), or leave empty for auto-assignment
+
+fullnameOverride: nearbyone
+
+imagePullSecrets:
+  - name: opg-registry-secret
+
+# [RBAC]: To enable RBAC (Permissions) configurations
+rbac:
+  enable: true
+
+# [CRDs]: To enable the CRDs
+crd:
+  # This option determines whether the CRDs are included
+  # in the installation process.
+  enable: false
+
+  # Enabling this option adds the "helm.sh/resource-policy": keep
+  # annotation to the CRD, ensuring it remains installed even when
+  # the Helm release is uninstalled.
+  # NOTE: Removing the CRDs will also remove all cert-manager CR(s)
+  # (Certificates, Issuers, ...) due to garbage collection.
+  keep: true
+
+# [METRICS]: Set to true to generate manifests for exporting metrics.
+# To disable metrics export set false, and ensure that the
+# ControllerManager argument "--metrics-bind-address=:8443" is removed.
+metrics:
+  enable: false
+
+# [PROMETHEUS]: To enable a ServiceMonitor to export metrics to Prometheus set true
+prometheus:
+  enable: false
+
+# [CERT-MANAGER]: To enable cert-manager injection to webhooks set true
+certmanager:
+  enable: false
+
+# [NETWORK POLICIES]: To enable NetworkPolicies set true
+networkPolicy:
+  enable: false

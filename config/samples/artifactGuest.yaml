@@ -1,0 +1,36 @@
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: Artefact
+metadata:
+  namespace: federation-guest
+  labels:
+    opg.ewbi.nby.one/federation-context-id: 4d559f1b-f008-58c2-a2f8-0596892a0f7a # get this from Guest Federation's status
+    opg.ewbi.nby.one/federation-relation: "guest"
+    opg.ewbi.nby.one/id: "artefact-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
+  name: "artefact-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
+spec:
+  appProviderId: nearbycomputing
+  artefactName: ContainerDeploy001
+  artefactVersion: "14"
+  componentSpec:
+    - commandLineParams:
+        args:
+          - -g
+          - daemon off;
+        command:
+          - nginx-debug
+      computeResourceProfile:
+        cpuArchType: ISA_X86_64
+        memory: 512
+        numCPU: "1"
+      exposedInterfaces:
+        - interfaceId: interface-id
+          port: 30013
+          protocol: TCP
+          visibilityType: VISIBILITY_EXTERNAL
+      images:
+        - "file-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
+      name: nginx-container
+      numOfInstances: 1
+      restartPolicy: "Always"
+  descriptorType: COMPONENTSPEC
+  virtType: CONTAINER_TYPE
