@@ -6,7 +6,7 @@ toolchain go1.24.8
 
 require (
 	github.com/gorilla/mux v1.8.1
-	github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251009101059-c51258281bbe
+	github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251009120118-776d8e0055a9
 	github.com/stretchr/testify v1.9.0
 	k8s.io/apimachinery v0.32.0
 	k8s.io/client-go v0.32.0

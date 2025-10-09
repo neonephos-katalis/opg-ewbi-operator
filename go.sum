@@ -121,10 +121,8 @@ github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251006170930-85004dde12e6 h1:lGErqUCUQl01OTaifB4SBHhYXF4gIP9WPFO62b+COC8=
-github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251006170930-85004dde12e6/go.mod h1:jrQAJ+UW8SflKSI0ujy8viZK9KD6Cs0PyA2E7s0PnzA=
-github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251009101059-c51258281bbe h1:iMbIKtG2g9e6ai/XH/Io4NtolgcqJIl7eNpwciPg9w0=
-github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251009101059-c51258281bbe/go.mod h1:ZJ86RwTHp6E8257zzVUzBm/OZofsQIalPUZ9D9RHJY8=
+github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251009120118-776d8e0055a9 h1:9l0cf28/9BMipHB2VXReDrdCyaxsE5yjTKfDhrQ0oiI=
+github.com/nbycomp/neonephos-opg-ewbi-api v0.0.0-20251009120118-776d8e0055a9/go.mod h1:brX5UEQe1EA25t+KIYQaNarraTqdNL78nEoZSfNM6lU=
 github.com/oapi-codegen/runtime v1.1.1 h1:EXLHh0DXIJnWhdRPN2w4MXAzFyE4CskzhNLUmtpMYro=
 github.com/oapi-codegen/runtime v1.1.1/go.mod h1:SK9X900oXmPWilYR5/WKPzt3Kqxn/uS/+lbpREv+eCg=
 github.com/onsi/ginkgo/v2 v2.21.0 h1:7rg/4f3rB88pb5obDgNZrNHrQ4e6WpjonchcpuBRnZM=
