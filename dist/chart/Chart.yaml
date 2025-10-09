@@ -1,0 +1,7 @@
+apiVersion: v2
+name: opg-ewbi-operator
+description: opg-ewbi Operator helm chart
+type: application
+version: 0.0.6
+appVersion: "0.0.5"
+icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png

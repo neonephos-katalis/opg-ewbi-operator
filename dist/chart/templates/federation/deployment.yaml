@@ -1,0 +1,57 @@
+{{- if .Values.federation.enable }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nearbyone.fullname" (list . "federation-api") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    control-plane: federation-api
+spec:
+  replicas:  {{ .Values.federation.replicas }}
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      control-plane: federation-api
+  template:
+    metadata:
+      labels:
+        {{- include "chart.labels" . | nindent 8 }}
+        control-plane: federation-api
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: api
+          image: {{ .Values.federation.image.repository }}:{{ .Values.federation.image.tag }}
+          imagePullPolicy: {{ .Values.federation.image.pullPolicy | default "Always" }}
+          env:
+          - name: CONTROLLER_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: HYDRA_BASE_ADDR
+            value: "http://{{ .Values.federation.externalServices.hydra.name }}:{{ .Values.federation.externalServices.hydra.port }}"
+          - name: CAMARA_LOG_LEVEL
+            value: "{{ .Values.federation.log.level }}"
+          - name: CAMARA_API_ROOT
+            value: "{{ .Values.federation.services.federation.name }}:{{ .Values.federation.services.federation.port }}"
+          - name: CAMARA_HOST_AGENT_ADDR
+            value: "0.0.0.0:8080"
+          - name: USERBUSTER_HOST
+            value: "{{ .Values.federation.externalServices.userBuster.name }}"
+          - name: USERBUSTER_PORT
+            value: "{{ .Values.federation.externalServices.userBuster.port }}"
+          ports:
+          - containerPort: 8080
+            name: api
+            protocol: TCP
+          resources:
+            {{- toYaml .Values.federation.resources | nindent 12 }}
+      securityContext:
+        {{- toYaml .Values.federation.securityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.federation.serviceAccountName }}
+      terminationGracePeriodSeconds: {{ .Values.federation.terminationGracePeriodSeconds }}
+{{- end }}

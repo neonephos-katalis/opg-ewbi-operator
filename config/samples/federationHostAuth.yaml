@@ -1,0 +1,21 @@
+# Create this when the Origin Partner (Client) 
+# credentials are created in the host system
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: Federation
+metadata:
+  namespace: federation-host
+  annotations:
+    opg.ewbi.nby.one/origin-mcc: "001" # not used, will be overridden by /partner request body
+    opg.ewbi.nby.one/origin-mncs: "001" # not used, will be overridden by /partner request body
+  labels:
+    opg.ewbi.nby.one/federation-relation: host
+    # opg.ewbi.nby.one/host-operator-org-id: "
+    opg.ewbi.nby.one/origin-operator-name: guestName
+    opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d # uuid, will match with clientID request
+    opg.ewbi.nby.one/origin-country-code: ES
+  name: fed-e35f69d8-ae5a-456b-9f95-d950e4c03e8d # prefix-uuid
+spec:
+  offeredAvailabilityZones:
+    - 2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f # uuid
+  guestPartnerCredentials:
+    clientId:   3acde22c-d245-480d-b01e-24e38e01806d # uuid

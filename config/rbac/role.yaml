@@ -1,0 +1,42 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: manager-role
+  namespace: foo
+rules:
+- apiGroups:
+  - opg.ewbi.nby.one
+  resources:
+  - applicationinstances
+  - applications
+  - artefacts
+  - availabilityzones
+  - federations
+  - files
+  verbs:
+  - '*'
+- apiGroups:
+  - opg.ewbi.nby.one
+  resources:
+  - applicationinstances/finalizers
+  - applications/finalizers
+  - artefacts/finalizers
+  - availabilityzones/finalizers
+  - federations/finalizers
+  - files/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - opg.ewbi.nby.one
+  resources:
+  - applicationinstances/status
+  - applications/status
+  - artefacts/status
+  - availabilityzones/status
+  - federations/status
+  - files/status
+  verbs:
+  - get
+  - patch
+  - update
