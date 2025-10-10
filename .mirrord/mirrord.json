@@ -1,0 +1,13 @@
+{
+    "target": {
+        "path": {
+            "deployment": "opg-ewbi-operator-controller-manager"
+        }
+    },
+    "feature": {
+        "env": true,
+        "network": {
+            "incoming": "steal"
+        }
+    }
+}

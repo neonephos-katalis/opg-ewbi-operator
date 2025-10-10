@@ -1,0 +1,122 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: files.opg.ewbi.nby.one
+spec:
+  group: opg.ewbi.nby.one
+  names:
+    kind: File
+    listKind: FileList
+    plural: files
+    singular: file
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: File is the Schema for the files API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: FileSpec defines the desired state of File.
+            properties:
+              appProviderId:
+                description: |-
+                  AppProviderID identifies the provider of the application
+                  e.g. "provider-id-67890"
+                type: string
+              fileName:
+                description: |-
+                  FileName represents the file's human-friendly identifier
+                  e.g. "example-image.qcow2"
+                type: string
+              fileType:
+                description: |-
+                  FileType defines the file's type
+                  e.g. "QCOW2"
+                type: string
+              fileVersion:
+                description: |-
+                  FileVersion
+                  e.g. "1.0.0"
+                type: string
+              image:
+                properties:
+                  instructionSetArchitecture:
+                    description: the File's Image instructionSet Architecture
+                    type: string
+                  os:
+                    description: OS the expected Host Operative System the Image requires
+                    properties:
+                      architecture:
+                        description: |-
+                          The OS's required architecture
+                          e.g. "x86_64"
+                        type: string
+                      distribution:
+                        description: |-
+                          The OS's distribution
+                          e.g. "Ubuntu"
+                        type: string
+                      license:
+                        description: |-
+                          The OS's license
+                          e.g. "OS_LICENSE_TYPE_FREE"
+                        type: string
+                      version:
+                        description: |-
+                          The OS's Version
+                          e.g. "OS_VERSION_UBUNTU_2204_LTS"
+                        type: string
+                    type: object
+                type: object
+              repoLocation:
+                properties:
+                  password:
+                    description: Password field required to access private repos
+                    type: string
+                  token:
+                    description: |-
+                      Repo's Access token, the spec doesn't clarify
+                      if it should either Password or Token
+                    type: string
+                  type:
+                    description: Repo's type e.g. public,private
+                    type: string
+                  url:
+                    description: Repo's URL
+                    type: string
+                  username:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: FileStatus defines the observed state of File.
+            properties:
+              phase:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

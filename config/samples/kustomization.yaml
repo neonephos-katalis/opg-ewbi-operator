@@ -1,0 +1,9 @@
+## Append samples of your project ##
+resources:
+- opg.ewbi_v1beta1_applicationinstance.yaml
+- opg.ewbi_v1beta1_federation.yaml
+- opg.ewbi_v1beta1_file.yaml
+- opg.ewbi_v1beta1_artefact.yaml
+- opg.ewbi_v1beta1_application.yaml
+- opg.ewbi_v1beta1_availabilityzone.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

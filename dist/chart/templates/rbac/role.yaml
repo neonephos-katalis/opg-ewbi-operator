@@ -1,0 +1,46 @@
+{{- if .Values.rbac.enable }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  name: opg-ewbi-manager-role
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - opg.ewbi.nby.one
+  resources:
+  - applicationinstances
+  - applications
+  - artefacts
+  - availabilityzones
+  - federations
+  - files
+  verbs:
+  - '*'
+- apiGroups:
+  - opg.ewbi.nby.one
+  resources:
+  - applicationinstances/finalizers
+  - applications/finalizers
+  - artefacts/finalizers
+  - availabilityzones/finalizers
+  - federations/finalizers
+  - files/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - opg.ewbi.nby.one
+  resources:
+  - applicationinstances/status
+  - applications/status
+  - artefacts/status
+  - availabilityzones/status
+  - federations/status
+  - files/status
+  verbs:
+  - get
+  - patch
+  - update
+{{- end -}}

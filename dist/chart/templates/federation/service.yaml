@@ -1,0 +1,20 @@
+{{- if .Values.federation.enable }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.federation.services.federation.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.federation.services.federation.port }}
+      targetPort: api
+      protocol: TCP
+      {{- if .Values.federation.services.federation.nodePort }}
+      nodePort: {{ .Values.federation.services.federation.nodePort }}
+      {{- end }}
+  selector:
+    control-plane: federation-api
+{{- end }}

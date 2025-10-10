@@ -1,0 +1,28 @@
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: Federation
+metadata:
+  namespace: federation-guest
+  annotations:
+    opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d
+  labels:
+    opg.ewbi.nby.one/federation-relation: guest
+    opg.ewbi.nby.one/host-operator-org-id: hostName
+    # opg.ewbi.nby.one/origin-operator-org-id: "placeholder"
+    opg.ewbi.nby.one/id: 2dae064c-28cc-456e-8b0a-dd67bab7d8f7
+  name: fed-2dae064c-28cc-456e-8b0a-dd67bab7d8f7
+spec:
+  originOP:
+    countryCode: "ES"
+    fixedNetworkCodes:
+      - "none"
+    mobileNetworkCodes:
+      mcc: "999"
+      mncs:
+        - "99"
+  guestPartnerCredentials:
+    clientId: 3acde22c-d245-480d-b01e-24e38e01806d
+    tokenUrl: "http://nearbyone-federation-api.federation-host.svc.cluster.local:8080"
+  partner:
+    callbackCredentials:
+      clientId: "foo"
+    statusLink: "http://nearbyone-federation-api.federation-guest.svc.cluster.local:8080"
