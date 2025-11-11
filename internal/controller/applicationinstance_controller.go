@@ -141,7 +141,16 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 	} else {
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
+		//WAITING MECHANISM
+		if a.Status.Phase != v1beta1.ApplicationInstancePhaseReady {
+			log.Info("Waiting for ApplicationInstance to reach Ready Phase", "CurrentPhase", a.Status.Phase)
+			upErr := r.Status().Update(ctx, a.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		}
+		//a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 		upErr := r.Status().Update(ctx, a.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)
