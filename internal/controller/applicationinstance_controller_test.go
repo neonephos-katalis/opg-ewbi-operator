@@ -21,9 +21,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/opg"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/test/mock"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
+	"github.com/neonephos-katalis/opg-ewbi-operator/test/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"

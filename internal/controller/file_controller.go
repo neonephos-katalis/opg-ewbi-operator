@@ -28,11 +28,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	opgmodels "github.com/nbycomp/neonephos-opg-ewbi-api/api/federation/models"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/indexer"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/multipart"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/opg"
+	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/multipart"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )
 
 // FileReconciler reconciles a File object

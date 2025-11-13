@@ -3,7 +3,7 @@ package controller
 import (
 	"testing"
 
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 	"github.com/stretchr/testify/assert"
 )
 

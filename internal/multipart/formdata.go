@@ -9,7 +9,7 @@ import (
 	"mime/multipart"
 	"strings"
 
-	opgmodels "github.com/nbycomp/neonephos-opg-ewbi-api/api/federation/models"
+	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
 )
 
 type MultipartReader struct {

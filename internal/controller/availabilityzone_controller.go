@@ -25,9 +25,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
-	opgewbiv1beta1 "github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/opg"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )
 
 // AvailabilityZoneReconciler reconciles a AvailabilityZone object

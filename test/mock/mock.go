@@ -5,13 +5,13 @@ import (
 	"io"
 	"net/http"
 
-	opgewbiv1beta1 "github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 
-	opgc "github.com/nbycomp/neonephos-opg-ewbi-api/api/federation/client"
-	"github.com/nbycomp/neonephos-opg-ewbi-api/api/federation/models"
-	opgmodels "github.com/nbycomp/neonephos-opg-ewbi-api/api/federation/models"
+	opgc "github.com/neonephos-katalis/opg-ewbi-api/api/federation/client"
+	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
 
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/multipart"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/multipart"
 )
 
 const (

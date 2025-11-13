@@ -36,10 +36,10 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	opgewbiv1beta1 "github.com/nbycomp/neonephos-opg-ewbi-operator/api/v1beta1"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/controller"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/opg"
-	"github.com/nbycomp/neonephos-opg-ewbi-operator/internal/options"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/controller"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/options"
 	// +kubebuilder:scaffold:imports
 )
 
