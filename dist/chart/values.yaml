@@ -4,7 +4,7 @@ controllerManager:
   container:
     enable: true
     image:
-      repository: registry.example.com/operators/opg-ewbi-operator
+      repository: ghcr.io/neonephos-katalis/opg-ewbi-operator
       tag: neonephos
     args:
       - "--leader-elect"
@@ -46,7 +46,7 @@ federation:
   enable: true
   replicas: 1
   image:
-    repository: registry.example.com/nearbyone/ewbi-opg-federation-api
+    repository: ghcr.io/neonephos-katalis/opg-ewbi-api
     tag: neonephos
     pullPolicy: Always
   resources:
