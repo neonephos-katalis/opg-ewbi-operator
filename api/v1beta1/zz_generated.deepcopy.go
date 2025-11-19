@@ -602,7 +602,7 @@ func (in *FederationSpec) DeepCopyInto(out *FederationSpec) {
 	out.Partner = in.Partner
 	if in.OfferedAvailabilityZones != nil {
 		in, out := &in.OfferedAvailabilityZones, &out.OfferedAvailabilityZones
-		*out = make([]string, len(*in))
+		*out = make([]ZoneDetails, len(*in))
 		copy(*out, *in)
 	}
 	if in.AcceptedAvailabilityZones != nil {
