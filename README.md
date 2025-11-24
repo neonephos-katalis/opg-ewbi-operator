@@ -26,22 +26,22 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
 
 1. Download the OPG-EWBI-OPERATOR folder: https://github.com/neonephos-katalis/opg-ewbi-operator
 2. After the download, open this folder via terminal and exec the following command: 
-  ```bash make docker-build-controller ```
+  ```make docker-build-controller ```
       **or**
-  ```bash  docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
+  ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
 3. Download the OPG-EWBI-API folder: https://github.com/neonephos-katalis/opg-ewbi-api
 4. After the download, open this folder via terminale and exec the following command:
-  ```bash docker-compose build federation --no-cache ```
+  ```docker-compose build federation --no-cache ```
    **or**
-  ```bash  docker compose build federation --no-cache ```
-5. In your cluster create a new namesapce (e.g. ```bash kubectl create ns federation ```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
+  ```docker compose build federation --no-cache ```
+6. In your cluster create a new namesapce (e.g. ```bash kubectl create ns federation ```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
       --docker-username= $username \
       --docker-password= $accessToken
   ```
-6. Becouse the images alle pull in a registry (ghcr.io): ghcr.io/ipcei-egate-federation/opg-ewbi-operator:neonephos for the controller and ghcr.io/ipcei-egate-federation/ewbi-opg-federation-api:neonephos for api we need to exec this command for the login: ```bash docker login ghcr.io```, during this command, you will asked to provide your your GITHUB USERNAME and GITHUB PERSONAL ACCESS TOKEN.
+6. Becouse the images alle pull in a registry (ghcr.io): ghcr.io/ipcei-egate-federation/opg-ewbi-operator:neonephos for the controller and ghcr.io/ipcei-egate-federation/ewbi-opg-federation-api:neonephos for api we need to exec this command for the login: ```docker login ghcr.io```, during this command, you will asked to provide your your GITHUB USERNAME and GITHUB PERSONAL ACCESS TOKEN.
 7. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
   ```bash
   helm install federation-manager dist/chart -n federation \
