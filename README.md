@@ -20,12 +20,45 @@ The repository implements a subset of the GSMA OPG East/WestBound Interfaces, in
 - Access to a Kubernetes v1.11.3+ cluster.
 
 ## Quickstart: Deploy on development cluster, federating two namespaces
+Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed. 
 
-Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs
-NodePorts are exposed in case testing outside of the cluster is needed.
+**No changes to values.yaml (dist/chart/values.yaml) are required.**
 
-⚠️ These helm charts pull images from a registry, left as an example
-Please modify the [values](dist/chart/values.yaml) for the images in order to deploy them.
+1. Download the OPG-EWBI-OPERATOR folder: https://github.com/neonephos-katalis/opg-ewbi-operator
+2. After the download, open this folder via terminal and exec the following command: 
+  ```bash make docker-build-controller ```
+      **or**
+  ```bash  docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
+3. Download the OPG-EWBI-API folder: https://github.com/neonephos-katalis/opg-ewbi-api
+4. After the download, open this folder via terminale and exec the following command:
+  ```bash docker-compose build federation --no-cache ```
+   **or**
+  ```bash  docker compose build federation --no-cache ```
+5. In your cluster create a new namesapce (e.g. ```bash kubectl create ns federation ```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
+  ```bash
+      kubectl -n federation create secret docker-registry opg-registry-secret \
+      --docker-server=ghcr.io \
+      --docker-username= $username \
+      --docker-password= $accessToken
+  ```
+6. Becouse the images alle pull in a registry (ghcr.io): ghcr.io/ipcei-egate-federation/opg-ewbi-operator:neonephos for the controller and ghcr.io/ipcei-egate-federation/ewbi-opg-federation-api:neonephos for api we need to exec this command for the login: ```bash docker login ghcr.io```, during this command, you will asked to provide your your GITHUB USERNAME and GITHUB PERSONAL ACCESS TOKEN.
+7. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
+  ```bash
+  helm install federation-manager dist/chart -n federation \
+  --set federation.services.federation.nodePort=30080 \
+  --set crd.enable=true
+  ```
+After this command the OPG-EWBI-CONTROLLER and OPG-EWBI-API, if everything goes well, they will be available.
+By running the command kubectl get pods -A, you should see two pods running in the federation namespace with names like nearbyone-federation-api-XXX and opg-ewbi-operator-controller-manager-XXX.
+
+Use the following commands only if we you want to push the latest version of the controller and the api in github pacakge
+  ```bash
+  docker push ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
+  docker push ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
+  ```
+
+The Nearby code is written to work in both role (HOST and GUEST).
+If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 5-6 in both namespace (federation-host and federation-guest)
 
 ```bash
 helm install federationhost dist/chart -n federation-host \
@@ -37,9 +70,11 @@ We set crd to false since we have already installed them
 
 ```bash
 helm install federationguest dist/chart -n federation-guest \
-  --set federation.services.federation.nodePort=30081 \
-  --set crd.enable=false
+--set federation.services.federation.nodePort=30081 \
+--set crd.enable=false
 ```
+**Choose the names you prefer for namespaces and helm; those listed here are provided as examples.**
+
 
 Prerequirement:
 
@@ -83,30 +118,4 @@ kubectl delete -f config/samples/artifactGuest.yaml
 kubectl delete -f config/samples/appGuest.yaml
 kubectl delete -f config/samples/appInstGuest.yaml
 ```
-
-## Quickstart: build and push
-
-Useful commands to build and push the binaries in this repo and to create the helm charts with CRDs.
-
-Please check the Makefile and configure according to your needs, especially these:
-
-```bash
-# Image URL to use all building/pushing image targets
-IMG ?= registry.example.com/operators/opg-ewbi-operator:neonephos
-PLATFORM ?= linux/arm64
-```
-
-```bash
-make docker-build-controller 
-```
-
-```bash
-make docker-push-controller 
-```
-
-```bash
-make helm 
-```
-
-This operator is built using kubebuilder, you can refer to official instructions on how to develop with it.
 
