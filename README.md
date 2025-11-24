@@ -34,7 +34,7 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
-6. In your cluster create a new namesapce (e.g. ```bash kubectl create ns federation ```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
+6. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
