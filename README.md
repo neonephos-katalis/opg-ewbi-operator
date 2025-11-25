@@ -44,13 +44,14 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
     - Line 3: ```PLATFORM ?= linux/amd64```
 
-3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow:
+3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow and changes the line 10:
 
     **For Linux/ARM64**:
-     Uncommnet the line 5,19,28 and 36
-     
+     - Uncommnet the lines 5,19,28 and 36 and comment the lines 6,20,29 ans 37
+     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
     **For Linux/AMD64**:
-     Uncomment the line 6,20,29 and 37 
+     - Uncomment the lines 6,20,29 and 37 and comment the lines 5,19,28 and 36
+     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
  
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed. 
