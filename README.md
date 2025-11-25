@@ -55,7 +55,7 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed. 
 
- **⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64) **
+**⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
  
 1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
     
