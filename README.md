@@ -98,11 +98,21 @@ After this command the OPG-EWBI-CONTROLLER and OPG-EWBI-API, if everything goes 
 By running the command kubectl get pods -A, you should see two pods running in the federation namespace with names like nearbyone-federation-api-XXX and opg-ewbi-operator-controller-manager-XXX.
 
 Use the following commands only if we you want to push the latest version of the controller and the api in github pacakge
-  ```bash
-  docker push ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
-  docker push ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
-  ```
 
+**For Linux/ARM64:**
+
+      ```
+      docker push ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
+      docker push ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
+      ```
+      
+**For Linux/AMD64:**
+     
+      ```
+      docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos
+      docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos
+      ```
+      
 The Nearby code is written to work in both role (HOST and GUEST).
 If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 5-6 in both namespace (federation-host and federation-guest)
 
