@@ -49,6 +49,7 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     **For Linux/ARM64**:
      - Uncommnet the lines 5,19,28 and 36 and comment the lines 6,20,29 ans 37
      - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
+       
     **For Linux/AMD64**:
      - Uncomment the lines 6,20,29 and 37 and comment the lines 5,19,28 and 36
      - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
