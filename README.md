@@ -60,7 +60,7 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
 1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
     
     ```
-    machine registry.example.com
+    machine ghcr.io
     login your-username
     password your-token
     ```
