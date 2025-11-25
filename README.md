@@ -71,12 +71,12 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
     ```bash
     chmod 600 ~/.netrc
     ```
-2. Download the OPG-EWBI-OPERATOR folder: https://github.com/neonephos-katalis/opg-ewbi-operator
+2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
 3. After the download, open this folder via terminal and exec the following command: 
-  ```make docker-build-controller ```
+  ```make docker-build-controller```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
-4. Download the OPG-EWBI-API folder: https://github.com/neonephos-katalis/opg-ewbi-api
+4. ```git clone https://github.com/neonephos-katalis/opg-ewbi-api```
 5. After the download, open this folder via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
