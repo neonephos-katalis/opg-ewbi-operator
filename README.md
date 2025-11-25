@@ -19,18 +19,63 @@ The repository implements a subset of the GSMA OPG East/WestBound Interfaces, in
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
 
-## Quickstart: Deploy on development cluster, federating two namespaces
+### Configuration: platform ARM64 or platform AMD64
+This code is designed to run on both ARM64 and AMD64 platforms, but to enable this, some changes need to be made to the following files: values.yaml in (dist/chart), the makefile, and docker-compose.yaml.
+
+1. For the **value.yaml** in OPG-EWBI-OPERATOR (**dist/chart**), you need to change the repository parameter values (line 7 and line 49) as follows:
+    
+    **For Linux/ARM64**:
+    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator```
+    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api```
+    
+    **For Linux/AMD64**:
+    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd```
+    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd```
+
+2. For the **makefile** in OPG-EWBI-OPERATOR, you need to change the line 1-3 as follwos:
+
+    **For Linux/ARM64**:
+    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos```
+    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
+    - Line 3: ```PLATFORM ?= linux/arm64```
+      
+    **For Linux/AMD64**:
+    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
+    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
+    - Line 3: ```PLATFORM ?= linux/amd64```
+
+3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow:
+
+    **For Linux/ARM64**:
+     Uncommnet the line 5,19,28 and 36
+     
+    **For Linux/AMD64**:
+     Uncomment the line 6,20,29 and 37 
+ 
+## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed. 
 
-**No changes to values.yaml (dist/chart/values.yaml) are required.**
-
-1. Download the OPG-EWBI-OPERATOR folder: https://github.com/neonephos-katalis/opg-ewbi-operator
-2. After the download, open this folder via terminal and exec the following command: 
+ **⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64) **
+ 
+1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
+    
+    ```
+    machine registry.example.com
+    login your-username
+    password your-token
+    ```
+    
+    Make sure the file has appropriate permissions:
+    ```bash
+    chmod 600 ~/.netrc
+    ```
+2. Download the OPG-EWBI-OPERATOR folder: https://github.com/neonephos-katalis/opg-ewbi-operator
+3. After the download, open this folder via terminal and exec the following command: 
   ```make docker-build-controller ```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
-3. Download the OPG-EWBI-API folder: https://github.com/neonephos-katalis/opg-ewbi-api
-4. After the download, open this folder via terminale and exec the following command:
+4. Download the OPG-EWBI-API folder: https://github.com/neonephos-katalis/opg-ewbi-api
+5. After the download, open this folder via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
