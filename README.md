@@ -72,16 +72,17 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
     chmod 600 ~/.netrc
     ```
 2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
-3. After the download, open this folder via terminal and exec the following command: 
+4. After the download, open this folder via terminal and exec the following command: 
   ```make docker-build-controller```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
-4. ```git clone https://github.com/neonephos-katalis/opg-ewbi-api```
-5. After the download, open this folder via terminale and exec the following command:
+5. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
+6. After the download, open this folder via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
-6. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
+7. ```docker login ghcr.io```
+8. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
@@ -100,18 +101,16 @@ By running the command kubectl get pods -A, you should see two pods running in t
 Use the following commands only if we you want to push the latest version of the controller and the api in github pacakge
 
 **For Linux/ARM64:**
-
-      ```
-      docker push ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
-      docker push ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
-      ```
+```bash
+docker push ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
+docker push ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
+```
       
-**For Linux/AMD64:**
-     
-      ```
-      docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos
-      docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos
-      ```
+**For Linux/AMD64:** **⚠️ In this moment the images are not push on GitHub please exec the following commands**
+```bash
+docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos
+docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos
+```
       
 The Nearby code is written to work in both role (HOST and GUEST).
 If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 5-6 in both namespace (federation-host and federation-guest)
