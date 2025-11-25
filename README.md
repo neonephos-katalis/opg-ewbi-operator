@@ -88,8 +88,7 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
       --docker-username= $username \
       --docker-password= $accessToken
   ```
-6. Becouse the images alle pull in a registry (ghcr.io): ghcr.io/ipcei-egate-federation/opg-ewbi-operator:neonephos for the controller and ghcr.io/ipcei-egate-federation/ewbi-opg-federation-api:neonephos for api we need to exec this command for the login: ```docker login ghcr.io```, during this command, you will asked to provide your your GITHUB USERNAME and GITHUB PERSONAL ACCESS TOKEN.
-7. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
+8. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
   ```bash
   helm install federation-manager dist/chart -n federation \
   --set federation.services.federation.nodePort=30080 \
