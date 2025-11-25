@@ -131,7 +131,7 @@ helm install federationguest dist/chart -n federation-guest \
 **Choose the names you prefer for namespaces and helm; those listed here are provided as examples.**
 
 
-Prerequirement:
+### Test:
 
 Create Client ID in identity provider and store in a federation on the host. This is not yet the establishment of the federation: This is done to link the federation to the clientID.
 
