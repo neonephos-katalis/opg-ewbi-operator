@@ -89,7 +89,8 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
       --docker-username= $username \
       --docker-password= $accessToken
   ```
-8. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
+8. Before the helm install command go here: dist/chart/templates/rbac/role.yaml and delete the namespace line (namespace: foo). We need to fix the error 
+9. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
   ```bash
   helm install federation-manager dist/chart -n federation \
   --set federation.services.federation.nodePort=30080 \
