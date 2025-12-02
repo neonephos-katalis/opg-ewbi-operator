@@ -50,8 +50,8 @@ spec:
             protocol: TCP
           resources:
             {{- toYaml .Values.federation.resources | nindent 12 }}
-      securityContext:
-        {{- toYaml .Values.federation.securityContext | nindent 8 }}
+          securityContext:
+            {{- toYaml .Values.federation.securityContext | nindent 12 }}
       serviceAccountName: {{ .Values.federation.serviceAccountName }}
       terminationGracePeriodSeconds: {{ .Values.federation.terminationGracePeriodSeconds }}
 {{- end }}
