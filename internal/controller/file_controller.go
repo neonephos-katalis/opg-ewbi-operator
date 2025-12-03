@@ -122,8 +122,8 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		if controllerutil.RemoveFinalizer(latest, v1beta1.FileFinalizer) {
 			log.Info("Removed basic finalizer for File")
 			if err := r.Update(ctx, latest); err != nil {
-				log.Error(err, "update failed while removing finalizers")
-				return ctrl.Result{}, err
+				//log.Error(err, "update failed while removing finalizers") //Commented to reduce log noise
+				return ctrl.Result{}, nil
 			}
 			log.Info("removed all finalizers, exiting...")
 			return ctrl.Result{}, nil
