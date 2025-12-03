@@ -105,21 +105,23 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			return ctrl.Result{}, nil
 		}
 	} else {
+		latest := &v1beta1.File{}
+		r.Get(ctx, client.ObjectKeyFromObject(&f), latest)
 		if isGuest {
-			if err := r.handleExternalFileDeletion(ctx, &f, feder); err != nil {
+			if err := r.handleExternalFileDeletion(ctx, latest, feder); err != nil {
 				log.Error(err, "error deleting file")
 				f.Status.Phase = v1beta1.FilePhaseError
-				upErr := r.Status().Update(ctx, f.DeepCopy())
+				upErr := r.Status().Update(ctx, latest)
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
-				return ctrl.Result{}, err
+				//return ctrl.Result{}, err
 			}
 		}
 		// if external file is correctly deleted, we can remove the finalizer
-		if controllerutil.RemoveFinalizer(&f, v1beta1.FileFinalizer) {
-			log.Info("Removed basic finalizer for File")
-			if err := r.Update(ctx, f.DeepCopy()); err != nil {
+		if controllerutil.RemoveFinalizer(latest, v1beta1.FileFinalizer) {
+			log.Info("*************Removed basic finalizer for File")
+			if err := r.Update(ctx, latest); err != nil {
 				log.Error(err, "update failed while removing finalizers")
 				return ctrl.Result{}, err
 			}
@@ -130,24 +132,28 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
+		latest := &v1beta1.File{}
+		r.Get(ctx, client.ObjectKeyFromObject(&f), latest)
+		if err := r.handleExternalFileCreation(ctx, latest, feder); err != nil {
 			log.Info("error creating file")
 			f.Status.Phase = v1beta1.FilePhaseError
-			upErr := r.Status().Update(ctx, f.DeepCopy())
+			upErr := r.Status().Update(ctx, latest)
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 	} else {
-		f.Status.Phase = v1beta1.FilePhaseReady
-		upErr := r.Status().Update(ctx, f.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
+		log.Info("+++++++++++++++++++++++++++++++Current Phase", "phase", f.Status.Phase)
+		log.Info("-------------------------------Current State", "state", f.Status.State)
+		if f.GetDeletionTimestamp().IsZero() {
+			upErr := r.Status().Update(ctx, f.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
 		}
 		return ctrl.Result{}, nil
 	}
-
 	return ctrl.Result{}, nil
 }
 
@@ -193,7 +199,6 @@ func (r *FileReconciler) handleExternalFileCreation(
 		log.Error(err, "error serializing multipart body")
 		return err
 	}
-
 	res, err := r.GetOPGClient(
 		feder.Labels[v1beta1.ExternalIdLabel],
 		feder.Spec.GuestPartnerCredentials.TokenUrl,
@@ -203,7 +208,6 @@ func (r *FileReconciler) handleExternalFileCreation(
 		feder.Status.FederationContextId,
 		contentType,
 		body)
-
 	if err != nil {
 		log.Error(err, "error creating file")
 		return err
@@ -213,15 +217,22 @@ func (r *FileReconciler) handleExternalFileCreation(
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		log.Info("Created", "response", res)
-
-		f.Status.Phase = v1beta1.FilePhaseReady
-
-		upErr := r.Status().Update(ctx, f.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, "Error Updating resource", "file", f.Name)
-			return upErr
+		if !f.GetDeletionTimestamp().IsZero() {
+			// if external file is correctly deleted, we can remove the finalizer
+			if controllerutil.RemoveFinalizer(f, v1beta1.FileFinalizer) {
+				log.Info("*************Removed basic finalizer for File")
+				r.Update(ctx, f.DeepCopy())
+				return nil
+			}
 		}
+		latest := &v1beta1.File{}
+		r.Get(ctx, client.ObjectKeyFromObject(f), latest)
+		latest.Status.Phase = v1beta1.FilePhase(res.JSON200File.Phase)
+		latest.Status.State = v1beta1.FileState(res.JSON200File.State)
+		log.Info("--------------", "response", res.JSON200File)
+		r.Status().Update(ctx, latest)
+		time.Sleep(3 * time.Second)
+		r.handleExternalFileCreation(ctx, latest, feder)
 
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
