@@ -109,10 +109,10 @@ const (
 )
 
 const (
-	FileStatePending FilePhase = "Pending"
-	FileStateReady   FilePhase = "Ready"
-	FileStateError   FilePhase = "Error"
-	FileStateUnknown FilePhase = "Unknown"
+	FileStatePending FileState = "Pending"
+	FileStateReady   FileState = "Ready"
+	FileStateError   FileState = "Error"
+	FileStateUnknown FileState = "Unknown"
 )
 
 // FileStatus defines the observed state of File.
