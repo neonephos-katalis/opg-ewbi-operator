@@ -222,18 +222,27 @@ func (r *FileReconciler) handleExternalFileCreation(
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		if !f.GetDeletionTimestamp().IsZero() {
+		latest := &v1beta1.File{}
+		r.Get(ctx, client.ObjectKeyFromObject(f), latest)
+		if !latest.GetDeletionTimestamp().IsZero() {
 			// if external file is correctly deleted, we can remove the finalizer
-			if controllerutil.RemoveFinalizer(f, v1beta1.FileFinalizer) {
-				log.Info("Removed basic finalizer for File")
-				r.Update(ctx, f.DeepCopy())
+			if controllerutil.RemoveFinalizer(latest, v1beta1.FileFinalizer) {
+				log.Info("*************Removed basic finalizer for File")
+				r.Update(ctx, latest)
 				return nil
 			}
 		}
-		latest := &v1beta1.File{}
-		r.Get(ctx, client.ObjectKeyFromObject(f), latest)
-		latest.Status.Phase = v1beta1.FilePhase(res.JSON200File.Phase)
-		latest.Status.State = v1beta1.FileState(res.JSON200File.State)
+		switch statusCode {
+		case 202:
+			latest.Status.Phase = v1beta1.FilePhaseReady
+			latest.Status.State = "Pending"
+		case 200:
+			latest.Status.Phase = v1beta1.FilePhaseReady
+			latest.Status.State = "Ready"
+		default:
+			latest.Status.Phase = v1beta1.FilePhaseReady
+			latest.Status.State = "Pending"
+		}
 		log.Info("--------------", "response", res.JSON200File)
 		r.Status().Update(ctx, latest)
 		time.Sleep(3 * time.Second)
