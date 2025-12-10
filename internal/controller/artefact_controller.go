@@ -103,11 +103,13 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			return ctrl.Result{}, nil
 		}
 	} else {
+		latest := &v1beta1.Artefact{}
+		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
 		if isGuest {
-			if err := r.handleExternalArtefactDeletion(ctx, &a, feder); err != nil {
+			if err := r.handleExternalArtefactDeletion(ctx, latest, feder); err != nil {
 				log.Error(err, "error deleting Artefact")
-				a.Status.Phase = v1beta1.ArtefactPhaseError
-				upErr := r.Status().Update(ctx, a.DeepCopy())
+				latest.Status.Phase = v1beta1.ArtefactPhaseError
+				upErr := r.Status().Update(ctx, latest)
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
@@ -128,20 +130,30 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if err := r.handleExternalArtefactCreation(ctx, &a, feder); err != nil {
+		latest := &v1beta1.Artefact{}
+		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
+		if err := r.handleExternalArtefactCreation(ctx, latest, feder); err != nil {
 			log.Info("error creating Artefact")
-			a.Status.Phase = v1beta1.ArtefactPhaseError
-			upErr := r.Status().Update(ctx, a.DeepCopy())
+			latest.Status.Phase = v1beta1.ArtefactPhaseError
+			upErr := r.Status().Update(ctx, latest)
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 	} else {
-		a.Status.Phase = v1beta1.ArtefactPhaseReady
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if a.Status.Phase == "" {
+			a.Status.Phase = v1beta1.ArtefactPhaseReady
+			a.Status.State = v1beta1.ArtefactStateReconciling
+			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		} else {
+			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		}
+		if a.GetDeletionTimestamp().IsZero() {
+			upErr := r.Status().Update(ctx, a.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
 		}
 		return ctrl.Result{}, nil
 	}
@@ -228,15 +240,32 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		log.Info("Created", "response", res)
-
-		a.Status.Phase = v1beta1.ArtefactPhaseReady
-
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, "Error Updating resource", "Artefact", a.Name)
-			return upErr
+		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
+		latest := &v1beta1.Artefact{}
+		r.Get(ctx, client.ObjectKeyFromObject(a), latest)
+		if !latest.GetDeletionTimestamp().IsZero() {
+			// if external file is correctly deleted, we can remove the finalizer
+			if controllerutil.RemoveFinalizer(latest, v1beta1.ArtefactFinalizer) {
+				log.Info("Removed basic finalizer for Artefact")
+				r.Update(ctx, latest)
+				return nil
+			}
+		} else {
+			latest.Status.Phase = v1beta1.ArtefactPhaseReady
+			switch statusCode {
+			case 202:
+				latest.Status.State = v1beta1.ArtefactStateReconciling
+			case 200:
+				latest.Status.State = v1beta1.ArtefactStateReady
+			default:
+				latest.Status.State = v1beta1.ArtefactStateReconciling
+			}
 		}
+		log.Info("Created/Updated external artefact", "phase", latest.Status.Phase, "state", latest.Status.State)
+		r.Status().Update(ctx, latest)
+		time.Sleep(3 * time.Second)
+		r.handleExternalArtefactCreation(ctx, latest, feder)
+
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
@@ -260,7 +289,12 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		latest := &v1beta1.Artefact{}
+		r.Get(ctx, client.ObjectKeyFromObject(a), latest)
+		latest.Status.Phase = v1beta1.ArtefactPhaseReady
+		latest.Status.State = v1beta1.ArtefactStateError
+		r.Status().Update(ctx, latest)
+		//log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
 	}
 	return nil
 }

@@ -135,20 +135,30 @@ func (r *ApplicationReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
+		latest := &v1beta1.Application{}
+		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
+		if err := r.handleExternalAppCreation(ctx, latest, feder); err != nil {
 			log.Info("error creating app")
-			a.Status.Phase = v1beta1.ApplicationPhaseError
-			upErr := r.Status().Update(ctx, a.DeepCopy())
+			latest.Status.Phase = v1beta1.ApplicationPhaseError
+			upErr := r.Status().Update(ctx, latest)
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 	} else {
-		a.Status.Phase = v1beta1.ApplicationPhaseReady
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if a.Status.Phase == "" {
+			a.Status.Phase = v1beta1.ApplicationPhaseReady
+			a.Status.State = "Pending"
+			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		} else {
+			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		}
+		if a.GetDeletionTimestamp().IsZero() {
+			upErr := r.Status().Update(ctx, a.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
 		}
 		return ctrl.Result{}, nil
 	}
@@ -226,16 +236,30 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		log.Info("Created", "response", res)
-
-		a.Status.Phase = v1beta1.ApplicationPhaseReady
-
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, "Error Updating resource", "app", a.Name)
-			return upErr
+		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
+		latest := &v1beta1.Application{}
+		r.Get(ctx, client.ObjectKeyFromObject(a), latest)
+		if !latest.GetDeletionTimestamp().IsZero() {
+			// if exte1rnal file is correctly deleted, we can remove the finalizer
+			if controllerutil.RemoveFinalizer(latest, v1beta1.FileFinalizer) {
+				log.Info("Removed basic finalizer for File")
+				r.Update(ctx, latest)
+				return nil
+			}
 		}
-
+		latest.Status.Phase = v1beta1.ApplicationPhaseReady
+		switch statusCode {
+		case 202:
+			latest.Status.State = "Pending"
+		case 200:
+			latest.Status.State = "Ready"
+		default:
+			latest.Status.State = "Pending"
+		}
+		log.Info("Created/Updated external application", "phase", latest.Status.Phase, "state", latest.Status.State)
+		r.Status().Update(ctx, latest)
+		time.Sleep(3 * time.Second)
+		r.handleExternalAppCreation(ctx, latest, feder)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
@@ -259,7 +283,12 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		latest := &v1beta1.Application{}
+		r.Get(ctx, client.ObjectKeyFromObject(a), latest)
+		latest.Status.Phase = v1beta1.ApplicationPhaseReady
+		latest.Status.State = "Error"
+		r.Status().Update(ctx, latest)
+		//log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
 	}
 	return nil
 }
