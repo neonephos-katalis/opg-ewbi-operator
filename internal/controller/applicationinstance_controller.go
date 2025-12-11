@@ -310,10 +310,10 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstGet(
 			}
 		}
 		latest.Status.State = v1beta1.ApplicationInstanceState(*res.JSON200.AppInstanceState)
-		if len(res.JSON200.AccesspointInfo) > 0 {
+		if len(res.JSON200.AccessPointInfo) > 0 {
 			log.Info("APP INSTANCES - Updating Access Point Info in status")
 			latest.Status.AccessPointInfo = []v1beta1.AccessPointInfo{}
-			for _, info := range res.JSON200.AccesspointInfo {
+			for _, info := range res.JSON200.AccessPointInfo {
 				apInfo := v1beta1.AccessPointInfo{
 					InterfaceId:  info.InterfaceId,
 					AccessPoints: []v1beta1.AccessPoints{},
@@ -323,7 +323,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstGet(
 						Port:          int(ap.Port),
 						Fqdn:          ap.Fqdn,
 						Ipv4Addresses: ap.Ipv4Addresses,
-						Ipv6Addresses: ap.Ipv6Addresses,
+						Ipv6Addresses: ap.Ipv6Addresses.([]string),
 					})
 				}
 				latest.Status.AccessPointInfo = append(latest.Status.AccessPointInfo, apInfo)
