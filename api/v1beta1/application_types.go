@@ -86,7 +86,6 @@ const (
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
 	Phase ApplicationPhase `json:"phase,omitempty"`
-
 	State ApplicationState `json:"state,omitempty"`
 }
 
