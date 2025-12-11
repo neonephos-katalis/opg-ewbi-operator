@@ -105,13 +105,11 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			return ctrl.Result{}, nil
 		}
 	} else {
-		latest := &v1beta1.File{}
-		r.Get(ctx, client.ObjectKeyFromObject(&f), latest)
 		if isGuest {
-			if err := r.handleExternalFileDeletion(ctx, latest, feder); err != nil {
+			if err := r.handleExternalFileDeletion(ctx, &f, feder); err != nil {
 				log.Error(err, "error deleting file")
-				latest.Status.Phase = v1beta1.FilePhaseError
-				upErr := r.Status().Update(ctx, latest)
+				f.Status.Phase = v1beta1.FilePhaseError
+				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
@@ -119,9 +117,9 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			}
 		}
 		// if external file is correctly deleted, we can remove the finalizer
-		if controllerutil.RemoveFinalizer(latest, v1beta1.FileFinalizer) {
+		if controllerutil.RemoveFinalizer(&f, v1beta1.FileFinalizer) {
 			log.Info("Removed basic finalizer for File")
-			if err := r.Update(ctx, latest); err != nil {
+			if err := r.Update(ctx, f.DeepCopy()); err != nil {
 				//log.Error(err, "update failed while removing finalizers") //Commented to reduce log noise
 				return ctrl.Result{}, nil
 			}
@@ -132,16 +130,16 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		latest := &v1beta1.File{}
-		r.Get(ctx, client.ObjectKeyFromObject(&f), latest)
-		if err := r.handleExternalFileCreation(ctx, latest, feder); err != nil {
+		if result, err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
 			log.Info("error creating file")
-			latest.Status.Phase = v1beta1.FilePhaseError
-			upErr := r.Status().Update(ctx, latest)
+			f.Status.Phase = v1beta1.FilePhaseError
+			upErr := r.Status().Update(ctx, f.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		} else {
+			return result, nil
 		}
 	} else {
 		if f.Status.Phase == "" {
@@ -159,7 +157,6 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 		return ctrl.Result{}, nil
 	}
-	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -175,7 +172,7 @@ func (r *FileReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *FileReconciler) handleExternalFileCreation(
 	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation,
-) error {
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	fileReqBody := opgmodels.UploadFileMultipartBody{
 		AppProviderId: f.Spec.AppProviderId,
@@ -202,7 +199,7 @@ func (r *FileReconciler) handleExternalFileCreation(
 	body, contentType, err := multipart.SerializeUploadFileMultipartBody(fileReqBody)
 	if err != nil {
 		log.Error(err, "error serializing multipart body")
-		return err
+		return ctrl.Result{}, err
 	}
 	res, err := r.GetOPGClient(
 		feder.Labels[v1beta1.ExternalIdLabel],
@@ -215,39 +212,29 @@ func (r *FileReconciler) handleExternalFileCreation(
 		body)
 	if err != nil {
 		log.Error(err, "error creating file")
-		return err
+		return ctrl.Result{}, err
 	}
 	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("FILE - Status code 2xx received from OPG API", "status", statusCode)
-		latest := &v1beta1.File{}
-		r.Get(ctx, client.ObjectKeyFromObject(f), latest)
-		if !latest.GetDeletionTimestamp().IsZero() {
-			// if external file is correctly deleted, we can remove the finalizer
-			if controllerutil.RemoveFinalizer(latest, v1beta1.FileFinalizer) {
-				log.Info("Removed basic finalizer for File")
-				r.Update(ctx, latest)
-				return nil
-			}
-		}
-		latest.Status.Phase = v1beta1.FilePhaseReady
+		f.Status.Phase = v1beta1.FilePhaseReady
 		switch statusCode {
 		case 202:
-			latest.Status.State = "Pending"
+			f.Status.State = "Pending"
 		case 200:
-			latest.Status.State = "Ready"
+			f.Status.State = "Ready"
 		default:
-			latest.Status.State = "Pending"
+			f.Status.State = "Pending"
 		}
-		log.Info("Created/Updated external file", "phase", latest.Status.Phase, "state", latest.Status.State)
-		r.Status().Update(ctx, latest)
-		time.Sleep(3 * time.Second)
-		r.handleExternalFileCreation(ctx, latest, feder)
+		log.Info("Created/Updated external file", "phase", f.Status.Phase, "state", f.Status.State)
+		r.Status().Update(ctx, f)
+		return ctrl.Result{}, nil
+		//return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return errors.New(*res.ApplicationproblemJSON400.Detail)
+		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
 	case statusCode == 404:
@@ -260,21 +247,19 @@ func (r *FileReconciler) handleExternalFileCreation(
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "file not found" {
-			return errors.New(*res.ApplicationproblemJSON500.Detail)
+			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		latest := &v1beta1.File{}
-		r.Get(ctx, client.ObjectKeyFromObject(f), latest)
-		latest.Status.Phase = v1beta1.FilePhaseReady
-		latest.Status.State = "Error"
-		r.Status().Update(ctx, latest)
+		f.Status.Phase = v1beta1.FilePhaseReady
+		f.Status.State = "Error"
+		r.Status().Update(ctx, f)
 		//log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
 	}
-	return nil
+	return ctrl.Result{}, nil
 }
 
 func (r *FileReconciler) handleExternalFileDeletion(

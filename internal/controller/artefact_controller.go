@@ -132,7 +132,7 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if isGuest {
 		latest := &v1beta1.Artefact{}
 		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
-		if err := r.handleExternalArtefactCreation(ctx, latest, feder); err != nil {
+		if result, err := r.handleExternalArtefactCreation(ctx, latest, feder); err != nil {
 			log.Info("error creating Artefact")
 			latest.Status.Phase = v1beta1.ArtefactPhaseError
 			upErr := r.Status().Update(ctx, latest)
@@ -140,11 +140,13 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		} else {
+			return result, nil
 		}
 	} else {
 		if a.Status.Phase == "" {
 			a.Status.Phase = v1beta1.ArtefactPhaseReady
-			a.Status.State = v1beta1.ArtefactStateReconciling
+			a.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
 		} else {
 			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
@@ -157,8 +159,6 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 		return ctrl.Result{}, nil
 	}
-
-	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -171,7 +171,7 @@ func (r *ArtefactReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	ctx context.Context, a *v1beta1.Artefact, feder *v1beta1.Federation,
-) error {
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
 	components := []opgmodels.ComponentSpec{}
@@ -218,7 +218,7 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	body, contentType, err := multipart.SerializeUploadArtefactMultipartBody(reqBody)
 	if err != nil {
 		log.Error(err, "error serializing multipart body")
-		return err
+		return ctrl.Result{}, err
 	}
 
 	res, err := r.GetOPGClient(
@@ -233,7 +233,7 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 
 	if err != nil {
 		log.Error(err, "error creating Artefact")
-		return err
+		return ctrl.Result{}, err
 	}
 
 	statusCode := res.StatusCode()
@@ -241,35 +241,24 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
-		latest := &v1beta1.Artefact{}
-		r.Get(ctx, client.ObjectKeyFromObject(a), latest)
-		if !latest.GetDeletionTimestamp().IsZero() {
-			// if external file is correctly deleted, we can remove the finalizer
-			if controllerutil.RemoveFinalizer(latest, v1beta1.ArtefactFinalizer) {
-				log.Info("Removed basic finalizer for Artefact")
-				r.Update(ctx, latest)
-				return nil
-			}
-		} else {
-			latest.Status.Phase = v1beta1.ArtefactPhaseReady
-			switch statusCode {
-			case 202:
-				latest.Status.State = v1beta1.ArtefactStateReconciling
-			case 200:
-				latest.Status.State = v1beta1.ArtefactStateReady
-			default:
-				latest.Status.State = v1beta1.ArtefactStateReconciling
-			}
-		}
-		log.Info("Created/Updated external artefact", "phase", latest.Status.Phase, "state", latest.Status.State)
-		r.Status().Update(ctx, latest)
-		time.Sleep(3 * time.Second)
-		r.handleExternalArtefactCreation(ctx, latest, feder)
 
+		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		switch statusCode {
+		case 202:
+			a.Status.State = "Pending"
+		case 200:
+			a.Status.State = "Ready"
+		default:
+			a.Status.State = "Pending"
+		}
+		log.Info("Created/Updated external artefact", "phase", a.Status.Phase, "state", a.Status.State)
+		r.Status().Update(ctx, a)
+		return ctrl.Result{}, nil
+		//return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return errors.New(*res.ApplicationproblemJSON400.Detail)
+		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
 	case statusCode == 404:
@@ -282,21 +271,18 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "file not found" {
-			return errors.New(*res.ApplicationproblemJSON500.Detail)
+			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		latest := &v1beta1.Artefact{}
-		r.Get(ctx, client.ObjectKeyFromObject(a), latest)
-		latest.Status.Phase = v1beta1.ArtefactPhaseReady
-		latest.Status.State = v1beta1.ArtefactStateError
-		r.Status().Update(ctx, latest)
-		//log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		a.Status.State = "Error"
+		r.Status().Update(ctx, a)
 	}
-	return nil
+	return ctrl.Result{}, nil
 }
 
 func (r *ArtefactReconciler) handleExternalArtefactDeletion(
