@@ -308,7 +308,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstGet(
 						Port:          int(ap.Port),
 						Fqdn:          ap.Fqdn,
 						Ipv4Addresses: ap.Ipv4Addresses,
-						Ipv6Addresses: ap.Ipv6Addresses.([]string),
+						Ipv6Addresses: ap.Ipv6Addresses,
 					})
 				}
 				newAccessPoints = append(newAccessPoints, apInfo)
