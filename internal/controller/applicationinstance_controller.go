@@ -231,7 +231,8 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 		log.Info("APP INSTANCES - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 		a.Status.State = "Pending"
-		a.Status.AppInstanceId = res.JSON200.AppInstanceId
+		log.Info("******************************", "JSON200", res.JSON200)
+		a.Status.AppInstanceId = a.Name //"app-inst-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
 		log.Info("Created/Updated external application instances", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
 		r.Status().Update(ctx, a)
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
@@ -290,40 +291,43 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstGet(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("********APP INSTANCES - ACCESS POINT INFO - Status code 2xx received from OPG API", "status", statusCode)
-
-		oldStatus := a.Status.DeepCopy()
-		newState := v1beta1.ApplicationInstanceState(*res.JSON200.AppInstanceState)
-		a.Status.State = newState
-
-		if len(res.JSON200.AccessPointInfo) > 0 {
-			log.Info("APP INSTANCES - Updating Access Point Info in status")
-			newAccessPoints := []v1beta1.AccessPointInfo{}
-			for _, info := range res.JSON200.AccessPointInfo {
-				apInfo := v1beta1.AccessPointInfo{
-					InterfaceId:  info.InterfaceId,
-					AccessPoints: []v1beta1.AccessPoints{},
+		if res.JSON200.AppInstanceState != nil {
+			oldStatus := a.Status.DeepCopy()
+			newState := v1beta1.ApplicationInstanceState(*res.JSON200.AppInstanceState)
+			a.Status.State = newState
+			log.Info("°°°°°°°°°°°°°°°°°°°°APP INSTANCES", "JSON200", res.JSON200)
+			if res.JSON200.AppInstanceState != nil {
+				log.Info("APP INSTANCES - Updating Access Point Info in status")
+				newAccessPoints := []v1beta1.AccessPointInfo{}
+				for _, info := range res.JSON200.AccessPointInfo {
+					apInfo := v1beta1.AccessPointInfo{
+						InterfaceId:  info.InterfaceId,
+						AccessPoints: []v1beta1.AccessPoints{},
+					}
+					for _, ap := range info.AccessPoints {
+						apInfo.AccessPoints = append(apInfo.AccessPoints, v1beta1.AccessPoints{
+							Port:          int(ap.Port),
+							Fqdn:          ap.Fqdn,
+							Ipv4Addresses: ap.Ipv4Addresses,
+							Ipv6Addresses: ap.Ipv6Addresses,
+						})
+					}
+					newAccessPoints = append(newAccessPoints, apInfo)
 				}
-				for _, ap := range info.AccessPoints {
-					apInfo.AccessPoints = append(apInfo.AccessPoints, v1beta1.AccessPoints{
-						Port:          int(ap.Port),
-						Fqdn:          ap.Fqdn,
-						Ipv4Addresses: ap.Ipv4Addresses,
-						Ipv6Addresses: ap.Ipv6Addresses,
-					})
+				a.Status.AccessPointInfo = newAccessPoints
+				if !reflect.DeepEqual(oldStatus.AccessPointInfo, a.Status.AccessPointInfo) || oldStatus.State != a.Status.State {
+					log.Info("APP INSTANCES - Status changed, updating resource")
+					if err := r.Status().Update(ctx, a); err != nil {
+						log.Error(err, "error updating appInst status")
+						return ctrl.Result{}, err
+					}
+				} else {
+					log.Info("APP INSTANCES - Status unchanged, skipping update")
 				}
-				newAccessPoints = append(newAccessPoints, apInfo)
-			}
-			a.Status.AccessPointInfo = newAccessPoints
-			if !reflect.DeepEqual(oldStatus.AccessPointInfo, a.Status.AccessPointInfo) || oldStatus.State != a.Status.State {
-				log.Info("APP INSTANCES - Status changed, updating resource")
-				if err := r.Status().Update(ctx, a); err != nil {
-					log.Error(err, "error updating appInst status")
-					return ctrl.Result{}, err
-				}
+				return ctrl.Result{RequeueAfter: 60 * time.Second}, nil
 			} else {
-				log.Info("APP INSTANCES - Status unchanged, skipping update")
+				return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 			}
-			return ctrl.Result{RequeueAfter: 60 * time.Second}, nil
 		} else {
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		}
