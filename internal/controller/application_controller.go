@@ -249,8 +249,7 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 		}
 		log.Info("Created/Updated external application", "phase", a.Status.Phase, "state", a.Status.State)
 		r.Status().Update(ctx, a)
-		return ctrl.Result{}, nil
-		//return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)

@@ -229,8 +229,7 @@ func (r *FileReconciler) handleExternalFileCreation(
 		}
 		log.Info("Created/Updated external file", "phase", f.Status.Phase, "state", f.Status.State)
 		r.Status().Update(ctx, f)
-		return ctrl.Result{}, nil
-		//return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
