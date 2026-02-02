@@ -130,12 +130,10 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		latest := &v1beta1.Artefact{}
-		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
-		if result, err := r.handleExternalArtefactCreation(ctx, latest, feder); err != nil {
+		if result, err := r.handleExternalArtefactCreation(ctx, &a, feder); err != nil {
 			log.Info("error creating Artefact")
-			latest.Status.Phase = v1beta1.ArtefactPhaseError
-			upErr := r.Status().Update(ctx, latest)
+			a.Status.Phase = v1beta1.ArtefactPhaseError
+			upErr := r.Status().Update(ctx, &a)
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
@@ -243,17 +241,23 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
 
 		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		var result ctrl.Result
 		switch statusCode {
 		case 202:
 			a.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		case 200:
 			a.Status.State = "Ready"
+			result = ctrl.Result{}
 		default:
 			a.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		}
 		log.Info("Created/Updated external artefact", "phase", a.Status.Phase, "state", a.Status.State)
-		r.Status().Update(ctx, a)
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		if err := r.Status().Update(ctx, a); err != nil {
+			return ctrl.Result{}, err
+		}
+		return result, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)

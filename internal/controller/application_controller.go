@@ -135,12 +135,10 @@ func (r *ApplicationReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		latest := &v1beta1.Application{}
-		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
-		if result, err := r.handleExternalAppCreation(ctx, latest, feder); err != nil {
+		if result, err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
 			log.Info("error creating app")
-			latest.Status.Phase = v1beta1.ApplicationPhaseError
-			upErr := r.Status().Update(ctx, latest)
+			a.Status.Phase = v1beta1.ApplicationPhaseError
+			upErr := r.Status().Update(ctx, &a)
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
@@ -239,17 +237,23 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ApplicationPhaseReady
+		var result ctrl.Result
 		switch statusCode {
 		case 202:
 			a.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		case 200:
 			a.Status.State = "Ready"
+			result = ctrl.Result{}
 		default:
 			a.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		}
 		log.Info("Created/Updated external application", "phase", a.Status.Phase, "state", a.Status.State)
-		r.Status().Update(ctx, a)
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		if err := r.Status().Update(ctx, a); err != nil {
+			return ctrl.Result{}, err
+		}
+		return result, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
