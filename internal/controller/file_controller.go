@@ -219,17 +219,23 @@ func (r *FileReconciler) handleExternalFileCreation(
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("FILE - Status code 2xx received from OPG API", "status", statusCode)
 		f.Status.Phase = v1beta1.FilePhaseReady
+		var result ctrl.Result
 		switch statusCode {
 		case 202:
 			f.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		case 200:
 			f.Status.State = "Ready"
+			result = ctrl.Result{}
 		default:
 			f.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		}
 		log.Info("Created/Updated external file", "phase", f.Status.Phase, "state", f.Status.State)
-		r.Status().Update(ctx, f)
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		if err := r.Status().Update(ctx, f); err != nil {
+			return ctrl.Result{}, err
+		}
+		return result, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
