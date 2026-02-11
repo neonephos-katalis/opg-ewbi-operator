@@ -130,22 +130,11 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 		}
 	}
 
-	// if federation is guest, send OPG API request
+	// if federation is guest, send OPG API request to create the resource on Host
+	// NOTE: No polling - callbacks from Host will update status via Federation API server handler
 	if isGuest {
-		if a.Status.Phase == "Ready" && (a.Status.State == "Pending" || a.Status.State == "Ready") && a.Status.AppInstanceId != "" {
-			log.Info("AppInst is in Pending state, getting access point info")
-			if result, err := r.handleExternalAppInstGet(ctx, &a, feder); err != nil {
-				log.Error(err, "error getting appInst info before deletion")
-				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
-				upErr := r.Status().Update(ctx, a.DeepCopy())
-				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
-				}
-				return ctrl.Result{}, err
-			} else {
-				return result, nil
-			}
-		} else {
+		// Only handle creation - callbacks will handle status updates
+		if a.Status.AppInstanceId == "" {
 			if result, err := r.handleExternalAppInstCreation(ctx, &a, feder); err != nil {
 				log.Info("error creating appInst")
 				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
@@ -158,7 +147,12 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 				return result, nil
 			}
 		}
+		// Resource already created - no polling needed
+		// Host will send callbacks via Federation API to update status
+		log.Info("AppInst already created, waiting for callbacks from Host", "appInstanceId", a.Status.AppInstanceId)
+		return ctrl.Result{}, nil
 	} else {
+		// HOST side: manage local CR and send callbacks to Guest on status changes
 		if a.Status.Phase == "" {
 			a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 			a.Status.State = "Pending"
@@ -171,6 +165,13 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
+
+			// Send callback to Guest (event-driven, triggered on every reconciliation)
+			// For ApplicationInstance: continue callbacks until resource is deleted
+			if err := r.sendAppInstCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "failed to send callback to Guest")
+				// Don't fail reconciliation - callback is best-effort
 			}
 		}
 		return ctrl.Result{}, nil
@@ -235,7 +236,8 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 		a.Status.AppInstanceId = a.Name //"app-inst-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
 		log.Info("Created/Updated external application instances", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
 		r.Status().Update(ctx, a)
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		// No RequeueAfter - callbacks from Host will update status via Federation API server handler
+		return ctrl.Result{}, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
@@ -266,11 +268,14 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 	return ctrl.Result{}, nil
 }
 
+// handleExternalAppInstGet retrieves external AppInst details on-demand.
+// NOTE: This function is no longer used for polling - status updates come via callbacks.
+// Can still be called for on-demand queries when needed.
 func (r *ApplicationInstanceReconciler) handleExternalAppInstGet(
 	ctx context.Context, a *v1beta1.ApplicationInstance, feder *v1beta1.Federation,
 ) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	log.Info("Getting external appInst details")
+	log.Info("DEPRECATED: Getting external appInst details - use callbacks instead")
 	res, err := r.GetOPGClient(
 		feder.Labels[v1beta1.ExternalIdLabel],
 		feder.Spec.GuestPartnerCredentials.TokenUrl,
@@ -409,4 +414,125 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstDeletion(
 		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
 	}
 	return nil
+}
+
+// sendAppInstCallback sends a callback to the Guest with the current ApplicationInstance status.
+// This is called by the Host reconciler when status changes (event-driven, not polling).
+// For ApplicationInstance: callbacks continue until the resource is deleted.
+func (r *ApplicationInstanceReconciler) sendAppInstCallback(
+	ctx context.Context,
+	a *v1beta1.ApplicationInstance,
+	feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping callback")
+		return nil
+	}
+
+	log.Info("Sending AppInst callback to Guest",
+		"appInstanceId", a.Status.AppInstanceId,
+		"state", a.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+
+	// Build callback body with current status
+	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
+	state := opgmodels.InstanceState(a.Status.State)
+	accessPointInfo := r.convertAccessPointInfoToOPGSingle(a.Status.AccessPointInfo)
+
+	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
+		AppId:               a.Spec.AppId,
+		AppInstanceId:       a.Status.AppInstanceId,
+		FederationContextId: &feder.Status.FederationContextId,
+		ZoneId:              a.Spec.ZoneInfo.ZoneId,
+	}
+	callbackBody.AppInstanceInfo.AppInstanceState = &state
+	callbackBody.AppInstanceInfo.AccesspointInfo = accessPointInfo
+
+	// Get callback client (pointing to Guest's callback URL)
+	// Using a different cache key to separate callback client from regular client
+	callbackClient := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel]+"-callback",
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	)
+
+	// Send callback to Guest
+	res, err := callbackClient.AppInstCallbackLinkWithResponse(
+		ctx,
+		feder.Status.FederationContextId,
+		callbackBody,
+	)
+	if err != nil {
+		return err
+	}
+
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("Successfully sent AppInst callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+	default:
+		log.Info("Callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+	}
+
+	return nil
+}
+
+// convertAccessPointInfoToOPGSingle converts v1beta1.AccessPointInfo slice to a single *opgmodels.AccessPointInfo
+// For callbacks, we take the first AccessPointInfo if available.
+func (r *ApplicationInstanceReconciler) convertAccessPointInfoToOPGSingle(
+	apiInfoList []v1beta1.AccessPointInfo,
+) *opgmodels.AccessPointInfo {
+	if len(apiInfoList) == 0 {
+		return nil
+	}
+
+	// Take the first AccessPointInfo for the callback
+	api := apiInfoList[0]
+	accessPoints := []opgmodels.AccessPoints{}
+	for _, ap := range api.AccessPoints {
+		accessPoints = append(accessPoints, opgmodels.AccessPoints{
+			Port:          ap.Port,
+			Fqdn:          ap.Fqdn,
+			Ipv4Addresses: ap.Ipv4Addresses,
+			Ipv6Addresses: ap.Ipv6Addresses,
+		})
+	}
+
+	return &opgmodels.AccessPointInfo{
+		InterfaceId:  api.InterfaceId,
+		AccessPoints: accessPoints,
+	}
+}
+
+// convertAccessPointInfoToOPG converts v1beta1.AccessPointInfo slice to opgmodels.AccessPointInfo slice
+// Kept for backward compatibility if needed for other use cases.
+func (r *ApplicationInstanceReconciler) convertAccessPointInfoToOPG(
+	apiInfoList []v1beta1.AccessPointInfo,
+) []opgmodels.AccessPointInfo {
+	result := []opgmodels.AccessPointInfo{}
+	for _, api := range apiInfoList {
+		accessPoints := []opgmodels.AccessPoints{}
+		for _, ap := range api.AccessPoints {
+			accessPoints = append(accessPoints, opgmodels.AccessPoints{
+				Port:          ap.Port,
+				Fqdn:          ap.Fqdn,
+				Ipv4Addresses: ap.Ipv4Addresses,
+				Ipv6Addresses: ap.Ipv6Addresses,
+			})
+		}
+		result = append(result, opgmodels.AccessPointInfo{
+			InterfaceId:  api.InterfaceId,
+			AccessPoints: accessPoints,
+		})
+	}
+	return result
 }
