@@ -231,6 +231,8 @@ helm: base-chart crd-chart ## build the operator's helm chart
 .PHONY: base-chart
 base-chart: manifests ## build the operator's helm chart
 	kubebuilder edit  --plugins=helm/v1-alpha
+# 	fix the namespace in the role.yaml file otherwise it hardcodes the namespace to "foo"
+	sed -i 's/namespace: foo/namespace: {{ .Release.Namespace }}/g' dist/chart/templates/rbac/role.yaml
 	helm lint dist/chart
 
 
