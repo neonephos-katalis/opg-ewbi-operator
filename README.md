@@ -32,17 +32,15 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd```
     - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd```
 
-2. For the **makefile** in OPG-EWBI-OPERATOR, you need to change the line 1-3 as follwos:
+2. For the **Makefile** in OPG-EWBI-OPERATOR, you need to change lines 1-2 as follows:
 
     **For Linux/ARM64**:
     - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos```
-    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
-    - Line 3: ```PLATFORM ?= linux/arm64```
+    - Line 2: ```PLATFORM ?= linux/arm64```
 
     **For Linux/AMD64**:
     - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
-    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
-    - Line 3: ```PLATFORM ?= linux/amd64```
+    - Line 2: ```PLATFORM ?= linux/amd64```
 
 3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow and changes the line 10:
 
@@ -77,7 +75,7 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
 5. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
-6. After the download, open this folder via terminale and exec the following command:
+6. After the download, open the created folder, `opg-ewbi-api`, via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
