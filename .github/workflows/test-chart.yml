@@ -38,7 +38,7 @@ jobs:
       - name: Prepare opg-ewbi
         run: |
           go mod tidy
-          make docker-build IMG=opg-ewbi:v0.1.0
+          make docker-build IMG=opg-ewbi:v0.1.0 PLATFORM=linux/amd64
           kind load docker-image opg-ewbi:v0.1.0
 
       - name: Install Helm
