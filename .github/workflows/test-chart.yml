@@ -29,6 +29,12 @@ jobs:
       - name: Create kind cluster
         run: kind create cluster
 
+      - name: Setup authentication for private Go modules
+        run: |
+          echo "machine github.com login ${{ github.actor }} password ${{ secrets.GITHUB_TOKEN }}" > $HOME/.netrc
+          chmod 600 $HOME/.netrc
+          git config --global url."https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Prepare opg-ewbi
         run: |
           go mod tidy
