@@ -157,16 +157,20 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 			a.Status.State = "Pending"
 			a.Status.AppInstanceId = a.Labels[v1beta1.ExternalIdLabel]
-			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
+			log.Info("-<0>- Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
 		} else {
-			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
+			log.Info("-<1>- Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
 		}
+		
+		log.Info("-<2>- Checking delation timestamp")
 		if a.GetDeletionTimestamp().IsZero() {
+			log.Info("-<3>- Updatting resource")
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 
+			log.Info("-<4>- Sending callback to", feder)
 			// Send callback to Guest (event-driven, triggered on every reconciliation)
 			// For ApplicationInstance: continue callbacks until resource is deleted
 			if err := r.sendAppInstCallback(ctx, &a, feder); err != nil {
