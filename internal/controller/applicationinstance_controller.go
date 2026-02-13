@@ -170,7 +170,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 
-			log.Info("-<4>- Sending callback to", feder)
+			log.Info("-<4>- Sending callback to", "federation", feder)
 			// Send callback to Guest (event-driven, triggered on every reconciliation)
 			// For ApplicationInstance: continue callbacks until resource is deleted
 			if err := r.sendAppInstCallback(ctx, &a, feder); err != nil {
