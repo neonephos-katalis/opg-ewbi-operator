@@ -450,7 +450,7 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
 		AppId:               a.Spec.AppId,
-		AppInstanceId:       labels["opg.ewbi.nby.one/id"]
+		AppInstanceId:       labels["opg.ewbi.nby.one/id"],
 		FederationContextId: &feder.Status.FederationContextId,
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
