@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strings"
 	"time"
 
 	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
@@ -439,7 +438,7 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 
 	log.Info("Sending AppInst callback to Guest",
 		"appInstanceId", a.Status.AppInstanceId,
-		"state", strings.ToUpper(a.Status.State),
+		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
 
 	// Build callback body with current status
