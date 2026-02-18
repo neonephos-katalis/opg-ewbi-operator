@@ -462,7 +462,7 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	// Get callback client (pointing to Guest's callback URL)
 	// Using a different cache key to separate callback client from regular client
 	callbackClient := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel]+"-callback",
+		feder.Labels[v1beta1.ExternalIdLabel],
 		feder.Spec.Partner.StatusLink,
 		feder.Spec.Partner.CallbackCredentials.ClientId,
 	)
@@ -471,7 +471,7 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	log.Info("#############################################################################################", "callbackbody", callbackBody)
 	res, err := callbackClient.AppInstCallbackLinkWithResponse(
 		ctx,
-		feder.Spec.Partner.CallbackCredentials.ClientId,
+		fedID,
 		callbackBody,
 	)
 	log.Info("#############################################################################################", "res", res.StatusCode())
