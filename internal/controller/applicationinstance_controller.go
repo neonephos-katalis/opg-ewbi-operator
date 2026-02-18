@@ -446,9 +446,11 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	state := opgmodels.InstanceState(a.Status.State)
 	accessPointInfo := r.convertAccessPointInfoToOPGSingle(a.Status.AccessPointInfo)
 
+	labels := a.GetLabels()
+
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
 		AppId:               a.Spec.AppId,
-		AppInstanceId:       a.Status.AppInstanceId,
+		AppInstanceId:       labels["opg.ewbi.nby.one/id"]
 		FederationContextId: &feder.Status.FederationContextId,
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
@@ -465,6 +467,7 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	)
 
 	// Send callback to Guest
+	log.Info("#############################################################################################", "callbackbody", callbackBody)
 	res, err := callbackClient.AppInstCallbackLinkWithResponse(
 		ctx,
 		feder.Spec.Partner.CallbackCredentials.ClientId,
