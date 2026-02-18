@@ -162,12 +162,11 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
-		} else if a.Status.Phase != "Pending" {
-			log.Info("******Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
-			log.Info("******Sending callback to", "federation", feder)
+		} else if a.Status.State != "Pending" {
+			log.Info("******Sending callback", "phase", a.Status.Phase, "state", a.Status.State)
 			if err := r.sendAppInstCallback(ctx, &a, feder); err != nil {
 				log.Error(err, "failed to send callback to Guest")
-				// Don't fail reconciliation - callback is best-effort
+
 			}
 		}
 		return ctrl.Result{}, nil
