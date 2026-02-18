@@ -161,7 +161,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 		} else {
 			log.Info("-<1>- Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
 		}
-		
+
 		log.Info("-<2>- Checking delation timestamp")
 		if a.GetDeletionTimestamp().IsZero() {
 			log.Info("-<3>- Updatting resource")
@@ -447,11 +447,12 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	accessPointInfo := r.convertAccessPointInfoToOPGSingle(a.Status.AccessPointInfo)
 
 	labels := a.GetLabels()
+	fedID := opgmodels.FederationContextId(labels["opg.ewbi.nby.one/federation-context-id"])
 
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
 		AppId:               a.Spec.AppId,
 		AppInstanceId:       labels["opg.ewbi.nby.one/id"],
-		FederationContextId: labels["opg.ewbi.nby.one/federation-context-id"],
+		FederationContextId: &fedID,
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
