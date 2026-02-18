@@ -136,8 +136,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 	if isGuest {
 		// Only handle creation - callbacks will handle status updates
 		if a.Status.AppInstanceId == "" {
-			result, err := r.handleExternalAppInstCreation(ctx, &a, feder)
-			if err != nil {
+			if result, err := r.handleExternalAppInstCreation(ctx, &a, feder); err != nil {
 				log.Info("error creating appInst")
 				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 				upErr := r.Status().Update(ctx, a.DeepCopy())
@@ -145,12 +144,13 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
 				return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+			} else {
+				return result, nil
 			}
-			return result, nil
 		}
 		// Resource already created - no polling needed
 		// Host will send callbacks via Federation API to update status
-		log.Info("AppInst already created, modivied via Host callbacks", "appInstanceId", a.Status.AppInstanceId)
+		log.Info("AppInst already created, waiting for callbacks from Host", "appInstanceId", a.Status.AppInstanceId)
 		return ctrl.Result{}, nil
 	} else {
 		// HOST side: manage local CR and send callbacks to Guest on status changes
@@ -159,23 +159,26 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			a.Status.State = "Pending"
 			a.Status.AppInstanceId = a.Labels[v1beta1.ExternalIdLabel]
 			log.Info("-<0>- Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
-			log.Info("-<0.1>- Updatting resource")
+		} else {
+			log.Info("-<1>- Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		}
+		
+		log.Info("-<2>- Checking delation timestamp")
+		if a.GetDeletionTimestamp().IsZero() {
+			log.Info("-<3>- Updatting resource")
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
-		} else {
-			log.Info("-<1>- Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		}
 
-		log.Info("-<2>- Sending callback to", "federation", feder)
-		// Send callback to Guest (event-driven, triggered on every reconciliation)
-		// For ApplicationInstance: continue callbacks until resource is deleted
-		if err := r.sendAppInstCallback(ctx, &a, feder); err != nil {
-			log.Error(err, "failed to send callback to Guest")
-			// Don't fail reconciliation - callback is best-effort
+			log.Info("-<4>- Sending callback to", "federation", feder)
+			// Send callback to Guest (event-driven, triggered on every reconciliation)
+			// For ApplicationInstance: continue callbacks until resource is deleted
+			if err := r.sendAppInstCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "failed to send callback to Guest")
+				// Don't fail reconciliation - callback is best-effort
+			}
 		}
-
 		return ctrl.Result{}, nil
 	}
 }
@@ -464,21 +467,22 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	// Send callback to Guest
 	res, err := callbackClient.AppInstCallbackLinkWithResponse(
 		ctx,
-		feder.Spec.Partner.CallbackCredentials.ClientId,
+		feder.Status.FederationContextId,
 		callbackBody,
 	)
 	if err != nil {
 		return err
 	}
 
-	switch statusCode := res.StatusCode(); statusCode {
-	case 204:
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
 		log.Info("Successfully sent AppInst callback to Guest", "status", statusCode)
-	case 400:
+	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-	case 401:
+	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-	case 404:
+	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
 	default:
 		log.Info("Callback returned unexpected status", "status", statusCode, "body", string(res.Body))
