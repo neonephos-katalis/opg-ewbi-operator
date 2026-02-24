@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/go-logr/logr"
@@ -25,6 +26,7 @@ import (
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -68,4 +70,52 @@ func handleProblemDetails(log logr.Logger, code int, p *opgmodels.ProblemDetails
 // false otherwise (either label wasn't present or is RelationHost)
 func IsGuestResource(labels map[string]string) bool {
 	return labels[v1beta1.FederationRelationLabel] == string(v1beta1.FederationRelationGuest)
+}
+
+type patchOperationType string
+
+const (
+	addOp     patchOperationType = "add"
+	removeOp  patchOperationType = "remove"
+	replaceOp patchOperationType = "replace"
+)
+
+func (p *patchOperationType) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	switch patchOperationType(s) {
+	case addOp, removeOp, replaceOp:
+		*p = patchOperationType(s)
+	default:
+		return errors.New("invalid patch operation type")
+	}
+	return nil
+}
+
+type patchOperation struct {
+	Op    patchOperationType `json:"op"`
+	Path  string             `json:"path"`
+	Value string             `json:"value,omitempty"`
+}
+
+func toPatch(ops []patchOperation) client.Patch {
+	patchBytes, err := json.Marshal(ops)
+	if err != nil {
+		panic("failed to marshal patch operations")
+	}
+	return client.RawPatch(types.JSONPatchType, patchBytes)
+}
+
+func checkCreationLabel(labels map[string]string) []patchOperation {
+	if _, ok := labels[v1beta1.CreationPhaseLabel]; !ok {
+		return nil
+	}
+
+	delete(labels, v1beta1.CreationPhaseLabel)
+	return []patchOperation{{
+		Op:   removeOp,
+		Path: "/metadata/labels/opg.ewbi.nby.one~1creation",
+	}}
 }

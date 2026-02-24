@@ -31,6 +31,7 @@ const (
 	FederationRelationLabel  = "opg.ewbi.nby.one/federation-relation"
 	FederationGuestUrlLabel  = "opg.ewbi.nby.one/federation-guest-url"
 	ExternalIdLabel          = "opg.ewbi.nby.one/id"
+	CreationPhaseLabel       = "opg.ewbi.nby.one/creation"
 )
 
 // fields
