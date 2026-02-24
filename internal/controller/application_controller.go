@@ -135,23 +135,17 @@ func (r *ApplicationReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if patchOps := checkCreationLabel(a.Labels); len(patchOps) > 0 { // label present and then removed, need to create external app
-			if ops, err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
-				log.Info("error creating app")
-				patchOps = append(patchOps, patchOperation{
-					Op:    replaceOp,
-					Path:  "/status/phase",
-					Value: string(v1beta1.ApplicationPhaseError),
-				})
-			} else if len(ops) > 0 {
-				patchOps = append(patchOps, ops...)
+		if result, err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
+			log.Info("error creating app")
+			a.Status.Phase = v1beta1.ApplicationPhaseError
+			upErr := r.Status().Update(ctx, &a)
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
-			if uperr := r.Patch(ctx, &a, toPatch(patchOps)); uperr != nil {
-				log.Error(uperr, errorUpdatingResourceStatusMsg)
-				return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-			}
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		} else {
+			return result, nil
 		}
-		return ctrl.Result{}, nil
 	} else {
 		if a.Status.Phase == "" {
 			a.Status.Phase = v1beta1.ApplicationPhaseReady
@@ -181,7 +175,7 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *ApplicationReconciler) handleExternalAppCreation(
 	ctx context.Context, a *v1beta1.Application, feder *v1beta1.Federation,
-) ([]patchOperation, error) {
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	numUsers := int(a.Spec.QoSProfile.UsersPerAppInst)
 	multiUserClients := opgmodels.AppQoSProfileMultiUserClients(a.Spec.QoSProfile.MultiUserClients)
@@ -235,7 +229,7 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 
 	if err != nil {
 		log.Error(err, "error creating app")
-		return nil, err
+		return ctrl.Result{}, err
 	}
 
 	statusCode := res.StatusCode()
@@ -243,23 +237,28 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
-		var state opgewbiv1beta1.ApplicationState
+		a.Status.Phase = v1beta1.ApplicationPhaseReady
+		var result ctrl.Result
 		switch statusCode {
 		case 202:
-			state = "Pending"
+			a.Status.State = "Pending"
+			result = ctrl.Result{} // Host will send callback when ready; no polling needed
 		case 200:
-			state = "Ready"
+			a.Status.State = "Ready"
+			result = ctrl.Result{}
 		default:
-			state = "Pending"
+			a.Status.State = "Pending"
+			result = ctrl.Result{} // Host will send callback when ready; no polling needed
 		}
-		return []patchOperation{
-			{Op: "replace", Path: "/status/phase", Value: string(v1beta1.ApplicationPhaseReady)},
-			{Op: "replace", Path: "/status/state", Value: string(state)},
-		}, nil
+		log.Info("Created/Updated external application", "phase", a.Status.Phase, "state", a.Status.State)
+		if err := r.Status().Update(ctx, a); err != nil {
+			return ctrl.Result{}, err
+		}
+		return result, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return nil, errors.New(*res.ApplicationproblemJSON400.Detail)
+		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
 	case statusCode == 404:
@@ -272,19 +271,18 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "artefact not found" {
-			return nil, errors.New(*res.ApplicationproblemJSON500.Detail)
+			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		return []patchOperation{
-			{Op: "replace", Path: "/status/phase", Value: string(v1beta1.ApplicationPhaseError)},
-			{Op: "replace", Path: "/status/state", Value: string(v1beta1.ApplicationStateFailed)},
-		}, nil
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = "Error"
+		r.Status().Update(ctx, a)
 	}
-	return nil, nil
+	return ctrl.Result{}, nil
 }
 
 func (r *ApplicationReconciler) handleExternalAppDeletion(
@@ -357,7 +355,8 @@ func (r *ApplicationReconciler) sendAppCallback(
 		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
 
-	fedID := opgmodels.FederationContextId(a.Labels[v1beta1.FederationContextIdLabel])
+	labels := a.GetLabels()
+	fedID := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	onboardStatus := opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo(a.Status.State)
 
 	callbackBody := opgmodels.AppStatusCallbackLinkJSONRequestBody{
@@ -391,19 +390,18 @@ func (r *ApplicationReconciler) sendAppCallback(
 		return err
 	}
 
-	switch statusCode := res.StatusCode(); statusCode {
-	case 400:
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("Successfully sent App callback to Guest", "status", statusCode)
+	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-	case 401:
+	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-	case 404:
+	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
 	default:
-		if 300 > statusCode && statusCode >= 200 {
-			log.Info("Successfully sent App callback to Guest", "status", statusCode)
-		} else {
-			log.Info("App callback returned unexpected status", "status", statusCode, "body", string(res.Body))
-		}
+		log.Info("App callback returned unexpected status", "status", statusCode, "body", string(res.Body))
 	}
 
 	return nil
