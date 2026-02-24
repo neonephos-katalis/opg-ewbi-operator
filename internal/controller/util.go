@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"path"
+	"strings"
 
 	"github.com/go-logr/logr"
 	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
@@ -108,14 +110,28 @@ func toPatch(ops []patchOperation) client.Patch {
 	return client.RawPatch(types.JSONPatchType, patchBytes)
 }
 
-func checkCreationLabel(labels map[string]string) []patchOperation {
+var creationLabelPatch = toPatch([]patchOperation{{
+	Op:   removeOp,
+	Path: path.Join("/metadata/labels/", strings.ReplaceAll(strings.ReplaceAll(string(v1beta1.CreationPhaseLabel), "~", "~0"), "/", "~1")),
+}})
+
+func checkCreationLabel(r client.Writer, ctx context.Context, obj client.Object) bool {
+	var (
+		labels = obj.GetLabels()
+		log    = log.FromContext(ctx)
+	)
+
 	if _, ok := labels[v1beta1.CreationPhaseLabel]; !ok {
-		return nil
+		log.Info(v1beta1.CreationPhaseLabel + " label not found")
+		return false
+	}
+
+	if err := r.Patch(ctx, obj, creationLabelPatch); err == nil {
+		log.Error(err, "Cannot remove "+v1beta1.CreationPhaseLabel+" label")
+		return false
 	}
 
 	delete(labels, v1beta1.CreationPhaseLabel)
-	return []patchOperation{{
-		Op:   removeOp,
-		Path: "/metadata/labels/opg.ewbi.nby.one~1creation",
-	}}
+	obj.SetLabels(labels) // shold not be necessary since the patch should have already removed the label, but doing it anyway
+	return true
 }

@@ -135,15 +135,16 @@ func (r *ApplicationReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if result, err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
-			log.Info("error creating app")
-			a.Status.Phase = v1beta1.ApplicationPhaseError
-			upErr := r.Status().Update(ctx, &a)
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if checkCreationLabel(r, ctx, &a) {
+			result, err := r.handleExternalAppCreation(ctx, &a, feder)
+			if err != nil {
+				log.Info("error creating app")
+				a.Status.Phase = v1beta1.ApplicationPhaseError
+				if upErr := r.Status().Update(ctx, a.DeepCopy()); upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+				result.RequeueAfter = 5 * time.Second
 			}
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-		} else {
 			return result, nil
 		}
 	} else {
@@ -151,8 +152,7 @@ func (r *ApplicationReconciler) Reconcile(
 			a.Status.Phase = v1beta1.ApplicationPhaseReady
 			a.Status.State = "Pending"
 			log.Info("*******Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
-			upErr := r.Status().Update(ctx, a.DeepCopy())
-			if upErr != nil {
+			if upErr := r.Status().Update(ctx, a.DeepCopy()); upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 		} else if a.Status.State != v1beta1.ApplicationStatePending {
@@ -161,8 +161,8 @@ func (r *ApplicationReconciler) Reconcile(
 				log.Error(err, "error sending App callback")
 			}
 		}
-		return ctrl.Result{}, nil
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
