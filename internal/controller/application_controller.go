@@ -150,14 +150,15 @@ func (r *ApplicationReconciler) Reconcile(
 		if a.Status.Phase == "" {
 			a.Status.Phase = v1beta1.ApplicationPhaseReady
 			a.Status.State = "Pending"
-			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		} else {
-			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		}
-		if a.GetDeletionTimestamp().IsZero() {
+			log.Info("*******Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
+		} else if a.Status.State != v1beta1.ApplicationStatePending {
+			log.Info("*******Sending App callback to Guest", "state", a.Status.State)
+			if err := r.sendAppCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error sending App callback")
 			}
 		}
 		return ctrl.Result{}, nil
@@ -241,13 +242,13 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 		switch statusCode {
 		case 202:
 			a.Status.State = "Pending"
-			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+			result = ctrl.Result{} // Host will send callback when ready; no polling needed
 		case 200:
 			a.Status.State = "Ready"
 			result = ctrl.Result{}
 		default:
 			a.Status.State = "Pending"
-			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+			result = ctrl.Result{} // Host will send callback when ready; no polling needed
 		}
 		log.Info("Created/Updated external application", "phase", a.Status.Phase, "state", a.Status.State)
 		if err := r.Status().Update(ctx, a); err != nil {
@@ -329,5 +330,79 @@ func (r *ApplicationReconciler) handleExternalAppDeletion(
 	default:
 		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
 	}
+	return nil
+}
+
+// sendAppCallback sends a callback to the Guest with the current Application status.
+// This is called by the Host reconciler when status changes (event-driven, not polling).
+// Callbacks are sent whenever State != "Pending", i.e. on every reconcile that reflects a
+// non-initial state, covering the full lifecycle (Onboarded, Failed, Deboarding, Removed).
+func (r *ApplicationReconciler) sendAppCallback(
+	ctx context.Context,
+	a *v1beta1.Application,
+	feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping App callback")
+		return nil
+	}
+
+	log.Info("Sending App callback to Guest",
+		"appId", a.Labels[v1beta1.ExternalIdLabel],
+		"state", a.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+
+	labels := a.GetLabels()
+	fedID := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
+	onboardStatus := opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo(a.Status.State)
+
+	callbackBody := opgmodels.AppStatusCallbackLinkJSONRequestBody{
+		AppId:               opgmodels.AppIdentifier(a.Labels[v1beta1.ExternalIdLabel]),
+		FederationContextId: &fedID,
+		StatusInfo: []struct {
+			OnboardStatusInfo opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo `json:"onboardStatusInfo"`
+			ZoneId            opgmodels.ZoneIdentifier                                           `json:"zoneId"`
+		}{
+			{
+				OnboardStatusInfo: onboardStatus,
+				ZoneId:            "",
+			},
+		},
+	}
+
+	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
+	callbackClient := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel],
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	)
+
+	res, err := callbackClient.AppStatusCallbackLinkWithResponse(
+		ctx,
+		opgmodels.FederationCallbackId(fedID),
+		callbackBody,
+	)
+	if err != nil {
+		log.Error(err, "error sending App callback")
+		return err
+	}
+
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("Successfully sent App callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+	default:
+		log.Info("App callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+	}
+
 	return nil
 }
