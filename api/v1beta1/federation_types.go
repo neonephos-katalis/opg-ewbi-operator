@@ -27,11 +27,12 @@ const (
 
 // labels
 const (
-	FederationContextIdLabel = "opg.ewbi.nby.one/federation-context-id"
-	FederationRelationLabel  = "opg.ewbi.nby.one/federation-relation"
-	FederationGuestUrlLabel  = "opg.ewbi.nby.one/federation-guest-url"
-	ExternalIdLabel          = "opg.ewbi.nby.one/id"
-	CreationPhaseLabel       = "opg.ewbi.nby.one/creation"
+	FederationContextIdLabel  = "opg.ewbi.nby.one/federation-context-id"
+	FederationCallbackIdLabel = "opg.ewbi.nby.one/federation-callback-id"
+	FederationRelationLabel   = "opg.ewbi.nby.one/federation-relation"
+	FederationGuestUrlLabel   = "opg.ewbi.nby.one/federation-guest-url"
+	ExternalIdLabel           = "opg.ewbi.nby.one/id"
+	CreationPhaseLabel        = "opg.ewbi.nby.one/creation"
 )
 
 // fields

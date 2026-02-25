@@ -382,7 +382,7 @@ func (r *ApplicationReconciler) sendAppCallback(
 
 	res, err := callbackClient.AppStatusCallbackLinkWithResponse(
 		ctx,
-		opgmodels.FederationCallbackId(fedID),
+		opgmodels.FederationCallbackId(labels[v1beta1.FederationCallbackIdLabel]),
 		callbackBody,
 	)
 	if err != nil {
