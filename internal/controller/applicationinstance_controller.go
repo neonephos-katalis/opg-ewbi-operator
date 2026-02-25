@@ -462,15 +462,16 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	log.Info("#############################################################################################", "callbackbody", callbackBody)
 	res, err := callbackClient.AppInstCallbackLinkWithResponse(
 		ctx,
-		fedID,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
 		callbackBody,
 	)
-	log.Info("#############################################################################################", "res", res.StatusCode())
+
+	statusCode := res.StatusCode()
+	log.Info("#############################################################################################", "res", statusCode)
 	if err != nil {
 		return err
 	}
 
-	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("Successfully sent AppInst callback to Guest", "status", statusCode)
