@@ -126,7 +126,7 @@ func checkCreationLabel(r client.Writer, ctx context.Context, obj client.Object)
 		return false
 	}
 
-	if err := r.Patch(ctx, obj, creationLabelPatch); err == nil {
+	if err := r.Patch(ctx, obj, creationLabelPatch); err != nil {
 		log.Error(err, "Cannot remove "+v1beta1.CreationPhaseLabel+" label")
 		return false
 	}
