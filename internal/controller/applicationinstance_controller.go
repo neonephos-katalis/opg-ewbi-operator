@@ -465,24 +465,26 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 		feder.Spec.Partner.CallbackCredentials.ClientId,
 		callbackBody,
 	)
-
-	statusCode := res.StatusCode()
-	log.Info("#############################################################################################", "res", statusCode)
 	if err != nil {
+		log.Error(err, "Error while sending applicationinstance callback")
 		return err
 	}
 
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("Successfully sent AppInst callback to Guest", "status", statusCode)
-	case statusCode == 400:
+	statusCode := res.StatusCode()
+	log.Info("#############################################################################################", "res", statusCode)
+	switch statusCode {
+	case 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-	case statusCode == 401:
+	case 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-	case statusCode == 404:
+	case 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
 	default:
-		log.Info("Callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+		if 200 <= statusCode && statusCode < 300 {
+			log.Info("Successfully sent AppInst callback to Guest", "status", statusCode)
+		} else {
+			log.Info("Callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+		}
 	}
 
 	return nil
