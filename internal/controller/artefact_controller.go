@@ -146,13 +146,16 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			a.Status.Phase = v1beta1.ArtefactPhaseReady
 			a.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		} else {
-			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		}
-		if a.GetDeletionTimestamp().IsZero() {
-			upErr := r.Status().Update(ctx, a.DeepCopy())
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			if a.GetDeletionTimestamp().IsZero() {
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+			}
+		} else if a.Status.State != v1beta1.ArtefactStateReconciling {
+			log.Info("Sending Artefact callback to Guest", "state", a.Status.State)
+			if err := r.sendArtefactCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error sending Artefact callback")
 			}
 		}
 		return ctrl.Result{}, nil
@@ -286,6 +289,67 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 		r.Status().Update(ctx, a)
 	}
 	return ctrl.Result{}, nil
+}
+
+// sendArtefactCallback sends a callback to the Guest with the current Artefact upload status.
+// This is called by the Host reconciler when status changes (event-driven, not polling).
+// Callbacks are sent whenever State != "Pending" (ArtefactStateReconciling), i.e. on every
+// reconcile that reflects a non-initial state, covering statuses like Ready and Error.
+func (r *ArtefactReconciler) sendArtefactCallback(
+	ctx context.Context,
+	a *v1beta1.Artefact,
+	feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping Artefact callback")
+		return nil
+	}
+
+	log.Info("Sending Artefact callback to Guest",
+		"artefactId", a.Labels[v1beta1.ExternalIdLabel],
+		"state", a.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+
+	callbackBody := opgmodels.ArtefactStatusCallbackLinkJSONRequestBody{
+		ArtefactId:       a.Labels[v1beta1.ExternalIdLabel],
+		UploadStatusInfo: string(a.Status.State),
+	}
+
+	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
+	callbackClient := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel],
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	)
+
+	res, err := callbackClient.ArtefactStatusCallbackLinkWithResponse(
+		ctx,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+		callbackBody,
+	)
+	if err != nil {
+		log.Error(err, "error sending Artefact callback")
+		return err
+	}
+
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("Successfully sent Artefact callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+	default:
+		log.Info("Artefact callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+	}
+
+	return nil
 }
 
 func (r *ArtefactReconciler) handleExternalArtefactDeletion(
