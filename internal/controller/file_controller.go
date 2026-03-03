@@ -146,13 +146,16 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			f.Status.Phase = v1beta1.FilePhaseReady
 			f.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", f.Status.Phase, "state", f.Status.State)
-		} else {
-			log.Info("Existing CR state", "phase", f.Status.Phase, "state", f.Status.State)
-		}
-		if f.GetDeletionTimestamp().IsZero() {
-			upErr := r.Status().Update(ctx, f.DeepCopy())
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			if f.GetDeletionTimestamp().IsZero() {
+				upErr := r.Status().Update(ctx, f.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+			}
+		} else if f.Status.State != "Pending" {
+			log.Info("Sending File callback to Guest", "state", f.Status.State)
+			if err := r.sendFileCallback(ctx, &f, feder); err != nil {
+				log.Error(err, "error sending File callback")
 			}
 		}
 		return ctrl.Result{}, nil
@@ -265,6 +268,67 @@ func (r *FileReconciler) handleExternalFileCreation(
 		//log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
 	}
 	return ctrl.Result{}, nil
+}
+
+// sendFileCallback sends a callback to the Guest with the current File upload status.
+// This is called by the Host reconciler when status changes (event-driven, not polling).
+// Callbacks are sent whenever State != "Pending", i.e. on every reconcile that reflects a
+// non-initial state, covering statuses like Ready and Error.
+func (r *FileReconciler) sendFileCallback(
+	ctx context.Context,
+	f *v1beta1.File,
+	feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping File callback")
+		return nil
+	}
+
+	log.Info("Sending File callback to Guest",
+		"fileId", f.Labels[v1beta1.ExternalIdLabel],
+		"state", f.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+
+	callbackBody := opgmodels.FileStatusCallbackLinkJSONRequestBody{
+		FileId:           f.Labels[v1beta1.ExternalIdLabel],
+		UploadStatusInfo: string(f.Status.State),
+	}
+
+	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
+	callbackClient := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel],
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	)
+
+	res, err := callbackClient.FileStatusCallbackLinkWithResponse(
+		ctx,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+		callbackBody,
+	)
+	if err != nil {
+		log.Error(err, "error sending File callback")
+		return err
+	}
+
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("Successfully sent File callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+	default:
+		log.Info("File callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+	}
+
+	return nil
 }
 
 func (r *FileReconciler) handleExternalFileDeletion(

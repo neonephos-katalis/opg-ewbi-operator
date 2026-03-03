@@ -435,7 +435,6 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 	// Build callback body with current status
 	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
 	state := opgmodels.InstanceState(a.Status.State)
-	accessPointInfo := r.convertAccessPointInfoToOPGSingle(a.Status.AccessPointInfo)
 
 	labels := a.GetLabels()
 	fedID := opgmodels.FederationContextId(labels["opg.ewbi.nby.one/federation-context-id"])
@@ -447,7 +446,7 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
-	callbackBody.AppInstanceInfo.AccesspointInfo = accessPointInfo
+	callbackBody.AppInstanceInfo.AccesspointInfo = convertAccessPointInfo(a.Status.AccessPointInfo)
 
 	log.Info("*********************************************************************************************", "AppInstanceState", state)
 	// Get callback client (pointing to Guest's callback URL)
@@ -492,51 +491,28 @@ func (r *ApplicationInstanceReconciler) sendAppInstCallback(
 
 // convertAccessPointInfoToOPGSingle converts v1beta1.AccessPointInfo slice to a single *opgmodels.AccessPointInfo
 // For callbacks, we take the first AccessPointInfo if available.
-func (r *ApplicationInstanceReconciler) convertAccessPointInfoToOPGSingle(
-	apiInfoList []v1beta1.AccessPointInfo,
-) *opgmodels.AccessPointInfo {
+func convertAccessPointInfo(apiInfoList []v1beta1.AccessPointInfo) []opgmodels.AccessPointInfo {
 	if len(apiInfoList) == 0 {
 		return nil
 	}
 
 	// Take the first AccessPointInfo for the callback
-	api := apiInfoList[0]
-	accessPoints := []opgmodels.AccessPoints{}
-	for _, ap := range api.AccessPoints {
-		accessPoints = append(accessPoints, opgmodels.AccessPoints{
-			Port:          ap.Port,
-			Fqdn:          ap.Fqdn,
-			Ipv4Addresses: ap.Ipv4Addresses,
-			Ipv6Addresses: ap.Ipv6Addresses,
-		})
-	}
-
-	return &opgmodels.AccessPointInfo{
-		InterfaceId:  api.InterfaceId,
-		AccessPoints: accessPoints,
-	}
-}
-
-// convertAccessPointInfoToOPG converts v1beta1.AccessPointInfo slice to opgmodels.AccessPointInfo slice
-// Kept for backward compatibility if needed for other use cases.
-func (r *ApplicationInstanceReconciler) convertAccessPointInfoToOPG(
-	apiInfoList []v1beta1.AccessPointInfo,
-) []opgmodels.AccessPointInfo {
-	result := []opgmodels.AccessPointInfo{}
-	for _, api := range apiInfoList {
-		accessPoints := []opgmodels.AccessPoints{}
-		for _, ap := range api.AccessPoints {
-			accessPoints = append(accessPoints, opgmodels.AccessPoints{
+	accessPoints := make([]opgmodels.AccessPointInfo, len(apiInfoList))
+	for i, api := range apiInfoList {
+		list := make([]opgmodels.AccessPoints, len(api.AccessPoints))
+		for j, ap := range api.AccessPoints {
+			list[j] = opgmodels.AccessPoints{
 				Port:          ap.Port,
 				Fqdn:          ap.Fqdn,
 				Ipv4Addresses: ap.Ipv4Addresses,
 				Ipv6Addresses: ap.Ipv6Addresses,
-			})
+			}
 		}
-		result = append(result, opgmodels.AccessPointInfo{
+		accessPoints[i] = opgmodels.AccessPointInfo{
 			InterfaceId:  api.InterfaceId,
-			AccessPoints: accessPoints,
-		})
+			AccessPoints: list,
+		}
 	}
-	return result
+
+	return accessPoints
 }
