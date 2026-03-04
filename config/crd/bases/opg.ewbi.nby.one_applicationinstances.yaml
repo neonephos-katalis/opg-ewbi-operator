@@ -90,7 +90,9 @@ spec:
                               type: string
                             type: array
                           port:
-                            type: integer
+                            items:
+                              type: integer
+                            type: array
                         type: object
                       type: array
                     interfaceId:
