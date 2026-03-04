@@ -25,39 +25,39 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
 1. For the **value.yaml** in OPG-EWBI-OPERATOR (**dist/chart**), you need to change the repository parameter values (line 7 and line 49) as follows:
     
     **For Linux/ARM64**:
-    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator```
-    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api```
+    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64```
+    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-arm64```
     
     **For Linux/AMD64**:
-    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd```
-    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd```
+    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64```
+    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd64```
 
 2. For the **makefile** in OPG-EWBI-OPERATOR, you need to change the line 1-3 as follwos:
 
     **For Linux/ARM64**:
-    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos```
-    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
+    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64:v1.0.0```
+    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0```
     - Line 3: ```PLATFORM ?= linux/arm64```
       
     **For Linux/AMD64**:
-    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
-    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
+    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd-64:v1.0.0```
+    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd-64:v1.0.0```
     - Line 3: ```PLATFORM ?= linux/amd64```
 
 3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow and changes the line 10:
 
     **For Linux/ARM64**:
      - Uncommnet the lines 5,19,28 and 36 and comment the lines 6,20,29 ans 37
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
+     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0```
        
     **For Linux/AMD64**:
      - Uncomment the lines 6,20,29 and 37 and comment the lines 5,19,28 and 36
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
+     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0```
  
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed. 
 
-**⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
+**⚠️ Currently, the file are setted for Linux/amd64 platforms. If you need to build images for Linux/arm64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
  
 1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
     
@@ -71,17 +71,18 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
     ```bash
     chmod 600 ~/.netrc
     ```
-2. Download the OPG-EWBI-OPERATOR folder: https://github.com/neonephos-katalis/opg-ewbi-operator
-3. After the download, open this folder via terminal and exec the following command: 
-  ```make docker-build-controller ```
+2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
+4. After the download, open this folder via terminal and exec the following command: 
+  ```make docker-build-controller```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
-4. Download the OPG-EWBI-API folder: https://github.com/neonephos-katalis/opg-ewbi-api
-5. After the download, open this folder via terminale and exec the following command:
+5. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
+6. After the download, open this folder via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
-6. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
+7. ```docker login ghcr.io```
+8. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
@@ -98,11 +99,19 @@ After this command the OPG-EWBI-CONTROLLER and OPG-EWBI-API, if everything goes 
 By running the command kubectl get pods -A, you should see two pods running in the federation namespace with names like nearbyone-federation-api-XXX and opg-ewbi-operator-controller-manager-XXX.
 
 Use the following commands only if we you want to push the latest version of the controller and the api in github pacakge
-  ```bash
-  docker push ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
-  docker push ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
-  ```
 
+**For Linux/ARM64:**
+```bash
+docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64:v1.0.0
+docker push ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0
+```
+      
+**For Linux/AMD64:** **NOW IMAGES AVAILABLE**
+```bash
+docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64:v1.0.0
+docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
+```
+      
 The Nearby code is written to work in both role (HOST and GUEST).
 If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 5-6 in both namespace (federation-host and federation-guest)
 
@@ -122,7 +131,7 @@ helm install federationguest dist/chart -n federation-guest \
 **Choose the names you prefer for namespaces and helm; those listed here are provided as examples.**
 
 
-Prerequirement:
+### Test:
 
 Create Client ID in identity provider and store in a federation on the host. This is not yet the establishment of the federation: This is done to link the federation to the clientID.
 

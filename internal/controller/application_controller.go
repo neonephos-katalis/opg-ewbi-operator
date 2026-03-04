@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"time"
 
 	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -135,22 +134,42 @@ func (r *ApplicationReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
-			log.Info("error creating app")
-			a.Status.Phase = v1beta1.ApplicationPhaseError
+		if a.Status.State == "" {
+			if err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
+				log.Info("error creating app")
+				a.Status.Phase = v1beta1.ApplicationPhaseError
+				a.Status.State = v1beta1.ApplicationStateFailed
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+				return ctrl.Result{}, nil
+			}
+		} else {
+			log.Info("+++++++++++++++++++ App status is ", "state", a.Status.State)
+		}
+	} else {
+		if a.Status.State == "" {
+			a.Status.Phase = v1beta1.ApplicationPhaseReady
+			a.Status.State = v1beta1.ApplicationStatePending
+			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
+				return ctrl.Result{}, upErr
 			}
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		} else {
+			log.Info("New CR state", "state", a.Status.State)
+			if err := r.handleExternalAppCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error handling app callback")
+				a.Status.Phase = v1beta1.ApplicationPhaseError
+				a.Status.State = v1beta1.ApplicationStateFailed
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+			}
 		}
-	} else {
-		a.Status.Phase = v1beta1.ApplicationPhaseReady
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
-		}
-		return ctrl.Result{}, nil
 	}
 	return ctrl.Result{}, nil
 }
@@ -226,40 +245,118 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		log.Info("Created", "response", res)
-
+		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ApplicationPhaseReady
-
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, "Error Updating resource", "app", a.Name)
-			return upErr
+		switch statusCode {
+		case 202:
+			a.Status.State = v1beta1.ApplicationStatePending
+		case 200:
+			a.Status.State = v1beta1.ApplicationStateOnboarded
+		default:
+			a.Status.State = v1beta1.ApplicationStatePending
 		}
-
+		log.Info("Created external application", "phase", a.Status.Phase, "state", a.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
 		return errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "artefact not found" {
 			return errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 	default:
-		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
+	}
+	upErr := r.Status().Update(ctx, a)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
+	}
+	return nil
+}
+
+func (r *ApplicationReconciler) handleExternalAppCallback(
+	ctx context.Context, a *v1beta1.Application, feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping App callback")
+		return nil
+	}
+	log.Info("Sending App callback to Guest",
+		"appId", a.Labels[v1beta1.ExternalIdLabel],
+		"state", a.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+	labels := a.GetLabels()
+	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
+	callbackBody := opgmodels.AppStatusCallbackLinkJSONRequestBody{
+		AppId:               opgmodels.AppIdentifier(a.Labels[v1beta1.ExternalIdLabel]),
+		FederationContextId: &fedId,
+		StatusInfo: []struct {
+			OnboardStatusInfo opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo `json:"onboardStatusInfo"`
+			ZoneId            opgmodels.ZoneIdentifier                                           `json:"zoneId"`
+		}{
+			{
+				OnboardStatusInfo: opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo(a.Status.State),
+				ZoneId:            "",
+			},
+		},
+	}
+	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
+	res, err := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel],
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	).AppStatusCallbackLinkWithResponse(
+		context.TODO(),
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+		callbackBody)
+	if err != nil {
+		log.Error(err, "error sending App callback")
+		return err
+	}
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("Successfully sent App callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+	default:
+		log.Info("############# App callback returned unexpected status", "status", statusCode, "body", string(res.Body))
 	}
 	return nil
 }
