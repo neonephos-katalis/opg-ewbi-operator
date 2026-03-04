@@ -301,7 +301,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
-	accessPointInfo := opgmodels.AccessPointInfo{}
+	accessPointInfo := []opgmodels.AccessPointInfo{}
 	for _, ap := range a.Status.AccessPointInfo {
 		list := make([]opgmodels.AccessPoints, len(ap.AccessPoints))
 		for i, item := range ap.AccessPoints {
@@ -349,28 +349,6 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 		log.Info("############# ApplicationInstance callback returned unexpected status", "status", statusCode, "body", string(res.Body))
 	}
 	return nil
-}
-
-// convertAccessPointInfoToOPGSingle converts v1beta1.AccessPointInfo slice to a single *opgmodels.AccessPointInfo
-// For callbacks, we take the first AccessPointInfo if available.
-func convertAccessPointInfo(apInfo []v1beta1.AccessPointInfo) opgmodels.AccessPointInfo {
-	accessPointInfo := opgmodels.AccessPointInfo{}
-	for _, ap := range apInfo {
-		list := make([]opgmodels.AccessPoints, len(ap.AccessPoints))
-		for i, item := range ap.AccessPoints {
-			list[i] = opgmodels.AccessPoints{
-				Port:          item.Port,
-				Fqdn:          item.Fqdn,
-				Ipv4Addresses: item.Ipv4Addresses,
-				Ipv6Addresses: item.Ipv6Addresses,
-			}
-		}
-		accessPointInfo = append(accessPointInfo, opgmodels.AccessPointInfo{
-			InterfaceId:  ap.InterfaceId,
-			AccessPoints: list,
-		})
-	}
-	return accessPointInfo
 }
 
 func (r *ApplicationInstanceReconciler) handleExternalAppInstDeletion(
