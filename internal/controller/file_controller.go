@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -130,29 +129,38 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if result, err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
-			log.Info("error creating file")
-			f.Status.Phase = v1beta1.FilePhaseError
-			upErr := r.Status().Update(ctx, f.DeepCopy())
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if f.Status.Phase == "" {
+			if err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
+				log.Info("error creating file")
+				f.Status.Phase = v1beta1.FilePhaseError
+				upErr := r.Status().Update(ctx, f.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+				return ctrl.Result{}, nil
 			}
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		} else {
-			return result, nil
+			log.Info("+++++++++++++++++++ File status is ", "state", f.Status.State)
 		}
 	} else {
 		if f.Status.Phase == "" {
 			f.Status.Phase = v1beta1.FilePhaseReady
 			f.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", f.Status.Phase, "state", f.Status.State)
-		} else {
-			log.Info("Existing CR state", "phase", f.Status.Phase, "state", f.Status.State)
-		}
-		if f.GetDeletionTimestamp().IsZero() {
 			upErr := r.Status().Update(ctx, f.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
+		} else {
+			log.Info("New CR state", "state", f.Status.State)
+			if err := r.handleExternalFileCallback(ctx, &f, feder); err != nil {
+				log.Error(err, "error handling file callback")
+				f.Status.Phase = v1beta1.FilePhaseError
+				f.Status.State = "Error"
+				upErr := r.Status().Update(ctx, f.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
 			}
 		}
 		return ctrl.Result{}, nil
@@ -172,7 +180,7 @@ func (r *FileReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *FileReconciler) handleExternalFileCreation(
 	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation,
-) (ctrl.Result, error) {
+) error {
 	log := log.FromContext(ctx)
 	fileReqBody := opgmodels.UploadFileMultipartBody{
 		AppProviderId: f.Spec.AppProviderId,
@@ -199,7 +207,7 @@ func (r *FileReconciler) handleExternalFileCreation(
 	body, contentType, err := multipart.SerializeUploadFileMultipartBody(fileReqBody)
 	if err != nil {
 		log.Error(err, "error serializing multipart body")
-		return ctrl.Result{}, err
+		return err
 	}
 	res, err := r.GetOPGClient(
 		feder.Labels[v1beta1.ExternalIdLabel],
@@ -212,59 +220,118 @@ func (r *FileReconciler) handleExternalFileCreation(
 		body)
 	if err != nil {
 		log.Error(err, "error creating file")
-		return ctrl.Result{}, err
+		return err
 	}
 	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("FILE - Status code 2xx received from OPG API", "status", statusCode)
 		f.Status.Phase = v1beta1.FilePhaseReady
-		var result ctrl.Result
 		switch statusCode {
 		case 202:
-			f.Status.State = "Pending"
-			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+			f.Status.State = v1beta1.FileStatePending
 		case 200:
-			f.Status.State = "Ready"
+			f.Status.State = v1beta1.FileStateReady
 			result = ctrl.Result{}
 		default:
-			f.Status.State = "Pending"
-			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+			f.Status.State = v1beta1.FileStatePending
 		}
-		log.Info("Created/Updated external file", "phase", f.Status.Phase, "state", f.Status.State)
-		if err := r.Status().Update(ctx, f); err != nil {
-			return ctrl.Result{}, err
-		}
-		return result, nil
+		log.Info("Created external file", "phase", f.Status.Phase, "state", f.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
+		return errors.New(*res.ApplicationproblemJSON400.Detail)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	case statusCode == 409:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	case statusCode == 422:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	case statusCode == 500:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+		// this should be deleted when API returns a 400 for this case
+		if *res.ApplicationproblemJSON500.Detail == "file not found" {
+			return errors.New(*res.ApplicationproblemJSON500.Detail)
+		}
+	case statusCode == 503:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	case statusCode == 520:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	default:
+		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
+	}
+	upErr := r.Status().Update(ctx, f)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+	}
+	return nil
+}
+
+func (r *FileReconciler) handleExternalFileCallback(
+	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping App callback")
+		return nil
+	}
+	log.Info("Sending App callback to Guest",
+		"appId", f.Labels[v1beta1.ExternalIdLabel],
+		"state", f.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+	labels := f.GetLabels()
+	callbackBody := opgmodels.FileStatusCallbackLinkJSONRequestBody{
+		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
+		StatusInfo:          f.Status.State,
+	}
+	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
+	res, err := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel],
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	).FileStatusCallbackLinkWithResponse(
+		context.TODO(),
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+		callbackBody)
+
+	if err != nil {
+		log.Error(err, "error sending App callback")
+		return err
+	}
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("****************** Successfully sent File callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-	case statusCode == 409:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-	case statusCode == 422:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-	case statusCode == 500:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		// this should be deleted when API returns a 400 for this case
-		if *res.ApplicationproblemJSON500.Detail == "file not found" {
-			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
-		}
-	case statusCode == 503:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-	case statusCode == 520:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		f.Status.Phase = v1beta1.FilePhaseReady
-		f.Status.State = "Error"
-		r.Status().Update(ctx, f)
-		//log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		log.Info("############# File callback returned unexpected status", "status", statusCode, "body", string(res.Body))
 	}
-	return ctrl.Result{}, nil
+	return nil
 }
 
 func (r *FileReconciler) handleExternalFileDeletion(

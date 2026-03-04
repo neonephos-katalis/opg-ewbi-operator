@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"time"
 
 	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -103,13 +102,11 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			return ctrl.Result{}, nil
 		}
 	} else {
-		latest := &v1beta1.Artefact{}
-		r.Get(ctx, client.ObjectKeyFromObject(&a), latest)
 		if isGuest {
-			if err := r.handleExternalArtefactDeletion(ctx, latest, feder); err != nil {
+			if err := r.handleExternalArtefactDeletion(ctx, &a, feder); err != nil {
 				log.Error(err, "error deleting Artefact")
-				latest.Status.Phase = v1beta1.ArtefactPhaseError
-				upErr := r.Status().Update(ctx, latest)
+				a.Status.Phase = v1beta1.ArtefactPhaseError
+				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
@@ -130,29 +127,39 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if result, err := r.handleExternalArtefactCreation(ctx, &a, feder); err != nil {
-			log.Info("error creating Artefact")
-			a.Status.Phase = v1beta1.ArtefactPhaseError
-			upErr := r.Status().Update(ctx, &a)
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if a.Status.State == "" {
+			if err := r.handleExternalArtefactCreation(ctx, &a, feder); err != nil {
+				log.Info("error creating Artefact")
+				a.Status.Phase = v1beta1.ArtefactPhaseError
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
+				return ctrl.Result{}, nil
 			}
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		} else {
-			return result, nil
+			log.Info("+++++++++++++++++++ Artefact status is ", "state", a.Status.State)
 		}
 	} else {
 		if a.Status.Phase == "" {
 			a.Status.Phase = v1beta1.ArtefactPhaseReady
 			a.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		} else {
-			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		}
-		if a.GetDeletionTimestamp().IsZero() {
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
+				return ctrl.Result{}, upErr
+			}
+		} else {
+			log.Info("New CR state", "state", a.Status.State)
+			if err := r.handleExternalArtefactCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error handling artefact callback")
+				a.Status.Phase = v1beta1.ArtefactPhaseError
+				a.Status.State = v1beta1.ArtefactStateError
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
 			}
 		}
 		return ctrl.Result{}, nil
@@ -169,7 +176,7 @@ func (r *ArtefactReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	ctx context.Context, a *v1beta1.Artefact, feder *v1beta1.Federation,
-) (ctrl.Result, error) {
+) error {
 	log := log.FromContext(ctx)
 
 	components := []opgmodels.ComponentSpec{}
@@ -216,7 +223,7 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	body, contentType, err := multipart.SerializeUploadArtefactMultipartBody(reqBody)
 	if err != nil {
 		log.Error(err, "error serializing multipart body")
-		return ctrl.Result{}, err
+		return err
 	}
 
 	res, err := r.GetOPGClient(
@@ -231,7 +238,7 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 
 	if err != nil {
 		log.Error(err, "error creating Artefact")
-		return ctrl.Result{}, err
+		return err
 	}
 
 	statusCode := res.StatusCode()
@@ -239,42 +246,41 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
-
 		a.Status.Phase = v1beta1.ArtefactPhaseReady
-		var result ctrl.Result
 		switch statusCode {
 		case 202:
-			a.Status.State = "Pending"
-			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+			a.Status.State = v1beta1.ArtefactStateReconciling
 		case 200:
-			a.Status.State = "Ready"
-			result = ctrl.Result{}
+			a.Status.State = v1beta1.ArtefactStateReady
 		default:
-			a.Status.State = "Pending"
-			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+			a.Status.State = v1beta1.ArtefactStateReconciling
 		}
 		log.Info("Created/Updated external artefact", "phase", a.Status.Phase, "state", a.Status.State)
-		if err := r.Status().Update(ctx, a); err != nil {
-			return ctrl.Result{}, err
-		}
-		return result, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
+		return errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		a.Status.State = v1beta1.ArtefactStateError
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		a.Status.State = v1beta1.ArtefactStateError
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
+		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		a.Status.State = v1beta1.ArtefactStateError
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
+		a.Status.Phase = v1beta1.ArtefactPhaseReady
+		a.Status.State = v1beta1.ArtefactStateError
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "file not found" {
-			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
+			return errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
@@ -282,10 +288,62 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
 		a.Status.Phase = v1beta1.ArtefactPhaseReady
-		a.Status.State = "Error"
-		r.Status().Update(ctx, a)
+		a.Status.State = v1beta1.ArtefactStateError
 	}
-	return ctrl.Result{}, nil
+	upErr := r.Status().Update(ctx, a)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
+	}
+	return nil
+}
+
+func (r *ArtefactReconciler) handleExternalArtefactCallback(
+	ctx context.Context, a *v1beta1.Artefact, feder *v1beta1.Federation,
+) error {
+	log := log.FromContext(ctx)
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping App callback")
+		return nil
+	}
+	log.Info("Sending App callback to Guest",
+		"appId", a.Labels[v1beta1.ExternalIdLabel],
+		"state", a.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+	labels := a.GetLabels()
+	callbackBody := opgmodels.ArtefactStatusCallbackLinkJSONRequestBody{
+		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
+		StatusInfo:          a.Status.State,
+	}
+	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
+	res, err := r.GetOPGClient(
+		feder.Labels[v1beta1.ExternalIdLabel],
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	).ArtefactStatusCallbackLinkWithResponse(
+		context.TODO(),
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+		callbackBody)
+
+	if err != nil {
+		log.Error(err, "error sending App callback")
+		return err
+	}
+	statusCode := res.StatusCode()
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		log.Info("****************** Successfully sent Artefact callback to Guest", "status", statusCode)
+	case statusCode == 400:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+	case statusCode == 401:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+	case statusCode == 404:
+		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+	default:
+		log.Info("############# Artefact callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+	}
+	return nil
 }
 
 func (r *ArtefactReconciler) handleExternalArtefactDeletion(

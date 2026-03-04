@@ -19,8 +19,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"reflect"
-	"time"
 
 	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -132,46 +130,41 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if a.Status.Phase == "Ready" && (a.Status.State == "Pending" || a.Status.State == "Ready") && a.Status.AppInstanceId != "" {
+		if a.Status.State == "" {
 			log.Info("AppInst is in Pending state, getting access point info")
-			if result, err := r.handleExternalAppInstGet(ctx, &a, feder); err != nil {
-				log.Error(err, "error getting appInst info before deletion")
+			if err := r.handleExternalAppInstCreation(ctx, &a, feder); err != nil {
+				log.Error(err, "error creating appInst info before deletion")
 				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
 				return ctrl.Result{}, err
-			} else {
-				return result, nil
 			}
 		} else {
-			if result, err := r.handleExternalAppInstCreation(ctx, &a, feder); err != nil {
-				log.Info("error creating appInst")
-				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
-				upErr := r.Status().Update(ctx, a.DeepCopy())
-				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
-				}
-				return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-			} else {
-				return result, nil
-			}
+			log.Info("+++++++++++++++++++ AppInst status is ", "state", a.Status.State)
 		}
 	} else {
 		if a.Status.Phase == "" {
 			a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
-			a.Status.State = "Pending"
+			a.Status.State = v1beta1.ApplicationInstanceStateReady
 			a.Status.AppInstanceId = a.Labels[v1beta1.ExternalIdLabel]
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
-		} else {
-			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
-		}
-		if a.GetDeletionTimestamp().IsZero() {
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
+				return ctrl.Result{}, upErr
 			}
+		} else {
+			log.Info("New CR state", "state", a.Status.State)
+			if err:= r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error handling appInst callback")
+				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+				a.Status.State = v1beta1.ApplicationInstanceStateFailed
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
 		}
 		return ctrl.Result{}, nil
 	}
@@ -187,7 +180,7 @@ func (r *ApplicationInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error
 
 func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 	ctx context.Context, a *v1beta1.ApplicationInstance, feder *v1beta1.Federation,
-) (ctrl.Result, error) {
+) error {
 	log := log.FromContext(ctx)
 
 	zone := struct {
@@ -222,7 +215,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 
 	if err != nil {
 		log.Error(err, "error creating appInst")
-		return ctrl.Result{}, err
+		return err
 	}
 
 	statusCode := res.StatusCode()
@@ -230,29 +223,36 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APP INSTANCES - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
-		a.Status.State = "Pending"
-		log.Info("******************************", "JSON200", res.JSON200)
+		a.Status.State = v1beta1.ApplicationInstanceStatePending
 		a.Status.AppInstanceId = a.Name //"app-inst-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
-		log.Info("Created/Updated external application instances", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
-		r.Status().Update(ctx, a)
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		log.Info("Created external application instances", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
+
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
+		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
+		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
+		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "application not found" {
-			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
+			return errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
@@ -260,106 +260,109 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
 		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
-		a.Status.State = "Error"
-		r.Status().Update(ctx, a)
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	}
-	return ctrl.Result{}, nil
+	upErr := r.Status().Update(ctx, a)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
+	}
+	return nil
 }
 
-func (r *ApplicationInstanceReconciler) handleExternalAppInstGet(
-	ctx context.Context, a *v1beta1.ApplicationInstance, feder *v1beta1.Federation,
-) (ctrl.Result, error) {
+func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
+	ctx context.Context,
+	a *v1beta1.ApplicationInstance,
+	feder *v1beta1.Federation,
+) error {
 	log := log.FromContext(ctx)
-	log.Info("Getting external appInst details")
+
+	// Check if callback is configured
+	if feder.Spec.Partner.StatusLink == "" {
+		log.Info("No callback StatusLink configured in Federation, skipping callback")
+		return nil
+	}
+
+	log.Info("Sending AppInst callback to Guest",
+		"appInstanceId", a.Status.AppInstanceId,
+		"state", a.Status.State,
+		"statusLink", feder.Spec.Partner.StatusLink)
+
+	// Build callback body with current status
+	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
+	state := opgmodels.InstanceState(a.Status.State) 
+	labels := a.GetLabels()
+	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
+		AppId:               a.Spec.AppId,
+		AppInstanceId:       labels["opg.ewbi.nby.one/id"],
+		FederationContextId: &a.Labels[v1beta1.FederationContextIdLabel], extraLabels),
+		ZoneId:              a.Spec.ZoneInfo.ZoneId,
+	}
+	callbackBody.AppInstanceInfo.AppInstanceState = &state
+	callbackBody.AppInstanceInfo.AccesspointInfo = convertAccessPointInfo(a.Status.AccessPointInfo)
+
+	// Get callback client (pointing to Guest's callback URL)
+	// Using a different cache key to separate callback client from regular client
 	res, err := r.GetOPGClient(
 		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.GuestPartnerCredentials.TokenUrl,
-		feder.Spec.GuestPartnerCredentials.ClientId,
-	).GetAppInstanceDetailsWithResponse(
+		feder.Spec.Partner.StatusLink,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+	)t.AppInstCallbackLinkWithResponse(
 		context.TODO(),
-		feder.Status.FederationContextId,
-		a.Spec.AppId,
-		a.Status.AppInstanceId,
-		a.Spec.ZoneInfo.ZoneId,
+		feder.Spec.Partner.CallbackCredentials.ClientId,
+		callbackBody,
 	)
 	if err != nil {
-		log.Error(err, "error getting appInst info")
-		return ctrl.Result{}, err
+		log.Error(err, "Error while sending applicationinstance callback")
+		return err
 	}
-	statusCode := res.StatusCode()
 
+	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		log.Info("********APP INSTANCES - ACCESS POINT INFO - Status code 2xx received from OPG API", "status", statusCode)
-		if res.JSON200.AppInstanceState != nil {
-			oldStatus := a.Status.DeepCopy()
-			newState := v1beta1.ApplicationInstanceState(*res.JSON200.AppInstanceState)
-			a.Status.State = newState
-			log.Info("°°°°°°°°°°°°°°°°°°°°APP INSTANCES", "JSON200", res.JSON200)
-			if res.JSON200.AppInstanceState != nil {
-				log.Info("APP INSTANCES - Updating Access Point Info in status")
-				newAccessPoints := []v1beta1.AccessPointInfo{}
-				for _, info := range res.JSON200.AccessPointInfo {
-					apInfo := v1beta1.AccessPointInfo{
-						InterfaceId:  info.InterfaceId,
-						AccessPoints: []v1beta1.AccessPoints{},
-					}
-					for _, ap := range info.AccessPoints {
-						apInfo.AccessPoints = append(apInfo.AccessPoints, v1beta1.AccessPoints{
-							Port:          int(ap.Port),
-							Fqdn:          ap.Fqdn,
-							Ipv4Addresses: ap.Ipv4Addresses,
-							Ipv6Addresses: ap.Ipv6Addresses,
-						})
-					}
-					newAccessPoints = append(newAccessPoints, apInfo)
-				}
-				a.Status.AccessPointInfo = newAccessPoints
-				if !reflect.DeepEqual(oldStatus.AccessPointInfo, a.Status.AccessPointInfo) || oldStatus.State != a.Status.State {
-					log.Info("APP INSTANCES - Status changed, updating resource")
-					if err := r.Status().Update(ctx, a); err != nil {
-						log.Error(err, "error updating appInst status")
-						return ctrl.Result{}, err
-					}
-				} else {
-					log.Info("APP INSTANCES - Status unchanged, skipping update")
-				}
-				return ctrl.Result{RequeueAfter: 60 * time.Second}, nil
-			} else {
-				return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-			}
-		} else {
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-		}
+		log.Info("****************** Successfully sent ApplicationInstance callback to Guest", "status", statusCode)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-	case statusCode == 409:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-	case statusCode == 422:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-	case statusCode == 500:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		// this should be deleted when API returns a 400 for this case
-		if *res.ApplicationproblemJSON500.Detail == "application not found" {
-			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
-		}
-	case statusCode == 503:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-	case statusCode == 520:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
-		a.Status.State = "Error"
-		r.Status().Update(ctx, a)
+		log.Info("############# ApplicationInstance callback returned unexpected status", "status", statusCode, "body", string(res.Body))
 	}
-	return ctrl.Result{}, nil
+	return nil
 }
+
+// convertAccessPointInfoToOPGSingle converts v1beta1.AccessPointInfo slice to a single *opgmodels.AccessPointInfo
+// For callbacks, we take the first AccessPointInfo if available.
+func convertAccessPointInfo(apiInfoList []v1beta1.AccessPointInfo) []opgmodels.AccessPointInfo {
+	if len(apiInfoList) == 0 {
+		return nil
+	}
+	// Take the first AccessPointInfo for the callback
+	accessPoints := make([]opgmodels.AccessPointInfo, len(apiInfoList))
+	for i, api := range apiInfoList {
+		list := make([]opgmodels.AccessPoints, len(api.AccessPoints))
+		for j, ap := range api.AccessPoints {
+			list[j] = opgmodels.AccessPoints{
+				Port:          ap.Port,
+				Fqdn:          ap.Fqdn,
+				Ipv4Addresses: ap.Ipv4Addresses,
+				Ipv6Addresses: ap.Ipv6Addresses,
+			}
+		}
+		accessPoints[i] = opgmodels.AccessPointInfo{
+			InterfaceId:  api.InterfaceId,
+			AccessPoints: list,
+		}
+	}
+	return accessPoints
+}
+
+
+
+
+
 
 func (r *ApplicationInstanceReconciler) handleExternalAppInstDeletion(
 	ctx context.Context, appInst *v1beta1.ApplicationInstance, feder *v1beta1.Federation,
