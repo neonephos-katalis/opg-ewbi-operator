@@ -318,10 +318,10 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
 	labels := a.GetLabels()
-
+	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.AppStatusCallbackLinkJSONRequestBody{
 		AppId:               opgmodels.AppIdentifier(a.Labels[v1beta1.ExternalIdLabel]),
-		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
+		FederationContextId: &fedId,
 		StatusInfo: []struct {
 			OnboardStatusInfo opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo `json:"onboardStatusInfo"`
 			ZoneId            opgmodels.ZoneIdentifier                                           `json:"zoneId"`

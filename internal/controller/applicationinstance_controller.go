@@ -296,10 +296,11 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
 	state := opgmodels.InstanceState(a.Status.State)
 	labels := a.GetLabels()
+	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
 		AppId:               a.Spec.AppId,
 		AppInstanceId:       labels["opg.ewbi.nby.one/id"],
-		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
+		FederationContextId: &fedId,
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
