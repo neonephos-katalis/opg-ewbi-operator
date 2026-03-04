@@ -6,7 +6,6 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
   name: opg-ewbi-manager-role
-  namespace: foo
 rules:
 - apiGroups:
   - opg.ewbi.nby.one

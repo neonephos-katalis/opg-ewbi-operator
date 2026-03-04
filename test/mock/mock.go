@@ -1264,6 +1264,41 @@ func (c *MockedOpgAPI) AppInstCallbackLinkWithResponse(
 ) (*opgc.AppInstCallbackLinkResponse, error) {
 	panic(notImplementedMsg)
 }
+func (c *MockedOpgAPI) ArtefactStatusCallbackLinkWithResponse(
+	ctx context.Context,
+	federationCallbackId opgmodels.FederationCallbackId,
+	body models.ArtefactStatusCallbackLinkJSONRequestBody,
+	reqEditors ...opgc.RequestEditorFn,
+) (*opgc.ArtefactStatusCallbackLinkResponse, error) {
+	panic(notImplementedMsg)
+}
+func (c *MockedOpgAPI) ArtefactStatusCallbackLinkWithBodyWithResponse(
+	ctx context.Context,
+	federationCallbackId opgmodels.FederationCallbackId,
+	contentType string,
+	body io.Reader,
+	reqEditors ...opgc.RequestEditorFn,
+) (*opgc.ArtefactStatusCallbackLinkResponse, error) {
+	panic(notImplementedMsg)
+}
+func (c *MockedOpgAPI) FileStatusCallbackLinkWithBodyWithResponse(
+	ctx context.Context,
+	federationCallbackId opgmodels.FederationCallbackId,
+	contentType string,
+	body io.Reader,
+	reqEditors ...opgc.RequestEditorFn,
+) (*opgc.FileStatusCallbackLinkResponse, error) {
+	panic(notImplementedMsg)
+}
+
+func (c *MockedOpgAPI) FileStatusCallbackLinkWithResponse(
+	ctx context.Context,
+	federationCallbackId opgmodels.FederationCallbackId,
+	body models.FileStatusCallbackLinkJSONRequestBody,
+	reqEditors ...opgc.RequestEditorFn,
+) (*opgc.FileStatusCallbackLinkResponse, error) {
+	panic(notImplementedMsg)
+}
 
 // AppStatusCallbackLinkWithBodyWithResponse request with arbitrary body returning *AppStatusCallbackLinkResponse
 func (c *MockedOpgAPI) AppStatusCallbackLinkWithBodyWithResponse(

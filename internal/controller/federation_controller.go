@@ -310,7 +310,7 @@ func (r *FederationReconciler) handleExternalFederationDeletion(
 func (r *FederationReconciler) handleAcceptExternalAZ(ctx context.Context, f *v1beta1.Federation) error {
 	log := log.FromContext(ctx)
 
-	if len(f.Status.OfferedAvailabilityZones) != 1 {
+	if len(f.Status.OfferedAvailabilityZones) == 0 {
 		log.Info("No AZ was offered, no AZ available to be accepted")
 		return nil
 	}
