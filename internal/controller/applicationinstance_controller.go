@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )
 
@@ -173,7 +174,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 // SetupWithManager sets up the controller with the Manager.
 func (r *ApplicationInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1beta1.ApplicationInstance{}).
+		For(&opgewbiv1beta1.ApplicationInstance{}).
 		Named("applicationinstance").
 		Complete(r)
 }
