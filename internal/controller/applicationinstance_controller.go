@@ -301,7 +301,23 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
-	callbackBody.AppInstanceInfo.AccessPointInfo = &(convertAccessPointInfo(a.Status.AccessPointInfo)[0])
+	accessPointInfo := opgmodels.AccessPointInfo{}
+	for _, ap := range a.Status.AccessPointInfo {
+		list := make([]opgmodels.AccessPoints, len(ap.AccessPoints))
+		for i, item := range ap.AccessPoints {
+			list[i] = opgmodels.AccessPoints{
+				Port:          item.Port,
+				Fqdn:          item.Fqdn,
+				Ipv4Addresses: item.Ipv4Addresses,
+				Ipv6Addresses: item.Ipv6Addresses,
+			}
+		}
+		accessPointInfo = append(accessPointInfo, opgmodels.AccessPointInfo{
+			InterfaceId:  ap.InterfaceId,
+			AccessPoints: list,
+		})
+	}
+	callbackBody.AppInstanceInfo.AccessPointInfo = accessPointInfo
 
 	// Get callback client (pointing to Guest's callback URL)
 	// Using a different cache key to separate callback client from regular client
@@ -337,28 +353,24 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 
 // convertAccessPointInfoToOPGSingle converts v1beta1.AccessPointInfo slice to a single *opgmodels.AccessPointInfo
 // For callbacks, we take the first AccessPointInfo if available.
-func convertAccessPointInfo(apiInfoList []v1beta1.AccessPointInfo) []opgmodels.AccessPointInfo {
-	if len(apiInfoList) == 0 {
-		return nil
-	}
-	// Take the first AccessPointInfo for the callback
-	accessPoints := make([]opgmodels.AccessPointInfo, len(apiInfoList))
-	for i, api := range apiInfoList {
-		list := make([]opgmodels.AccessPoints, len(api.AccessPoints))
-		for j, ap := range api.AccessPoints {
-			list[j] = opgmodels.AccessPoints{
-				Port:          ap.Port,
-				Fqdn:          ap.Fqdn,
-				Ipv4Addresses: ap.Ipv4Addresses,
-				Ipv6Addresses: ap.Ipv6Addresses,
+func convertAccessPointInfo(apInfo []v1beta1.AccessPointInfo) opgmodels.AccessPointInfo {
+	accessPointInfo := opgmodels.AccessPointInfo{}
+	for _, ap := range apInfo {
+		list := make([]opgmodels.AccessPoints, len(ap.AccessPoints))
+		for i, item := range ap.AccessPoints {
+			list[i] = opgmodels.AccessPoints{
+				Port:          item.Port,
+				Fqdn:          item.Fqdn,
+				Ipv4Addresses: item.Ipv4Addresses,
+				Ipv6Addresses: item.Ipv6Addresses,
 			}
 		}
-		accessPoints[i] = opgmodels.AccessPointInfo{
-			InterfaceId:  api.InterfaceId,
+		accessPointInfo = append(accessPointInfo, opgmodels.AccessPointInfo{
+			InterfaceId:  ap.InterfaceId,
 			AccessPoints: list,
-		}
+		})
 	}
-	return accessPoints
+	return accessPointInfo
 }
 
 func (r *ApplicationInstanceReconciler) handleExternalAppInstDeletion(
