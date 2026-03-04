@@ -145,7 +145,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			log.Info("+++++++++++++++++++ AppInst status is ", "state", a.Status.State)
 		}
 	} else {
-		if a.Status.Phase == "" {
+		if a.Status.State == "" {
 			a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 			a.Status.State = v1beta1.ApplicationInstanceStateReady
 			a.Status.AppInstanceId = a.Labels[v1beta1.ExternalIdLabel]

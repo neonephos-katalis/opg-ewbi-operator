@@ -141,7 +141,7 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			log.Info("+++++++++++++++++++ Artefact status is ", "state", a.Status.State)
 		}
 	} else {
-		if a.Status.Phase == "" {
+		if a.Status.State == "" {
 			a.Status.Phase = v1beta1.ArtefactPhaseReady
 			a.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)

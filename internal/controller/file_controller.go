@@ -129,7 +129,7 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if f.Status.Phase == "" {
+		if f.Status.State == "" {
 			if err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
 				log.Info("error creating file")
 				f.Status.Phase = v1beta1.FilePhaseError
@@ -143,7 +143,7 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			log.Info("+++++++++++++++++++ File status is ", "state", f.Status.State)
 		}
 	} else {
-		if f.Status.Phase == "" {
+		if f.Status.State == "" {
 			f.Status.Phase = v1beta1.FilePhaseReady
 			f.Status.State = "Pending"
 			log.Info("Initialized new CR state", "phase", f.Status.Phase, "state", f.Status.State)

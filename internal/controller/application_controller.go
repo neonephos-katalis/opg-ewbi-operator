@@ -149,7 +149,7 @@ func (r *ApplicationReconciler) Reconcile(
 			log.Info("+++++++++++++++++++ App status is ", "state", a.Status.State)
 		}
 	} else {
-		if a.Status.Phase == "" {
+		if a.Status.State == "" {
 			a.Status.Phase = v1beta1.ApplicationPhaseReady
 			a.Status.State = v1beta1.ApplicationStatePending
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
