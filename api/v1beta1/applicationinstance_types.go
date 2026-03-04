@@ -96,7 +96,7 @@ type AccessPoints struct {
 	Port          int      `json:"port,omitempty"`
 	Fqdn          string   `json:"fqdn,omitempty"`
 	Ipv4Addresses []string `json:"ipv4Addresses,omitempty"`
-	Ipv6Addresses []string `json:"ipv6Addreses,omitempty"`
+	Ipv6Addresses []string `json:"ipv6Addresses,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -163,8 +163,8 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 				}
 			}
 		}
-		return ctrl.Result{}, nil
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -232,7 +232,6 @@ func (r *FileReconciler) handleExternalFileCreation(
 			f.Status.State = v1beta1.FileStatePending
 		case 200:
 			f.Status.State = v1beta1.FileStateReady
-			result = ctrl.Result{}
 		default:
 			f.Status.State = v1beta1.FileStatePending
 		}
@@ -301,6 +300,7 @@ func (r *FileReconciler) handleExternalFileCallback(
 		"statusLink", feder.Spec.Partner.StatusLink)
 	labels := f.GetLabels()
 	callbackBody := opgmodels.FileStatusCallbackLinkJSONRequestBody{
+		FileId:              labels["opg.ewbi.nby.one/id"],
 		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
 		StatusInfo:          f.Status.State,
 	}

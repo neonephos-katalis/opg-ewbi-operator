@@ -85,7 +85,7 @@ spec:
                             items:
                               type: string
                             type: array
-                          ipv6Addreses:
+                          ipv6Addresses:
                             items:
                               type: string
                             type: array

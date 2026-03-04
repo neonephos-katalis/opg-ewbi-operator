@@ -160,17 +160,18 @@ func (r *ApplicationReconciler) Reconcile(
 			}
 		} else {
 			log.Info("New CR state", "state", a.Status.State)
-			if err:= r.handleExternalAppCallback(ctx, &a, feder); err != nil {
-				log.Error(err, "error handling appInst callback")
-				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
-				a.Status.State = v1beta1.ApplicationInstanceStateFailed
+			if err := r.handleExternalAppCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error handling app callback")
+				a.Status.Phase = v1beta1.ApplicationPhaseError
+				a.Status.State = v1beta1.ApplicationStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
+			}
 		}
-		return ctrl.Result{}, nil
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -332,16 +333,14 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 		},
 	}
 	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
-	callbackClient := r.GetOPGClient(
+	res, err := r.GetOPGClient(
 		feder.Labels[v1beta1.ExternalIdLabel],
 		feder.Spec.Partner.StatusLink,
 		feder.Spec.Partner.CallbackCredentials.ClientId,
-	)
-	res, err := callbackClient.AppStatusCallbackLinkWithResponse(
+	).AppStatusCallbackLinkWithResponse(
 		context.TODO(),
 		feder.Spec.Partner.CallbackCredentials.ClientId,
-		callbackBody,
-	)
+		callbackBody)
 	if err != nil {
 		log.Error(err, "error sending App callback")
 		return err
@@ -361,7 +360,6 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 	}
 	return nil
 }
-
 
 func (r *ApplicationReconciler) handleExternalAppDeletion(
 	ctx context.Context, a *v1beta1.Application, feder *v1beta1.Federation,

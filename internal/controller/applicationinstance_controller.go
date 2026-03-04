@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )
 
@@ -157,7 +157,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			}
 		} else {
 			log.Info("New CR state", "state", a.Status.State)
-			if err:= r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
+			if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
 				log.Error(err, "error handling appInst callback")
 				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 				a.Status.State = v1beta1.ApplicationInstanceStateFailed
@@ -165,15 +165,19 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
 				}
+			}
 		}
-		return ctrl.Result{}, nil
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ApplicationInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := indexer.GetFederationIndexers(context.Background(), mgr); err != nil {
+		return err
+	}
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&opgewbiv1beta1.ApplicationInstance{}).
+		For(&v1beta1.ApplicationInstance{}).
 		Named("applicationinstance").
 		Complete(r)
 }
@@ -290,16 +294,16 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 
 	// Build callback body with current status
 	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
-	state := opgmodels.InstanceState(a.Status.State) 
+	state := opgmodels.InstanceState(a.Status.State)
 	labels := a.GetLabels()
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
 		AppId:               a.Spec.AppId,
 		AppInstanceId:       labels["opg.ewbi.nby.one/id"],
-		FederationContextId: &a.Labels[v1beta1.FederationContextIdLabel], extraLabels),
+		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
-	callbackBody.AppInstanceInfo.AccesspointInfo = convertAccessPointInfo(a.Status.AccessPointInfo)
+	callbackBody.AppInstanceInfo.AccessPointInfo = convertAccessPointInfo(a.Status.AccessPointInfo)
 
 	// Get callback client (pointing to Guest's callback URL)
 	// Using a different cache key to separate callback client from regular client
@@ -307,7 +311,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 		feder.Labels[v1beta1.ExternalIdLabel],
 		feder.Spec.Partner.StatusLink,
 		feder.Spec.Partner.CallbackCredentials.ClientId,
-	)t.AppInstCallbackLinkWithResponse(
+	).AppInstCallbackLinkWithResponse(
 		context.TODO(),
 		feder.Spec.Partner.CallbackCredentials.ClientId,
 		callbackBody,
@@ -358,11 +362,6 @@ func convertAccessPointInfo(apiInfoList []v1beta1.AccessPointInfo) []opgmodels.A
 	}
 	return accessPoints
 }
-
-
-
-
-
 
 func (r *ApplicationInstanceReconciler) handleExternalAppInstDeletion(
 	ctx context.Context, appInst *v1beta1.ApplicationInstance, feder *v1beta1.Federation,

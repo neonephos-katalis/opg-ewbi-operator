@@ -162,8 +162,8 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 				}
 			}
 		}
-		return ctrl.Result{}, nil
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
