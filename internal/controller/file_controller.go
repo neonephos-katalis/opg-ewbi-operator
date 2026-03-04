@@ -299,10 +299,11 @@ func (r *FileReconciler) handleExternalFileCallback(
 		"state", f.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
 	labels := f.GetLabels()
+	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.FileStatusCallbackLinkJSONRequestBody{
 		FileId:              labels["opg.ewbi.nby.one/id"],
-		FederationContextId: opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel]),
-		StatusInfo:          f.Status.State,
+		FederationContextId: &fedId,
+		UpdateStatus:        string(f.Status.State),
 	}
 	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
 	res, err := r.GetOPGClient(

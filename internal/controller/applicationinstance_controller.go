@@ -304,7 +304,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
-	callbackBody.AppInstanceInfo.AccessPointInfo = convertAccessPointInfo(a.Status.AccessPointInfo)
+	callbackBody.AppInstanceInfo.AccessPointInfo = &(convertAccessPointInfo(a.Status.AccessPointInfo)[0])
 
 	// Get callback client (pointing to Guest's callback URL)
 	// Using a different cache key to separate callback client from regular client
