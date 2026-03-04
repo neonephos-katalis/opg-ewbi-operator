@@ -1264,7 +1264,7 @@ func (c *MockedOpgAPI) AppInstCallbackLinkWithResponse(
 ) (*opgc.AppInstCallbackLinkResponse, error) {
 	panic(notImplementedMsg)
 }
-func (c *MockedOpgAPI) ArtefactCallbackLinkWithResponse(
+func (c *MockedOpgAPI) ArtefactStatusCallbackLinkWithResponse(
 	ctx context.Context,
 	federationCallbackId opgmodels.FederationCallbackId,
 	body models.ArtefactStatusCallbackLinkJSONRequestBody,
@@ -1291,7 +1291,7 @@ func (c *MockedOpgAPI) FileStatusCallbackLinkWithBodyWithResponse(
 	panic(notImplementedMsg)
 }
 
-func (c *MockedOpgAPI) FileCallbackLinkWithResponse(
+func (c *MockedOpgAPI) FileStatusCallbackLinkWithResponse(
 	ctx context.Context,
 	federationCallbackId opgmodels.FederationCallbackId,
 	body models.FileStatusCallbackLinkJSONRequestBody,
