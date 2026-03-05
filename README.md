@@ -70,24 +70,32 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
     chmod 600 ~/.netrc
     ```
 2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
-4. After the download, open this folder via terminal and exec the following command:
+3. After the download, open this folder via terminal and exec the following command:
   ```make docker-build-controller```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos --secret id=netrc,src=$HOME/.netrc .```
-5. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
-6. After the download, open the created folder, `opg-ewbi-api`, via terminale and exec the following command:
+
+  **For debugging purposes**, you can build a debug image with bash and troubleshooting tools (curl, wget, tcpdump, dig, etc.):
+  ```make docker-build-debug```
+      **or**
+  ```docker build --target debug --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos-debug --secret id=netrc,src=$HOME/.netrc .```
+
+  To use the debug image, install the chart with `--set image.tag=neonephos-debug` and exec into the pod with `kubectl exec -it <pod-name> -- bash`
+
+4. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
+5. After the download, open the created folder, `opg-ewbi-api`, via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
-7. ```docker login ghcr.io```
-8. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
+6. ```docker login ghcr.io```
+7. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
       --docker-username= $username \
       --docker-password= $accessToken
   ```
-9. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
+8. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
   ```bash
   helm install federation-manager dist/chart -n federation \
   --set federation.services.federation.nodePort=30080 \
@@ -111,7 +119,7 @@ docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos
 ```
 
 The Nearby code is written to work in both role (HOST and GUEST).
-If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 5-6 in both namespace (federation-host and federation-guest)
+If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (federation-host and federation-guest)
 
 ```bash
 helm install federationhost dist/chart -n federation-host \

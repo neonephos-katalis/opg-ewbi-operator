@@ -1,5 +1,6 @@
 # Image URL to use all building/pushing image targets
 IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
+IMG_DEBUG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos-debug
 PLATFORM ?= linux/arm64
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
@@ -109,12 +110,23 @@ docker-build: docker-build-controller ## Build docker image for the manager
 docker-build-controller:
 	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --platform=${PLATFORM} -t ${IMG} --secret id=netrc,src=$(HOME)/.netrc .
 
+.PHONY: docker-build-debug
+docker-build-debug: docker-build-controller-debug ## Build docker image for the manager
+
+.PHONY: docker-build-controller-debug
+docker-build-controller-debug:
+	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --target debug --platform=${PLATFORM} -t ${IMG_DEBUG} --secret id=netrc,src=$(HOME)/.netrc .
+
 .PHONY: docker-push
 docker-push: docker-push-controller
 
 .PHONY: docker-push-controller
 docker-push-controller: ## Push docker image with the manager.
 	$(CONTAINER_TOOL) push ${IMG}
+
+.PHONY: docker-push-debug
+docker-push-debug:
+	$(CONTAINER_TOOL) push ${IMG_DEBUG}
 
 .PHONY: docker-itest
 docker-itest: ## Run itests
