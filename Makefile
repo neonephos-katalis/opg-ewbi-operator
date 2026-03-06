@@ -1,7 +1,7 @@
 # Image URL to use all building/pushing image targets
-IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64:v1.0.0
-HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
-PLATFORM ?= linux/amd64
+IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
+IMG_DEBUG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos-debug
+PLATFORM ?= linux/arm64
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
 
@@ -100,38 +100,37 @@ build: manifests generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/main.go
 
-.PHONY: run-host
-run-host:  ## Run a controller from your host.
-	go run ./cmd/host/main.go
-
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
-docker-build: docker-build-controller docker-build-host ## Build docker images for the manager and the host api
+docker-build: docker-build-controller ## Build docker image for the manager
 
 .PHONY: docker-build-controller
 docker-build-controller:
 	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --platform=${PLATFORM} -t ${IMG} --secret id=netrc,src=$(HOME)/.netrc .
 
-.PHONY: docker-build-host
-docker-build-host:
-	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --platform=linux/amd64 -t ${HOSTIMG} -f Host.Dockerfile  --secret id=netrc,src=$(HOME)/.netrc .
+.PHONY: docker-build-debug
+docker-build-debug: docker-build-controller-debug ## Build docker image for the manager
+
+.PHONY: docker-build-controller-debug
+docker-build-controller-debug:
+	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --target debug --platform=${PLATFORM} -t ${IMG_DEBUG} --secret id=netrc,src=$(HOME)/.netrc .
 
 .PHONY: docker-push
-docker-push: docker-push-controller docker-push-host
+docker-push: docker-push-controller
 
 .PHONY: docker-push-controller
 docker-push-controller: ## Push docker image with the manager.
 	$(CONTAINER_TOOL) push ${IMG}
 
-.PHONY: docker-push-host
-docker-push-host: ## Push docker image with the manager.
-	$(CONTAINER_TOOL) push ${HOSTIMG}
+.PHONY: docker-push-debug
+docker-push-debug:
+	$(CONTAINER_TOOL) push ${IMG_DEBUG}
 
 .PHONY: docker-itest
 docker-itest: ## Run itests
-	 DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --target test -t ${HOSTIMG}-test --secret id=netrc,src=$(HOME)/.netrc .
+	 DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --target test -t ${IMG}-test --secret id=netrc,src=$(HOME)/.netrc .
 
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
@@ -244,6 +243,8 @@ helm: base-chart crd-chart ## build the operator's helm chart
 .PHONY: base-chart
 base-chart: manifests ## build the operator's helm chart
 	kubebuilder edit  --plugins=helm/v1-alpha
+# 	fix the namespace in the role.yaml file otherwise it hardcodes the namespace to "foo"
+	sed -i 's/namespace: foo/namespace: {{ .Release.Namespace }}/g' dist/chart/templates/rbac/role.yaml
 	helm lint dist/chart
 
 
