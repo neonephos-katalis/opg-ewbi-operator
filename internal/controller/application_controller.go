@@ -135,24 +135,33 @@ func (r *ApplicationReconciler) Reconcile(
 
 	// if federation is guest, send OPG API request
 	if isGuest {
-		if err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
+		if result, err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
 			log.Info("error creating app")
 			a.Status.Phase = v1beta1.ApplicationPhaseError
-			upErr := r.Status().Update(ctx, a.DeepCopy())
+			upErr := r.Status().Update(ctx, &a)
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 			}
 			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+		} else {
+			return result, nil
 		}
 	} else {
-		a.Status.Phase = v1beta1.ApplicationPhaseReady
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if a.Status.Phase == "" {
+			a.Status.Phase = v1beta1.ApplicationPhaseReady
+			a.Status.State = "Pending"
+			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		} else {
+			log.Info("Existing CR state", "phase", a.Status.Phase, "state", a.Status.State)
+		}
+		if a.GetDeletionTimestamp().IsZero() {
+			upErr := r.Status().Update(ctx, a.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
 		}
 		return ctrl.Result{}, nil
 	}
-	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -165,7 +174,7 @@ func (r *ApplicationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *ApplicationReconciler) handleExternalAppCreation(
 	ctx context.Context, a *v1beta1.Application, feder *v1beta1.Federation,
-) error {
+) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	numUsers := int(a.Spec.QoSProfile.UsersPerAppInst)
 	multiUserClients := opgmodels.AppQoSProfileMultiUserClients(a.Spec.QoSProfile.MultiUserClients)
@@ -219,27 +228,36 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 
 	if err != nil {
 		log.Error(err, "error creating app")
-		return err
+		return ctrl.Result{}, err
 	}
 
 	statusCode := res.StatusCode()
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
-		log.Info("Created", "response", res)
-
+		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ApplicationPhaseReady
-
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, "Error Updating resource", "app", a.Name)
-			return upErr
+		var result ctrl.Result
+		switch statusCode {
+		case 202:
+			a.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
+		case 200:
+			a.Status.State = "Ready"
+			result = ctrl.Result{}
+		default:
+			a.Status.State = "Pending"
+			result = ctrl.Result{RequeueAfter: 5 * time.Second}
 		}
-
+		log.Info("Created/Updated external application", "phase", a.Status.Phase, "state", a.Status.State)
+		if err := r.Status().Update(ctx, a); err != nil {
+			return ctrl.Result{}, err
+		}
+		return result, nil
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return errors.New(*res.ApplicationproblemJSON400.Detail)
+		return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
 	case statusCode == 404:
@@ -252,16 +270,18 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "artefact not found" {
-			return errors.New(*res.ApplicationproblemJSON500.Detail)
+			return ctrl.Result{}, errors.New(*res.ApplicationproblemJSON500.Detail)
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = "Error"
+		r.Status().Update(ctx, a)
 	}
-	return nil
+	return ctrl.Result{}, nil
 }
 
 func (r *ApplicationReconciler) handleExternalAppDeletion(

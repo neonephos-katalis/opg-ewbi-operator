@@ -88,6 +88,7 @@ type ExposedInterface struct {
 }
 
 type ArtefactPhase string
+type ArtefactState string
 
 const (
 	ArtefactPhaseReconciling ArtefactPhase = "Pending"
@@ -96,10 +97,17 @@ const (
 	ArtefactPhaseUnknown     ArtefactPhase = "Unknown"
 )
 
+const (
+	ArtefactStateReconciling ArtefactState = "Pending"
+	ArtefactStateReady       ArtefactState = "Ready"
+	ArtefactStateError       ArtefactState = "Error"
+	ArtefactStateUnknown     ArtefactState = "Unknown"
+)
+
 // ArtefactStatus defines the observed state of Artefact.
 type ArtefactStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
-
+	State ArtefactState `json:"state,omitempty"`
 	Phase ArtefactPhase `json:"phase,omitempty"`
 }
 
