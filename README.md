@@ -29,8 +29,8 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api```
 
     **For Linux/AMD64**:
-    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd```
-    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd```
+    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64```
+    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd64```
 
 2. For the **Makefile** in OPG-EWBI-OPERATOR, you need to change lines 1-2 as follows:
 
@@ -118,6 +118,18 @@ docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos
 docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos
 ```
 
+**For Linux/ARM64:**
+```bash
+docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64:v1.0.0
+docker push ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0
+```
+      
+**For Linux/AMD64:** **NOW IMAGES AVAILABLE**
+```bash
+docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64:v1.0.0
+docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
+```
+      
 The Nearby code is written to work in both role (HOST and GUEST).
 If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (federation-host and federation-guest)
 

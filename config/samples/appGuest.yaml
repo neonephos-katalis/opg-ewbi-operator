@@ -6,6 +6,7 @@ metadata:
     opg.ewbi.nby.one/federation-context-id: 4d559f1b-f008-58c2-a2f8-0596892a0f7a # get this from Guest Federation's status
     opg.ewbi.nby.one/federation-relation: "guest"
     opg.ewbi.nby.one/id: "app-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
+    opg.ewbi.nby.one/federation-callback-id: 5tyde22c-d245-480d-b01e-24e38e7689d
   name: "app-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
 spec:
   appMetaData:
@@ -20,4 +21,4 @@ spec:
     multiUserClients: APP_TYPE_SINGLE_USER
     provisioning: true
     usersPerAppInst: 1
-  statusLink: https://onboard.app/callback
+  statusLink: http://nearbyone-federation-api.federation-guest.svc.cluster.local:8080
