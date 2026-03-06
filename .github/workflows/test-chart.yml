@@ -19,7 +19,7 @@ jobs:
 
       - name: Install the latest version of kind
         run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-$(go env GOARCH)
           chmod +x ./kind
           sudo mv ./kind /usr/local/bin/kind
 
@@ -29,10 +29,16 @@ jobs:
       - name: Create kind cluster
         run: kind create cluster
 
+      - name: Setup authentication for private Go modules
+        run: |
+          echo "machine github.com login ${{ github.actor }} password ${{ secrets.GITHUB_TOKEN }}" > $HOME/.netrc
+          chmod 600 $HOME/.netrc
+          git config --global url."https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Prepare opg-ewbi
         run: |
           go mod tidy
-          make docker-build IMG=opg-ewbi:v0.1.0
+          make docker-build IMG=opg-ewbi:v0.1.0 PLATFORM=linux/amd64
           kind load docker-image opg-ewbi:v0.1.0
 
       - name: Install Helm
