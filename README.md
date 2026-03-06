@@ -2,7 +2,7 @@
 
 OPG EWBI Operator implements a subset of the OPG East/WestBound Interface and translates these requests to k8s CRD resources.
 
-## ⚠️ Under development 
+## ⚠️ Under development
 
 **IMPORTANT**: This solution is a work in progress
 
@@ -23,66 +23,72 @@ The repository implements a subset of the GSMA OPG East/WestBound Interfaces, in
 This code is designed to run on both ARM64 and AMD64 platforms, but to enable this, some changes need to be made to the following files: values.yaml in (dist/chart), the makefile, and docker-compose.yaml.
 
 1. For the **value.yaml** in OPG-EWBI-OPERATOR (**dist/chart**), you need to change the repository parameter values (line 7 and line 49) as follows:
-    
+
     **For Linux/ARM64**:
-    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64```
-    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-arm64```
-    
+    - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator```
+    - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api```
+
     **For Linux/AMD64**:
     - Line 7: ```ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64```
     - Line 49: ```ghcr.io/neonephos-katalis/opg-ewbi-api-amd64```
 
-2. For the **makefile** in OPG-EWBI-OPERATOR, you need to change the line 1-3 as follwos:
+2. For the **Makefile** in OPG-EWBI-OPERATOR, you need to change lines 1-2 as follows:
 
     **For Linux/ARM64**:
-    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64:v1.0.0```
-    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0```
-    - Line 3: ```PLATFORM ?= linux/arm64```
-      
+    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos```
+    - Line 2: ```PLATFORM ?= linux/arm64```
+
     **For Linux/AMD64**:
-    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd-64:v1.0.0```
-    - Line 2: ```HOSTIMG ?= ghcr.io/neonephos-katalis/opg-ewbi-api-amd-64:v1.0.0```
-    - Line 3: ```PLATFORM ?= linux/amd64```
+    - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
+    - Line 2: ```PLATFORM ?= linux/amd64```
 
 3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow and changes the line 10:
 
     **For Linux/ARM64**:
      - Uncommnet the lines 5,19,28 and 36 and comment the lines 6,20,29 ans 37
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0```
-       
+     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
+
     **For Linux/AMD64**:
      - Uncomment the lines 6,20,29 and 37 and comment the lines 5,19,28 and 36
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0```
- 
-## Deploy the federation manager
-Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed. 
+     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
 
-**⚠️ Currently, the file are setted for Linux/amd64 platforms. If you need to build images for Linux/arm64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
- 
+## Deploy the federation manager
+Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed.
+
+**⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
+
 1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
-    
+
     ```
     machine ghcr.io
     login your-username
     password your-token
     ```
-    
+
     Make sure the file has appropriate permissions:
     ```bash
     chmod 600 ~/.netrc
     ```
 2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
-4. After the download, open this folder via terminal and exec the following command: 
+3. After the download, open this folder via terminal and exec the following command:
   ```make docker-build-controller```
       **or**
-  ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos ```
-5. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
-6. After the download, open this folder via terminale and exec the following command:
+  ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos --secret id=netrc,src=$HOME/.netrc .```
+
+  **For debugging purposes**, you can build a debug image with bash and troubleshooting tools (curl, wget, tcpdump, dig, etc.):
+  ```make docker-build-debug```
+      **or**
+  ```docker build --target debug --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos-debug --secret id=netrc,src=$HOME/.netrc .```
+
+  To use the debug image, install the chart with `--set image.tag=neonephos-debug` and exec into the pod with `kubectl exec -it <pod-name> -- bash`
+
+4. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
+5. After the download, open the created folder, `opg-ewbi-api`, via terminale and exec the following command:
   ```docker-compose build federation --no-cache ```
    **or**
   ```docker compose build federation --no-cache ```
-7. ```docker login ghcr.io```
-8. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)   
+6. ```docker login ghcr.io```
+7. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
@@ -105,15 +111,15 @@ Use the following commands only if we you want to push the latest version of the
 docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64:v1.0.0
 docker push ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0
 ```
-      
-**For Linux/AMD64:** **NOW IMAGES AVAILABLE**
+
+**For Linux/AMD64:** **⚠️ In this moment the images are not push on GitHub please exec the following commands**
 ```bash
 docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64:v1.0.0
 docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
 ```
-      
+
 The Nearby code is written to work in both role (HOST and GUEST).
-If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 5-6 in both namespace (federation-host and federation-guest)
+If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (federation-host and federation-guest)
 
 ```bash
 helm install federationhost dist/chart -n federation-host \
