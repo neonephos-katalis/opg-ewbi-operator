@@ -79,6 +79,32 @@ spec:
           status:
             description: ApplicationInstanceStatus defines the observed state of ApplicationInstance.
             properties:
+              accessPointInfo:
+                items:
+                  properties:
+                    accessPoints:
+                      items:
+                        properties:
+                          fqdn:
+                            type: string
+                          ipv4Addresses:
+                            items:
+                              type: string
+                            type: array
+                          ipv6Addreses:
+                            items:
+                              type: string
+                            type: array
+                          port:
+                            type: integer
+                        type: object
+                      type: array
+                    interfaceId:
+                      type: string
+                  type: object
+                type: array
+              appInstanceId:
+                type: string
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current
