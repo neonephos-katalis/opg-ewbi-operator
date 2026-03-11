@@ -247,14 +247,7 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ArtefactPhaseReady
-		switch statusCode {
-		case 202:
-			a.Status.State = v1beta1.ArtefactStateReconciling
-		case 200:
-			a.Status.State = v1beta1.ArtefactStateReady
-		default:
-			a.Status.State = v1beta1.ArtefactStateReconciling
-		}
+		a.Status.State = v1beta1.ArtefactStateReconciling
 		log.Info("Created/Updated external artefact", "phase", a.Status.Phase, "state", a.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
@@ -311,11 +304,8 @@ func (r *ArtefactReconciler) handleExternalArtefactCallback(
 		"appId", a.Labels[v1beta1.ExternalIdLabel],
 		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
-	labels := a.GetLabels()
-	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.ArtefactStatusCallbackLinkJSONRequestBody{
-		ArtefactId:          labels["opg.ewbi.nby.one/id"],
-		FederationContextId: &fedId,
+		ArtefactId:           a.Labels[v1beta1.ExternalIdLabel],
 		UpdateStatus:        opgmodels.ArtefactStatusCallbackLinkJSONBodyUpdateStatus(a.Status.State),
 	}
 	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)

@@ -155,6 +155,10 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 				return ctrl.Result{}, upErr
 			}
+		}
+		if len(a.Status.AccessPointInfo) == 0 {
+			log.Info("Skipping update: accesspointInfo is empty", "name", a.Name)
+			return ctrl.Result{}, nil
 		} else {
 			log.Info("New CR state", "state", a.Status.State)
 			if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
@@ -288,16 +292,12 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 		"appInstanceId", a.Status.AppInstanceId,
 		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
-
 	// Build callback body with current status
 	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
 	state := opgmodels.InstanceState(a.Status.State)
-	labels := a.GetLabels()
-	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
 		AppId:               a.Spec.AppId,
-		AppInstanceId:       labels["opg.ewbi.nby.one/id"],
-		FederationContextId: &fedId,
+		AppInstanceId:       a.Labels[v1beta1.ExternalIdLabel],
 		ZoneId:              a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state

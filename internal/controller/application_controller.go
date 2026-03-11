@@ -247,14 +247,7 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.Phase = v1beta1.ApplicationPhaseReady
-		switch statusCode {
-		case 202:
-			a.Status.State = v1beta1.ApplicationStatePending
-		case 200:
-			a.Status.State = v1beta1.ApplicationStateOnboarded
-		default:
-			a.Status.State = v1beta1.ApplicationStatePending
-		}
+		a.Status.State = v1beta1.ApplicationStatePending
 		log.Info("Created external application", "phase", a.Status.Phase, "state", a.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
@@ -317,18 +310,15 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 		"appId", a.Labels[v1beta1.ExternalIdLabel],
 		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
-	labels := a.GetLabels()
-	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.AppStatusCallbackLinkJSONRequestBody{
-		AppId:               opgmodels.AppIdentifier(a.Labels[v1beta1.ExternalIdLabel]),
-		FederationContextId: &fedId,
+		AppId:                a.Labels[v1beta1.ExternalIdLabel],
 		StatusInfo: []struct {
 			OnboardStatusInfo opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo `json:"onboardStatusInfo"`
 			ZoneId            opgmodels.ZoneIdentifier                                           `json:"zoneId"`
 		}{
 			{
 				OnboardStatusInfo: opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo(a.Status.State),
-				ZoneId:            "",
+				ZoneId:            "zone-es-madrid-001",
 			},
 		},
 	}

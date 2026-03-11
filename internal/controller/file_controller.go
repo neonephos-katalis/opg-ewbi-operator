@@ -215,7 +215,7 @@ func (r *FileReconciler) handleExternalFileCreation(
 		feder.Spec.GuestPartnerCredentials.ClientId,
 	).UploadFileWithBodyWithResponse(
 		context.TODO(),
-		feder.Status.FederationContextId,
+		f.Labels[v1beta1.FederationContextIdLabel],
 		contentType,
 		body)
 	if err != nil {
@@ -227,14 +227,7 @@ func (r *FileReconciler) handleExternalFileCreation(
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("FILE - Status code 2xx received from OPG API", "status", statusCode)
 		f.Status.Phase = v1beta1.FilePhaseReady
-		switch statusCode {
-		case 202:
-			f.Status.State = v1beta1.FileStatePending
-		case 200:
-			f.Status.State = v1beta1.FileStateReady
-		default:
-			f.Status.State = v1beta1.FileStatePending
-		}
+		f.Status.State = v1beta1.FileStatePending
 		log.Info("Created external file", "phase", f.Status.Phase, "state", f.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
@@ -298,11 +291,8 @@ func (r *FileReconciler) handleExternalFileCallback(
 		"appId", f.Labels[v1beta1.ExternalIdLabel],
 		"state", f.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
-	labels := f.GetLabels()
-	fedId := opgmodels.FederationContextId(labels[v1beta1.FederationContextIdLabel])
 	callbackBody := opgmodels.FileStatusCallbackLinkJSONRequestBody{
-		FileId:              labels["opg.ewbi.nby.one/id"],
-		FederationContextId: &fedId,
+		FileId:              f.Labels[v1beta1.ExternalIdLabel],
 		UpdateStatus:        opgmodels.FileStatusCallbackLinkJSONBodyUpdateStatus(f.Status.State),
 	}
 	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
