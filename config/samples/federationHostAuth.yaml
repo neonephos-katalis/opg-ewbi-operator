@@ -3,7 +3,7 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: federation-host
+  namespace: katalis-dev
   annotations:
     opg.ewbi.nby.one/origin-mcc: "001" # not used, will be overridden by /partner request body
     opg.ewbi.nby.one/origin-mncs: "001" # not used, will be overridden by /partner request body
