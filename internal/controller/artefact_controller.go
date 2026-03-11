@@ -316,7 +316,7 @@ func (r *ArtefactReconciler) handleExternalArtefactCallback(
 	callbackBody := opgmodels.ArtefactStatusCallbackLinkJSONRequestBody{
 		ArtefactId:          labels["opg.ewbi.nby.one/id"],
 		FederationContextId: &fedId,
-		UpdateStatus:        string(a.Status.State),
+		UpdateStatus:        opgmodels.ArtefactStatusCallbackLinkJSONBodyUpdateStatus(a.Status.State),
 	}
 	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
 	res, err := r.GetOPGClient(
