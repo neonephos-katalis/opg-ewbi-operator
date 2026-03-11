@@ -21,7 +21,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -656,7 +656,7 @@ func (in *FederationSpec) DeepCopyInto(out *FederationSpec) {
 	out.Partner = in.Partner
 	if in.OfferedAvailabilityZones != nil {
 		in, out := &in.OfferedAvailabilityZones, &out.OfferedAvailabilityZones
-		*out = make([]string, len(*in))
+		*out = make([]ZoneDetails, len(*in))
 		copy(*out, *in)
 	}
 	if in.AcceptedAvailabilityZones != nil {
