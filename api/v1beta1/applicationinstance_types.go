@@ -89,11 +89,11 @@ type ApplicationInstanceStatus struct {
 }
 
 type AccessPointInfo struct {
-	InterfaceId  string         `json:"interfaceId,omitempty"`
-	AccessPoints []AccessPoints `json:"accessPoints,omitempty"`
+	InterfaceId  string       `json:"interfaceId,omitempty"`
+	AccessPoints AccessPoints `json:"accessPoints,omitempty"`
 }
 type AccessPoints struct {
-	Port          []int    `json:"port,omitempty"`
+	Port          int      `json:"port,omitempty"`
 	Fqdn          string   `json:"fqdn,omitempty"`
 	Ipv4Addresses []string `json:"ipv4Addresses,omitempty"`
 	Ipv6Addresses []string `json:"ipv6Addresses,omitempty"`
