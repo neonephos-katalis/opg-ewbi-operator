@@ -67,8 +67,8 @@ spec:
                 type: string
               offeredAvailabilityZones:
                 description: |-
-                  OfferedAvailabilityZones, GuestOP offered AvailabilityZones
-                  for this Federation
+                  OfferedAvailabilityZones, list of AvailabilityZones the hostOP offers to the guestOP
+                  as part of this Federation
                 items:
                   properties:
                     geographyDetails:

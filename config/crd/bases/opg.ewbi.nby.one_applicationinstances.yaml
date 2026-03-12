@@ -77,24 +77,20 @@ spec:
                 items:
                   properties:
                     accessPoints:
-                      items:
-                        properties:
-                          fqdn:
+                      properties:
+                        fqdn:
+                          type: string
+                        ipv4Addresses:
+                          items:
                             type: string
-                          ipv4Addresses:
-                            items:
-                              type: string
-                            type: array
-                          ipv6Addresses:
-                            items:
-                              type: string
-                            type: array
-                          port:
-                            items:
-                              type: integer
-                            type: array
-                        type: object
-                      type: array
+                          type: array
+                        ipv6Addresses:
+                          items:
+                            type: string
+                          type: array
+                        port:
+                          type: integer
+                      type: object
                     interfaceId:
                       type: string
                   type: object
