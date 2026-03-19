@@ -1,0 +1,101 @@
+# This workflow performs a Software Composition Analysis (SCA) using Trivy to detect known
+# vulnerabilities (CVEs) in third-party libraries. It scans the repository filesystem, generates
+# a CSV report with CVE IDs, affected packages, installed/fixed versions, and severity levels
+# (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN), and uploads the report as a downloadable artifact.
+
+name: Dependency Vulnerability Scan
+
+on:
+  workflow_dispatch:
+  # You can also trigger this workflow automatically on pull request events targeting the main branch,
+  # so every code change is scanned before merging. Uncomment the block below to enable it:
+  # pull_request:
+  #   branches:
+  #     - main
+  #   types:
+  #     - opened
+  #     - synchronize
+  #     - reopened
+
+jobs:
+  trivy-sca-scan:
+    name: Dependency Vulnerability Scan with Trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: "read"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create CSV template for Trivy
+        run: |
+          mkdir -p .github/templates
+          cat > .github/templates/csv.tpl << 'EOF'
+          CVE ID,Package,Installed Version,Fixed Version,Severity,Title
+          {{- range .  }}
+          {{- range .Vulnerabilities }}
+          {{ .VulnerabilityID }},{{ .PkgName }},{{ .InstalledVersion }},{{ .FixedVersion }},{{ .Severity }},"{{ .Title }}"
+          {{- end }}
+          {{- end }}
+          EOF
+
+      - name: Manual Trivy Setup
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.5
+        with:
+          cache: false
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "template"
+          template: "@.github/templates/csv.tpl"
+          output: "trivy-cve-report.csv"
+          severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+          vuln-type: "library"
+          scanners: "vuln"
+
+      - name: Upload CVE Report as Artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: trivy-cve-report-${{ github.run_number }}
+          path: trivy-cve-report.csv
+          retention-days: 2
+
+      - name: Display scan summary
+        if: always()
+        run: |
+          echo "### 🔍 Trivy Security Scan Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f trivy-cve-report.csv ]; then
+            LINE_COUNT=$(wc -l < trivy-cve-report.csv)
+            VULN_COUNT=$((LINE_COUNT - 1))
+            CRIT=$(grep -c "CRITICAL" trivy-cve-report.csv || true)
+            HIGH=$(grep -c "HIGH" trivy-cve-report.csv || true)
+            MED=$(grep -c "MEDIUM" trivy-cve-report.csv || true)
+            LOW=$(grep -c "LOW" trivy-cve-report.csv || true)
+            UNK=$(grep -c "UNKNOWN" trivy-cve-report.csv || true)
+
+            CRIT=${CRIT:-0}
+            HIGH=${HIGH:-0}
+            MED=${MED:-0}
+            LOW=${LOW:-0}
+            UNK=${UNK:-0}
+
+            echo "✅ Scan completed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "📊 Total vulnerabilities found: **$VULN_COUNT**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔴 **CRITICAL** | $CRIT |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟠 **HIGH** | $HIGH |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟡 **MEDIUM** | $MED |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔵 **LOW** | $LOW |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⚪ **UNKNOWN** | $UNK |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📥 Download the full CVE report from the artifacts section" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No report generated" >> $GITHUB_STEP_SUMMARY
+          fi
