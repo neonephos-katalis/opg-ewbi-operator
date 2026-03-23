@@ -28,10 +28,10 @@ const (
 type ApplicationInstancePhase string
 
 const (
-	ApplicationInstancePhaseReconciling ApplicationInstancePhase = "Reconciling"
-	ApplicationInstancePhaseReady       ApplicationInstancePhase = "Ready"
-	ApplicationInstancePhaseError       ApplicationInstancePhase = "Error"
-	ApplicationInstancePhaseUnknown     ApplicationInstancePhase = "Unknown"
+	ApplicationInstancePhaseReconciling ApplicationInstancePhase = "RECONCILING"
+	ApplicationInstancePhaseReady       ApplicationInstancePhase = "READY"
+	ApplicationInstancePhaseError       ApplicationInstancePhase = "ERROR"
+	ApplicationInstancePhaseUnknown     ApplicationInstancePhase = "UNKNOWN"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -72,10 +72,10 @@ type Zone struct {
 type ApplicationInstanceState string
 
 const (
-	ApplicationInstanceStatePending     ApplicationInstanceState = "Pending"
-	ApplicationInstanceStateReady       ApplicationInstanceState = "Ready"
-	ApplicationInstanceStateFailed      ApplicationInstanceState = "Failed"
-	ApplicationInstanceStateTerminating ApplicationInstanceState = "Terminating"
+	ApplicationInstanceStatePending     ApplicationInstanceState = "PENDING"
+	ApplicationInstanceStateReady       ApplicationInstanceState = "READY"
+	ApplicationInstanceStateFailed      ApplicationInstanceState = "FAILED"
+	ApplicationInstanceStateTerminating ApplicationInstanceState = "TERMINATING"
 )
 
 // ApplicationInstanceStatus defines the observed state of ApplicationInstance.

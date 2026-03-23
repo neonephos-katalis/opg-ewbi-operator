@@ -147,7 +147,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 	} else {
 		if a.Status.State == "" {
 			a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
-			a.Status.State = v1beta1.ApplicationInstanceStateReady
+			a.Status.State = v1beta1.ApplicationInstanceStatePending
 			a.Status.AppInstanceId = a.Labels[v1beta1.ExternalIdLabel]
 			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
 			upErr := r.Status().Update(ctx, a.DeepCopy())
@@ -220,14 +220,15 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 
 	if err != nil {
 		log.Error(err, "error creating appInst")
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 		return err
 	}
-
+	a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APP INSTANCES - Status code 2xx received from OPG API", "status", statusCode)
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
+
 		a.Status.State = v1beta1.ApplicationInstanceStatePending
 		a.Status.AppInstanceId = a.Name //"app-inst-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
 		log.Info("Created external application instances", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
@@ -237,23 +238,18 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "application not found" {
@@ -264,8 +260,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
 	default:
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
-		a.Status.State = v1beta1.ApplicationInstanceStateFailed
+		a.Status.State = v1beta1.ApplicationInstanceStatePending
 	}
 	upErr := r.Status().Update(ctx, a)
 	if upErr != nil {
@@ -296,9 +291,9 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 	// AppInstCallbackLinkJSONRequestBody requires: AppId, AppInstanceId, AppInstanceInfo, ZoneId
 	state := opgmodels.InstanceState(a.Status.State)
 	callbackBody := opgmodels.AppInstCallbackLinkJSONRequestBody{
-		AppId:               a.Spec.AppId,
-		AppInstanceId:       a.Labels[v1beta1.ExternalIdLabel],
-		ZoneId:              a.Spec.ZoneInfo.ZoneId,
+		AppId:         a.Spec.AppId,
+		AppInstanceId: a.Labels[v1beta1.ExternalIdLabel],
+		ZoneId:        a.Spec.ZoneInfo.ZoneId,
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
 	accessPointInfo := opgmodels.AccessPointInfo{}
@@ -354,14 +349,25 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("****************** Successfully sent ApplicationInstance callback to Guest", "status", statusCode)
+		a.Status.State = v1beta1.ApplicationInstanceStateReady
+
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 	default:
 		log.Info("############# ApplicationInstance callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+		a.Status.State = v1beta1.ApplicationInstanceStatePending
+	}
+	upErr := r.Status().Update(ctx, a)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
 	}
 	return nil
 }
@@ -393,25 +399,40 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstDeletion(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("Deleted")
+		appInst.Status.State = v1beta1.ApplicationInstanceStateTerminating
 		// federResponse.OfferedAvailabilityZones
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
+		appInst.Status.State = v1beta1.ApplicationInstanceStateFailed
 	default:
 		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		appInst.Status.State = v1beta1.ApplicationInstanceStatePending
+	}
+	upErr := r.Status().Update(ctx, appInst)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
 	}
 	return nil
 }
