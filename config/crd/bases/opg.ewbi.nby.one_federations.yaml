@@ -70,7 +70,24 @@ spec:
                   OfferedAvailabilityZones, list of AvailabilityZones the hostOP offers to the guestOP
                   as part of this Federation
                 items:
-                  type: string
+                  properties:
+                    geographyDetails:
+                      description: |-
+                        GeographyDetails Details about cities or state covered by the edge. Details about the type
+                        of locality for eg rural, urban, industrial etc. This information is defined in human readable form.
+                      type: string
+                    geolocation:
+                      description: Geolocation Latitude,Longitude as decimal fraction
+                        up to 4 digit precision
+                      type: string
+                    zoneId:
+                      description: ZoneId Human readable name of the zone.
+                      type: string
+                  required:
+                  - geographyDetails
+                  - geolocation
+                  - zoneId
+                  type: object
                 type: array
               originOP:
                 properties:

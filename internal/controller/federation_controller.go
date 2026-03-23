@@ -139,12 +139,15 @@ func (r *FederationReconciler) Reconcile(
 			return ctrl.Result{}, err
 		}
 	} else {
-		f.Status.Phase = v1beta1.FederationPhaseReady
-		upErr := r.Status().Update(ctx, f.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
+		if f.Status.State == "" {
+			f.Status.Phase = v1beta1.FederationPhaseReady
+			f.Status.State = v1beta1.FederationStateAvailable
+			upErr := r.Status().Update(ctx, f.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingResourceStatusMsg)
+			}
+			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil
@@ -310,7 +313,7 @@ func (r *FederationReconciler) handleExternalFederationDeletion(
 func (r *FederationReconciler) handleAcceptExternalAZ(ctx context.Context, f *v1beta1.Federation) error {
 	log := log.FromContext(ctx)
 
-	if len(f.Status.OfferedAvailabilityZones) != 1 {
+	if len(f.Status.OfferedAvailabilityZones) == 0 {
 		log.Info("No AZ was offered, no AZ available to be accepted")
 		return nil
 	}
