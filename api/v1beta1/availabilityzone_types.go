@@ -47,10 +47,10 @@ type ZoneIdentifier string
 type AvailabilityZonePhase string
 
 const (
-	AvailabilityZonePhaseReconciling AvailabilityZonePhase = "Pending"
-	AvailabilityZonePhaseReady       AvailabilityZonePhase = "Ready"
-	AvailabilityZonePhaseError       AvailabilityZonePhase = "Error"
-	AvailabilityZonePhaseUnknown     AvailabilityZonePhase = "Unknown"
+	AvailabilityZonePhaseReconciling AvailabilityZonePhase = "PENDING"
+	AvailabilityZonePhaseReady       AvailabilityZonePhase = "READY"
+	AvailabilityZonePhaseError       AvailabilityZonePhase = "ERROR"
+	AvailabilityZonePhaseUnknown     AvailabilityZonePhase = "UNKNOWN"
 )
 
 // AvailabilityZoneStatus defines the observed state of AvailabilityZone.

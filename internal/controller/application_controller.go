@@ -242,11 +242,11 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 	}
 
 	statusCode := res.StatusCode()
-
+	a.Status.Phase = v1beta1.ApplicationPhaseReady
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
-		a.Status.Phase = v1beta1.ApplicationPhaseReady
+
 		a.Status.State = v1beta1.ApplicationStatePending
 		log.Info("Created external application", "phase", a.Status.Phase, "state", a.Status.State)
 	case statusCode == 400:
@@ -255,23 +255,18 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 		return errors.New(*res.ApplicationproblemJSON400.Detail)
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 		// this should be deleted when API returns a 400 for this case
 		if *res.ApplicationproblemJSON500.Detail == "artefact not found" {
@@ -279,15 +274,12 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 		}
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
-		a.Status.Phase = v1beta1.ApplicationPhaseError
 		a.Status.State = v1beta1.ApplicationStateFailed
 	default:
-		a.Status.Phase = v1beta1.ApplicationPhaseError
-		a.Status.State = v1beta1.ApplicationStateFailed
+		a.Status.State = v1beta1.ApplicationStatePending
 	}
 	upErr := r.Status().Update(ctx, a)
 	if upErr != nil {
@@ -311,7 +303,7 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 		"state", a.Status.State,
 		"statusLink", feder.Spec.Partner.StatusLink)
 	callbackBody := opgmodels.AppStatusCallbackLinkJSONRequestBody{
-		AppId:                a.Labels[v1beta1.ExternalIdLabel],
+		AppId: a.Labels[v1beta1.ExternalIdLabel],
 		StatusInfo: []struct {
 			OnboardStatusInfo opgmodels.AppStatusCallbackLinkJSONBodyStatusInfoOnboardStatusInfo `json:"onboardStatusInfo"`
 			ZoneId            opgmodels.ZoneIdentifier                                           `json:"zoneId"`
@@ -333,6 +325,7 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 		callbackBody)
 	if err != nil {
 		log.Error(err, "error sending App callback")
+		a.Status.State = v1beta1.ApplicationStateFailed
 		return err
 	}
 	statusCode := res.StatusCode()
@@ -341,12 +334,21 @@ func (r *ApplicationReconciler) handleExternalAppCallback(
 		log.Info("Successfully sent App callback to Guest", "status", statusCode)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	default:
 		log.Info("############# App callback returned unexpected status", "status", statusCode, "body", string(res.Body))
+		a.Status.State = v1beta1.ApplicationStatePending
+	}
+	upErr := r.Status().Update(ctx, a)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
 	}
 	return nil
 }
@@ -367,7 +369,8 @@ func (r *ApplicationReconciler) handleExternalAppDeletion(
 		a.Labels[v1beta1.ExternalIdLabel],
 	)
 	if err != nil {
-		log.Error(err, "error deleting federation")
+		log.Error(err, "error deleting application")
+		a.Status.State = v1beta1.ApplicationStateFailed
 		return err
 	}
 
@@ -376,25 +379,40 @@ func (r *ApplicationReconciler) handleExternalAppDeletion(
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("Deleted")
-		// federResponse.OfferedAvailabilityZones
+		a.Status.State = v1beta1.ApplicationStateRemoved
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 401:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 404:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 409:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 422:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 500:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 503:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	case statusCode == 520:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
+		a.Status.State = v1beta1.ApplicationStateFailed
 	default:
 		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
+		a.Status.State = v1beta1.ApplicationStatePending
+	}
+
+	upErr := r.Status().Update(ctx, a)
+	if upErr != nil {
+		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		return upErr
 	}
 	return nil
 }
