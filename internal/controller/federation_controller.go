@@ -139,7 +139,13 @@ func (r *FederationReconciler) Reconcile(
 			return ctrl.Result{}, err
 		}
 	} else {
-		f.Status.Phase = v1beta1.FederationPhaseReady
+		if f.Status.Phase == "" {
+			f.Status.Phase = v1beta1.FederationPhaseReady
+			f.Status.State = v1beta1.FederationStateNotAvailable
+		}
+		if f.Spec.AcceptedAvailabilityZones != nil {
+			f.Status.State = v1beta1.FederationStateAvailable
+		}
 		upErr := r.Status().Update(ctx, f.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)

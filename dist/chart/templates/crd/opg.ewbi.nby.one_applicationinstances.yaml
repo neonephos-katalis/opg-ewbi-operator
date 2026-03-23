@@ -96,7 +96,7 @@ spec:
                               type: string
                             type: array
                           port:
-                             items:
+                            items:
                               type: integer
                             type: array
                         type: object

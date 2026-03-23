@@ -102,17 +102,17 @@ type FilePhase string
 type FileState string
 
 const (
-	FilePhaseReconciling FilePhase = "Pending"
-	FilePhaseReady       FilePhase = "Ready"
-	FilePhaseError       FilePhase = "Error"
-	FilePhaseUnknown     FilePhase = "Unknown"
+	FilePhaseReconciling FilePhase = "PENDING"
+	FilePhaseReady       FilePhase = "READY"
+	FilePhaseError       FilePhase = "ERROR"
+	FilePhaseUnknown     FilePhase = "UNKNOWN"
 )
 
 const (
-	FileStatePending FileState = "Pending"
-	FileStateReady   FileState = "Ready"
-	FileStateError   FileState = "Error"
-	FileStateUnknown FileState = "Unknown"
+	FileStatePending FileState = "PENDING"
+	FileStateReady   FileState = "READY"
+	FileStateError   FileState = "ERROR"
+	FileStateUnknown FileState = "UNKNOWN"
 )
 
 // FileStatus defines the observed state of File.

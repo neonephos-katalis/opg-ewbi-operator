@@ -107,20 +107,20 @@ type FederationCredentials struct {
 type FederationState string
 
 const (
-	FederationStateFailed           FederationState = "Failed"
-	FederationStateTemporaryFailure FederationState = "TemporaryFailure"
-	FederationStateAvailable        FederationState = "Available"
-	FederationStateLocked           FederationState = "Locked"
-	FederationStateNotAvailable     FederationState = "NotAvailable"
+	FederationStateFailed           FederationState = "FAILED"
+	FederationStateTemporaryFailure FederationState = "TEMPORARY_FAILURE"
+	FederationStateAvailable        FederationState = "AVAILABLE"
+	FederationStateLocked           FederationState = "LOCKED"
+	FederationStateNotAvailable     FederationState = "NOT_AVAILABLE"
 )
 
 type FederationPhase string
 
 const (
-	FederationPhaseReconciling FederationPhase = "Pending"
-	FederationPhaseReady       FederationPhase = "Ready"
-	FederationPhaseError       FederationPhase = "Error"
-	FederationPhaseUnknown     FederationPhase = "Unknown"
+	FederationPhaseReconciling FederationPhase = "PENDING"
+	FederationPhaseReady       FederationPhase = "READY"
+	FederationPhaseError       FederationPhase = "ERROR"
+	FederationPhaseUnknown     FederationPhase = "UNKNOWN"
 )
 
 // FederationStatus defines the observed state of Federation.

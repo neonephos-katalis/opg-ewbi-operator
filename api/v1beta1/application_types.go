@@ -67,20 +67,20 @@ type QoSProfile struct {
 type ApplicationState string
 
 const (
-	ApplicationStatePending    ApplicationState = "Pending"
-	ApplicationStateOnboarded  ApplicationState = "Onboarded"
-	ApplicationStateDeboarding ApplicationState = "Deboarding"
-	ApplicationStateFailed     ApplicationState = "Failed"
-	ApplicationStateRemoved    ApplicationState = "Removed"
+	ApplicationStatePending    ApplicationState = "PENDING"
+	ApplicationStateOnboarded  ApplicationState = "ONBOARDED"
+	ApplicationStateDeboarding ApplicationState = "DEBOARDING"
+	ApplicationStateFailed     ApplicationState = "FAILED"
+	ApplicationStateRemoved    ApplicationState = "REMOVED"
 )
 
 type ApplicationPhase string
 
 const (
-	ApplicationPhaseReconciling ApplicationPhase = "Pending"
-	ApplicationPhaseReady       ApplicationPhase = "Ready"
-	ApplicationPhaseError       ApplicationPhase = "Error"
-	ApplicationPhaseUnknown     ApplicationPhase = "Unknown"
+	ApplicationPhaseReconciling ApplicationPhase = "PENDING"
+	ApplicationPhaseReady       ApplicationPhase = "READY"
+	ApplicationPhaseError       ApplicationPhase = "ERROR"
+	ApplicationPhaseUnknown     ApplicationPhase = "UNKNOWN"
 )
 
 // ApplicationStatus defines the observed state of Application.

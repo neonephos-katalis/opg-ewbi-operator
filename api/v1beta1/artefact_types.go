@@ -91,17 +91,17 @@ type ArtefactPhase string
 type ArtefactState string
 
 const (
-	ArtefactPhaseReconciling ArtefactPhase = "Pending"
-	ArtefactPhaseReady       ArtefactPhase = "Ready"
-	ArtefactPhaseError       ArtefactPhase = "Error"
-	ArtefactPhaseUnknown     ArtefactPhase = "Unknown"
+	ArtefactPhaseReconciling ArtefactPhase = "PENDING"
+	ArtefactPhaseReady       ArtefactPhase = "READY"
+	ArtefactPhaseError       ArtefactPhase = "ERROR"
+	ArtefactPhaseUnknown     ArtefactPhase = "UNKNOWN"
 )
 
 const (
-	ArtefactStateReconciling ArtefactState = "Pending"
-	ArtefactStateReady       ArtefactState = "Ready"
-	ArtefactStateError       ArtefactState = "Error"
-	ArtefactStateUnknown     ArtefactState = "Unknown"
+	ArtefactStateReconciling ArtefactState = "PENDING"
+	ArtefactStateReady       ArtefactState = "READY"
+	ArtefactStateError       ArtefactState = "ERROR"
+	ArtefactStateUnknown     ArtefactState = "UNKNOWN"
 )
 
 // ArtefactStatus defines the observed state of Artefact.
