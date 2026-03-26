@@ -86,16 +86,7 @@ type ExposedInterface struct {
 	InterfaceId    string `json:"interfaceId,omitempty"`
 	VisibilityType string `json:"visibilityType,omitempty"`
 }
-
-type ArtefactPhase string
 type ArtefactState string
-
-const (
-	ArtefactPhaseReconciling ArtefactPhase = "PENDING"
-	ArtefactPhaseReady       ArtefactPhase = "READY"
-	ArtefactPhaseError       ArtefactPhase = "ERROR"
-	ArtefactPhaseUnknown     ArtefactPhase = "UNKNOWN"
-)
 
 const (
 	ArtefactStateReconciling ArtefactState = "PENDING"
@@ -108,7 +99,6 @@ const (
 type ArtefactStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	State ArtefactState `json:"state,omitempty"`
-	Phase ArtefactPhase `json:"phase,omitempty"`
 }
 
 // +kubebuilder:object:root=true

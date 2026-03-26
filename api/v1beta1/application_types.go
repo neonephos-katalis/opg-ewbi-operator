@@ -74,18 +74,8 @@ const (
 	ApplicationStateRemoved    ApplicationState = "REMOVED"
 )
 
-type ApplicationPhase string
-
-const (
-	ApplicationPhaseReconciling ApplicationPhase = "PENDING"
-	ApplicationPhaseReady       ApplicationPhase = "READY"
-	ApplicationPhaseError       ApplicationPhase = "ERROR"
-	ApplicationPhaseUnknown     ApplicationPhase = "UNKNOWN"
-)
-
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
-	Phase ApplicationPhase `json:"phase,omitempty"`
 	State ApplicationState `json:"state,omitempty"`
 }
 

@@ -52,7 +52,7 @@ func TestAvailabilityZoneReconciler(t *testing.T) {
 		wantResult       ctrl.Result
 		wantReconcileErr bool
 		wantGetErr       func(err error) bool
-		wantStatusPhase  v1beta1.AvailabilityZonePhase
+		wantStatusState  v1beta1.ZoneState
 	}
 	tests := []struct {
 		name   string
@@ -73,7 +73,7 @@ func TestAvailabilityZoneReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.AvailabilityZonePhaseReady,
+				wantStatusState:  v1beta1.ZoneStateReady,
 			},
 		},
 	}
@@ -104,7 +104,7 @@ func TestAvailabilityZoneReconciler(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.resp.wantStatusPhase, reqAvailabilityZone.Status.Phase)
+			assert.Equal(t, tt.resp.wantStatusState, reqAvailabilityZone.Status.State)
 
 		})
 	}

@@ -88,7 +88,7 @@ func (r *ApplicationReconciler) Reconcile(
 	feder, err := GetFederationByContextId(ctx, r.Client, a.Labels[v1beta1.FederationContextIdLabel], extraLabels)
 	if err != nil {
 		log.Error(err, "An Applicattion should always have a parent federation")
-		a.Status.Phase = v1beta1.ApplicationPhaseError
+		a.Status.State = v1beta1.ApplicationStateFailed
 		upErr := r.Status().Update(ctx, a.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -112,7 +112,7 @@ func (r *ApplicationReconciler) Reconcile(
 		if isGuest {
 			if err := r.handleExternalAppDeletion(ctx, &a, feder); err != nil {
 				log.Error(err, "error deleting app")
-				a.Status.Phase = v1beta1.ApplicationPhaseError
+				a.Status.State = v1beta1.ApplicationStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -137,7 +137,6 @@ func (r *ApplicationReconciler) Reconcile(
 		if a.Status.State == "" {
 			if err := r.handleExternalAppCreation(ctx, &a, feder); err != nil {
 				log.Info("error creating app")
-				a.Status.Phase = v1beta1.ApplicationPhaseError
 				a.Status.State = v1beta1.ApplicationStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
@@ -150,9 +149,8 @@ func (r *ApplicationReconciler) Reconcile(
 		}
 	} else {
 		if a.Status.State == "" {
-			a.Status.Phase = v1beta1.ApplicationPhaseReady
 			a.Status.State = v1beta1.ApplicationStatePending
-			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
+			log.Info("Initialized new CR state", "state", a.Status.State)
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -162,7 +160,6 @@ func (r *ApplicationReconciler) Reconcile(
 			log.Info("New CR state", "state", a.Status.State)
 			if err := r.handleExternalAppCallback(ctx, &a, feder); err != nil {
 				log.Error(err, "error handling app callback")
-				a.Status.Phase = v1beta1.ApplicationPhaseError
 				a.Status.State = v1beta1.ApplicationStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
@@ -242,13 +239,12 @@ func (r *ApplicationReconciler) handleExternalAppCreation(
 	}
 
 	statusCode := res.StatusCode()
-	a.Status.Phase = v1beta1.ApplicationPhaseReady
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("APPLICATIONS - Status code 2xx received from OPG API", "status", statusCode)
 
 		a.Status.State = v1beta1.ApplicationStatePending
-		log.Info("Created external application", "phase", a.Status.Phase, "state", a.Status.State)
+		log.Info("Created external application", "state", a.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)

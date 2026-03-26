@@ -25,15 +25,6 @@ const (
 	ApplicationInstanceFinalizer = "applicationinstance.opg.ewbi.finalizer.nby.one"
 )
 
-type ApplicationInstancePhase string
-
-const (
-	ApplicationInstancePhaseReconciling ApplicationInstancePhase = "RECONCILING"
-	ApplicationInstancePhaseReady       ApplicationInstancePhase = "READY"
-	ApplicationInstancePhaseError       ApplicationInstancePhase = "ERROR"
-	ApplicationInstancePhaseUnknown     ApplicationInstancePhase = "UNKNOWN"
-)
-
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // ApplicationInstanceSpec defines the desired state of ApplicationInstance.
@@ -82,7 +73,6 @@ const (
 type ApplicationInstanceStatus struct {
 	State           ApplicationInstanceState `json:"state,omitempty"`
 	Conditions      []metav1.Condition       `json:"conditions,omitempty"`
-	Phase           ApplicationInstancePhase `json:"phase,omitempty"`
 	ErrorMsg        string                   `json:"errorMsg,omitempty"`
 	AccessPointInfo []AccessPointInfo        `json:"accessPointInfo,omitempty"`
 	AppInstanceId   string                   `json:"appInstanceId,omitempty"`
