@@ -4,6 +4,9 @@ kind: RoleBinding
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/name: opg-ewbi-operator
+    app.kubernetes.io/managed-by: kustomize
   name: opg-ewbi-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io

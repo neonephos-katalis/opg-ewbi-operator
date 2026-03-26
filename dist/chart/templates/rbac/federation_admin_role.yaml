@@ -11,6 +11,9 @@ kind: Role
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/name: opg-ewbi
+    app.kubernetes.io/managed-by: kustomize
   name: federation-admin-role
 rules:
 - apiGroups:
