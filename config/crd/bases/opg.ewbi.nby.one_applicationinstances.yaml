@@ -155,8 +155,6 @@ spec:
                 type: array
               errorMsg:
                 type: string
-              phase:
-                type: string
               state:
                 type: string
             type: object

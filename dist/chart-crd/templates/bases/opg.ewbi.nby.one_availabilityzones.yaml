@@ -63,8 +63,6 @@ spec:
                   samples
                 type: string
               flavoursSupported:
-                description: To be considered, for now these are just placeholder
-                  samples
                 items:
                   type: string
                 type: array
@@ -72,11 +70,11 @@ spec:
                 description: To be considered, for now these are just placeholder
                   samples
                 type: string
-              phase:
-                type: string
               reservedComputeResources:
                 description: To be considered, for now these are just placeholder
                   samples
+                type: string
+              state:
                 type: string
             type: object
         type: object
