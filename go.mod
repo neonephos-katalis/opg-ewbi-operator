@@ -5,7 +5,7 @@ go 1.24.6
 toolchain go1.24.8
 
 require (
-	github.com/neonephos-katalis/opg-ewbi-api v1.1.3-dev-callback-1.1.3
+	github.com/neonephos-katalis/opg-ewbi-api v1.0.0-cb
 	github.com/stretchr/testify v1.10.0
 	k8s.io/apimachinery v0.32.0
 	k8s.io/client-go v0.32.0
