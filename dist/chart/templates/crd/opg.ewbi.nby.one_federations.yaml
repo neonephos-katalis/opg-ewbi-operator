@@ -171,8 +171,6 @@ spec:
                   - zoneId
                   type: object
                 type: array
-              phase:
-                type: string
               state:
                 type: string
             type: object
