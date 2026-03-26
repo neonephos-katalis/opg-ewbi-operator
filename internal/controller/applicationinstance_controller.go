@@ -84,7 +84,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 	feder, err := GetFederationByContextId(ctx, r.Client, a.Labels[v1beta1.FederationContextIdLabel], extraLabels)
 	if err != nil {
 		log.Error(err, "An ApplicattionInstance should always have a parent federation")
-		a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 		upErr := r.Status().Update(ctx, a.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -108,7 +108,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 		if isGuest {
 			if err := r.handleExternalAppInstDeletion(ctx, &a, feder); err != nil {
 				log.Error(err, "error deleting appInst")
-				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+				a.Status.State = v1beta1.ApplicationInstanceStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -134,7 +134,7 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			log.Info("AppInst is in Pending state, getting access point info")
 			if err := r.handleExternalAppInstCreation(ctx, &a, feder); err != nil {
 				log.Error(err, "error creating appInst info before deletion")
-				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
+				a.Status.State = v1beta1.ApplicationInstanceStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -146,10 +146,9 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 		}
 	} else {
 		if a.Status.State == "" {
-			a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 			a.Status.State = v1beta1.ApplicationInstanceStatePending
 			a.Status.AppInstanceId = a.Labels[v1beta1.ExternalIdLabel]
-			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
+			log.Info("Initialized new CR state", "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -163,7 +162,6 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 			log.Info("New CR state", "state", a.Status.State)
 			if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
 				log.Error(err, "error handling appInst callback")
-				a.Status.Phase = v1beta1.ApplicationInstancePhaseError
 				a.Status.State = v1beta1.ApplicationInstanceStateFailed
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
@@ -223,7 +221,6 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 		a.Status.State = v1beta1.ApplicationInstanceStateFailed
 		return err
 	}
-	a.Status.Phase = v1beta1.ApplicationInstancePhaseReady
 	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
@@ -231,7 +228,7 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCreation(
 
 		a.Status.State = v1beta1.ApplicationInstanceStatePending
 		a.Status.AppInstanceId = a.Name //"app-inst-2dae064c-28cc-456e-8b0a-dd67bab7d8f7"
-		log.Info("Created external application instances", "phase", a.Status.Phase, "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
+		log.Info("Created external application instances", "state", a.Status.State, "appInstanceId", a.Status.AppInstanceId)
 
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)

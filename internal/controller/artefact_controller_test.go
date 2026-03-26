@@ -60,7 +60,7 @@ func TestArtefactReconciler(t *testing.T) {
 		wantResult       ctrl.Result
 		wantReconcileErr bool
 		wantGetErr       func(err error) bool
-		wantStatusPhase  v1beta1.ArtefactPhase
+		wantStatusState  v1beta1.ArtefactState
 		wantFinalizer    string
 		wantAPIArtefacts []string
 	}
@@ -83,12 +83,12 @@ func TestArtefactReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  "",
+				wantStatusState:  "",
 				wantFinalizer:    v1beta1.ArtefactFinalizer,
 			},
 		},
 		{
-			name: "A Host Artefact is ignored, phase is set to Ready",
+			name: "A Host Artefact is ignored, state is set to Ready",
 			fields: fields{
 				resources: []client.Object{feder, file, makeTestArtefact(testFederationContextId, artefactWithFinalizer())},
 			},
@@ -100,7 +100,7 @@ func TestArtefactReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.ArtefactPhaseReady,
+				wantStatusState:  v1beta1.ArtefactStateReady,
 				wantFinalizer:    v1beta1.ArtefactFinalizer,
 			},
 		},
@@ -122,7 +122,7 @@ func TestArtefactReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.ArtefactPhaseReady,
+				wantStatusState:  v1beta1.ArtefactStateReady,
 				wantFinalizer:    v1beta1.ArtefactFinalizer,
 				wantAPIArtefacts: []string{testArtefactExternalId},
 			},
@@ -133,7 +133,7 @@ func TestArtefactReconciler(t *testing.T) {
 				resources: []client.Object{
 					feder,
 					file,
-					makeTestArtefact(testFederationContextId, artefactWithFinalizer(), artefactWithPhase(v1beta1.ArtefactPhaseReady))},
+					makeTestArtefact(testFederationContextId, artefactWithFinalizer(), artefactWithState(v1beta1.ArtefactStateReady))},
 				mockOpgFederations: []*v1beta1.Federation{feder},
 				mockOpgArtefacts:   []*v1beta1.Artefact{makeTestArtefact(testFederationContextId)},
 			},
@@ -143,7 +143,7 @@ func TestArtefactReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.ArtefactPhaseReady,
+				wantStatusState:  v1beta1.ArtefactStateReady,
 				wantFinalizer:    v1beta1.ArtefactFinalizer,
 				wantAPIArtefacts: []string{testArtefactExternalId},
 			},
@@ -199,7 +199,7 @@ func TestArtefactReconciler(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.resp.wantStatusPhase, reqArt.Status.Phase)
+			assert.Equal(t, tt.resp.wantStatusState, reqArt.Status.State)
 			assert.Contains(t, reqArt.Finalizers, tt.resp.wantFinalizer)
 
 		})
@@ -222,9 +222,9 @@ func artefactWithDeletedAt(now time.Time) artefactOpt {
 	}
 }
 
-func artefactWithPhase(ph v1beta1.ArtefactPhase) artefactOpt {
+func artefactWithState(state v1beta1.ArtefactState) artefactOpt {
 	return func(f *v1beta1.Artefact) {
-		f.Status.Phase = ph
+		f.Status.State = state
 	}
 }
 

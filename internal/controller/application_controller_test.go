@@ -60,7 +60,6 @@ func TestApplicationReconciler(t *testing.T) {
 		wantResult       ctrl.Result
 		wantReconcileErr bool
 		wantGetErr       func(err error) bool
-		wantStatusPhase  v1beta1.ApplicationPhase
 		wantStatusState  v1beta1.ApplicationState
 		wantFinalizer    string
 		wantAPIApps      []string
@@ -84,12 +83,12 @@ func TestApplicationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  "",
+				wantStatusState:  "",
 				wantFinalizer:    v1beta1.AppFinalizer,
 			},
 		},
 		{
-			name: "A Host Application is ignored, phase is set to Ready",
+			name: "A Host Application is ignored, state is set to Onboarded",
 			fields: fields{
 				resources: []client.Object{feder, file, makeTestApplication(testFederationContextId, appWithFinalizer())},
 			},
@@ -101,7 +100,7 @@ func TestApplicationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.ApplicationPhaseReady,
+				wantStatusState:  v1beta1.ApplicationStateOnboarded,
 				wantFinalizer:    v1beta1.AppFinalizer,
 			},
 		},
@@ -119,7 +118,7 @@ func TestApplicationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.ApplicationPhaseReady,
+				wantStatusState:  v1beta1.ApplicationStateOnboarded,
 				wantFinalizer:    v1beta1.AppFinalizer,
 				wantAPIApps:      []string{testAppExternalId},
 			},
@@ -130,7 +129,7 @@ func TestApplicationReconciler(t *testing.T) {
 				resources: []client.Object{
 					feder,
 					file,
-					makeTestApplication(testFederationContextId, appWithFinalizer(), appWithPhase(v1beta1.ApplicationPhaseReady))},
+					makeTestApplication(testFederationContextId, appWithFinalizer(), appWithState(v1beta1.ApplicationStateOnboarded))},
 				mockOpgFederations: []*v1beta1.Federation{feder},
 				mockOpgApps:        []*v1beta1.Application{makeTestApplication(testFederationContextId)},
 			},
@@ -140,7 +139,7 @@ func TestApplicationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.ApplicationPhaseReady,
+				wantStatusState:  v1beta1.ApplicationStateOnboarded,
 				wantFinalizer:    v1beta1.AppFinalizer,
 				wantAPIApps:      []string{testAppExternalId},
 			},
@@ -195,7 +194,6 @@ func TestApplicationReconciler(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.resp.wantStatusPhase, reqApp.Status.Phase)
 			assert.Equal(t, tt.resp.wantStatusState, reqApp.Status.State)
 			assert.Contains(t, reqApp.Finalizers, tt.resp.wantFinalizer)
 
@@ -217,9 +215,9 @@ func appWithDeletedAt(now time.Time) appOpt {
 	}
 }
 
-func appWithPhase(ph v1beta1.ApplicationPhase) appOpt {
+func appWithState(state v1beta1.ApplicationState) appOpt {
 	return func(f *v1beta1.Application) {
-		f.Status.Phase = ph
+		f.Status.State = state
 	}
 }
 

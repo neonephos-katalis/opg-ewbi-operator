@@ -83,7 +83,7 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	feder, err := GetFederationByContextId(ctx, r.Client, f.Labels[v1beta1.FederationContextIdLabel], extraLabels)
 	if err != nil {
 		log.Error(err, "A File should always have a parent federation")
-		f.Status.Phase = v1beta1.FilePhaseError
+		f.Status.State = v1beta1.FileStateError
 		upErr := r.Status().Update(ctx, f.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -107,7 +107,7 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		if isGuest {
 			if err := r.handleExternalFileDeletion(ctx, &f, feder); err != nil {
 				log.Error(err, "error deleting file")
-				f.Status.Phase = v1beta1.FilePhaseError
+				f.Status.State = v1beta1.FileStateError
 				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -132,7 +132,7 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		if f.Status.State == "" {
 			if err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
 				log.Info("error creating file")
-				f.Status.Phase = v1beta1.FilePhaseError
+				f.Status.State = v1beta1.FileStateError
 				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -144,9 +144,8 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 	} else {
 		if f.Status.State == "" {
-			f.Status.Phase = v1beta1.FilePhaseReady
 			f.Status.State = v1beta1.FileStatePending
-			log.Info("Initialized new CR state", "phase", f.Status.Phase, "state", f.Status.State)
+			log.Info("Initialized new CR state", "state", f.Status.State)
 			upErr := r.Status().Update(ctx, f.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -155,7 +154,6 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			log.Info("New CR state", "state", f.Status.State)
 			if err := r.handleExternalFileCallback(ctx, &f, feder); err != nil {
 				log.Error(err, "error handling file callback")
-				f.Status.Phase = v1beta1.FilePhaseError
 				f.Status.State = v1beta1.FileStateError
 				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
@@ -223,14 +221,13 @@ func (r *FileReconciler) handleExternalFileCreation(
 		f.Status.State = v1beta1.FileStateError
 		return err
 	}
-	f.Status.Phase = v1beta1.FilePhaseReady
 	statusCode := res.StatusCode()
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("FILE - Status code 2xx received from OPG API", "status", statusCode)
 
 		f.Status.State = v1beta1.FileStatePending
-		log.Info("Created external file", "phase", f.Status.Phase, "state", f.Status.State)
+		log.Info("Created external file", "state", f.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		f.Status.State = v1beta1.FileStateError

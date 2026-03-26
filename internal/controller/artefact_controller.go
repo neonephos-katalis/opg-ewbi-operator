@@ -81,7 +81,7 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	feder, err := GetFederationByContextId(ctx, r.Client, a.Labels[v1beta1.FederationContextIdLabel], extraLabels)
 	if err != nil {
 		log.Error(err, "An Artefact should always have a parent federation")
-		a.Status.Phase = v1beta1.ArtefactPhaseError
+		a.Status.State = v1beta1.ArtefactStateError
 		upErr := r.Status().Update(ctx, a.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -105,7 +105,7 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if isGuest {
 			if err := r.handleExternalArtefactDeletion(ctx, &a, feder); err != nil {
 				log.Error(err, "error deleting Artefact")
-				a.Status.Phase = v1beta1.ArtefactPhaseError
+				a.Status.State = v1beta1.ArtefactStateError
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -130,7 +130,7 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if a.Status.State == "" {
 			if err := r.handleExternalArtefactCreation(ctx, &a, feder); err != nil {
 				log.Info("error creating Artefact")
-				a.Status.Phase = v1beta1.ArtefactPhaseError
+				a.Status.State = v1beta1.ArtefactStateError
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -142,9 +142,8 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	} else {
 		if a.Status.State == "" {
-			a.Status.Phase = v1beta1.ArtefactPhaseReady
 			a.Status.State = v1beta1.ArtefactStateReconciling
-			log.Info("Initialized new CR state", "phase", a.Status.Phase, "state", a.Status.State)
+			log.Info("Initialized new CR state", "state", a.Status.State)
 			upErr := r.Status().Update(ctx, a.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -154,7 +153,6 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			log.Info("New CR state", "state", a.Status.State)
 			if err := r.handleExternalArtefactCallback(ctx, &a, feder); err != nil {
 				log.Error(err, "error handling artefact callback")
-				a.Status.Phase = v1beta1.ArtefactPhaseError
 				a.Status.State = v1beta1.ArtefactStateError
 				upErr := r.Status().Update(ctx, a.DeepCopy())
 				if upErr != nil {
@@ -242,13 +240,12 @@ func (r *ArtefactReconciler) handleExternalArtefactCreation(
 	}
 
 	statusCode := res.StatusCode()
-	a.Status.Phase = v1beta1.ArtefactPhaseReady
 
 	switch {
 	case statusCode >= 200 && statusCode < 300:
 		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
 		a.Status.State = v1beta1.ArtefactStateReconciling
-		log.Info("Created/Updated external artefact", "phase", a.Status.Phase, "state", a.Status.State)
+		log.Info("Created/Updated external artefact", "state", a.Status.State)
 	case statusCode == 400:
 		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
 		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)

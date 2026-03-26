@@ -114,22 +114,11 @@ const (
 	FederationStateNotAvailable     FederationState = "NOT_AVAILABLE"
 )
 
-type FederationPhase string
-
-const (
-	FederationPhaseReconciling FederationPhase = "PENDING"
-	FederationPhaseReady       FederationPhase = "READY"
-	FederationPhaseError       FederationPhase = "ERROR"
-	FederationPhaseUnknown     FederationPhase = "UNKNOWN"
-)
-
 // FederationStatus defines the observed state of Federation.
 type FederationStatus struct {
 	FederationContextId string `json:"federationContextId,omitempty"`
 
 	State FederationState `json:"state,omitempty"`
-
-	Phase FederationPhase `json:"phase,omitempty"`
 
 	// OfferedAvailabilityZones, GuestOP offered AvailabilityZones
 	// for this Federation

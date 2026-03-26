@@ -98,15 +98,7 @@ type OS struct {
 	Version string `json:"version,omitempty"`
 }
 
-type FilePhase string
 type FileState string
-
-const (
-	FilePhaseReconciling FilePhase = "PENDING"
-	FilePhaseReady       FilePhase = "READY"
-	FilePhaseError       FilePhase = "ERROR"
-	FilePhaseUnknown     FilePhase = "UNKNOWN"
-)
 
 const (
 	FileStatePending FileState = "PENDING"
@@ -117,7 +109,6 @@ const (
 
 // FileStatus defines the observed state of File.
 type FileStatus struct {
-	Phase FilePhase `json:"phase,omitempty"`
 	State FileState `json:"state,omitempty"`
 }
 
