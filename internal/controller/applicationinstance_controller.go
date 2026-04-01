@@ -294,38 +294,39 @@ func (r *ApplicationInstanceReconciler) handleExternalAppInstCallback(
 	}
 	callbackBody.AppInstanceInfo.AppInstanceState = &state
 	accessPointInfo := opgmodels.AccessPointInfo{}
-	for _, ap := range a.Status.AccessPointInfo {
-		endpoint := opgmodels.ServiceEndpoint{
-			Port: ap.AccessPoints.Port,
-		}
-		if ap.AccessPoints.Fqdn != "" {
-			fqdn := opgmodels.Fqdn(ap.AccessPoints.Fqdn)
-			endpoint.Fqdn = &fqdn
-		}
-		if len(ap.AccessPoints.Ipv4Addresses) > 0 {
-			ipv4List := make([]opgmodels.Ipv4Addr, len(ap.AccessPoints.Ipv4Addresses))
-			for i, addr := range ap.AccessPoints.Ipv4Addresses {
-				ipv4List[i] = opgmodels.Ipv4Addr(addr)
+	if len(a.Status.AccessPointInfo) > 0 {
+		for _, ap := range a.Status.AccessPointInfo {
+			endpoint := opgmodels.ServiceEndpoint{
+				Port: ap.AccessPoints.Port,
 			}
-			endpoint.Ipv4Addresses = &ipv4List
-		}
-		if len(ap.AccessPoints.Ipv6Addresses) > 0 {
-			ipv6List := make([]opgmodels.Ipv6Addr, len(ap.AccessPoints.Ipv6Addresses))
-			for i, addr := range ap.AccessPoints.Ipv6Addresses {
-				ipv6List[i] = opgmodels.Ipv6Addr(addr)
+			if ap.AccessPoints.Fqdn != "" {
+				fqdn := opgmodels.Fqdn(ap.AccessPoints.Fqdn)
+				endpoint.Fqdn = &fqdn
 			}
-			endpoint.Ipv6Addresses = &ipv6List
+			if len(ap.AccessPoints.Ipv4Addresses) > 0 {
+				ipv4List := make([]opgmodels.Ipv4Addr, len(ap.AccessPoints.Ipv4Addresses))
+				for i, addr := range ap.AccessPoints.Ipv4Addresses {
+					ipv4List[i] = opgmodels.Ipv4Addr(addr)
+				}
+				endpoint.Ipv4Addresses = &ipv4List
+			}
+			if len(ap.AccessPoints.Ipv6Addresses) > 0 {
+				ipv6List := make([]opgmodels.Ipv6Addr, len(ap.AccessPoints.Ipv6Addresses))
+				for i, addr := range ap.AccessPoints.Ipv6Addresses {
+					ipv6List[i] = opgmodels.Ipv6Addr(addr)
+				}
+				endpoint.Ipv6Addresses = &ipv6List
+			}
+			accessPointInfo = append(accessPointInfo, struct {
+				AccessPoints opgmodels.ServiceEndpoint `json:"accessPoints"`
+				InterfaceId  opgmodels.InterfaceId     `json:"interfaceId"`
+			}{
+				AccessPoints: endpoint,
+				InterfaceId:  opgmodels.InterfaceId(ap.InterfaceId),
+			})
 		}
-		accessPointInfo = append(accessPointInfo, struct {
-			AccessPoints opgmodels.ServiceEndpoint `json:"accessPoints"`
-			InterfaceId  opgmodels.InterfaceId     `json:"interfaceId"`
-		}{
-			AccessPoints: endpoint,
-			InterfaceId:  opgmodels.InterfaceId(ap.InterfaceId),
-		})
+		callbackBody.AppInstanceInfo.AccesspointInfo = &accessPointInfo
 	}
-	callbackBody.AppInstanceInfo.AccesspointInfo = &accessPointInfo
-
 	// Get callback client (pointing to Guest's callback URL)
 	// Using a different cache key to separate callback client from regular client
 	res, err := r.GetOPGClient(
