@@ -25,15 +25,6 @@ const (
 	ApplicationInstanceFinalizer = "applicationinstance.opg.ewbi.finalizer.nby.one"
 )
 
-type ApplicationInstancePhase string
-
-const (
-	ApplicationInstancePhaseReconciling ApplicationInstancePhase = "Reconciling"
-	ApplicationInstancePhaseReady       ApplicationInstancePhase = "Ready"
-	ApplicationInstancePhaseError       ApplicationInstancePhase = "Error"
-	ApplicationInstancePhaseUnknown     ApplicationInstancePhase = "Unknown"
-)
-
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // ApplicationInstanceSpec defines the desired state of ApplicationInstance.
@@ -72,18 +63,30 @@ type Zone struct {
 type ApplicationInstanceState string
 
 const (
-	ApplicationInstanceStatePending     ApplicationInstanceState = "Pending"
-	ApplicationInstanceStateReady       ApplicationInstanceState = "Ready"
-	ApplicationInstanceStateFailed      ApplicationInstanceState = "Failed"
-	ApplicationInstanceStateTerminating ApplicationInstanceState = "Terminating"
+	ApplicationInstanceStatePending     ApplicationInstanceState = "PENDING"
+	ApplicationInstanceStateReady       ApplicationInstanceState = "READY"
+	ApplicationInstanceStateFailed      ApplicationInstanceState = "FAILED"
+	ApplicationInstanceStateTerminating ApplicationInstanceState = "TERMINATING"
 )
 
 // ApplicationInstanceStatus defines the observed state of ApplicationInstance.
 type ApplicationInstanceStatus struct {
-	State      ApplicationInstanceState `json:"state,omitempty"`
-	Conditions []metav1.Condition       `json:"conditions,omitempty"`
-	Phase      ApplicationInstancePhase `json:"phase,omitempty"`
-	ErrorMsg   string                   `json:"errorMsg,omitempty"`
+	State           ApplicationInstanceState `json:"state,omitempty"`
+	Conditions      []metav1.Condition       `json:"conditions,omitempty"`
+	ErrorMsg        string                   `json:"errorMsg,omitempty"`
+	AccessPointInfo []AccessPointInfo        `json:"accessPointInfo,omitempty"`
+	AppInstanceId   string                   `json:"appInstanceId,omitempty"`
+}
+
+type AccessPointInfo struct {
+	InterfaceId  string       `json:"interfaceId,omitempty"`
+	AccessPoints AccessPoints `json:"accessPoints,omitempty"`
+}
+type AccessPoints struct {
+	Port          int      `json:"port,omitempty"`
+	Fqdn          string   `json:"fqdn,omitempty"`
+	Ipv4Addresses []string `json:"ipv4Addresses,omitempty"`
+	Ipv6Addresses []string `json:"ipv6Addresses,omitempty"`
 }
 
 // +kubebuilder:object:root=true

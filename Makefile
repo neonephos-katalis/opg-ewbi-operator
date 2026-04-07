@@ -1,7 +1,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
-IMG_DEBUG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos-debug
-PLATFORM ?= linux/arm64
+IMG_DEBUG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:dev-callback-1.1.3
+PLATFORM ?= linux/amd64
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
 
