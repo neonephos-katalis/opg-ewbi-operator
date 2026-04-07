@@ -49,7 +49,7 @@ func TestFileReconciler(t *testing.T) {
 		wantResult       ctrl.Result
 		wantReconcileErr bool
 		wantGetErr       func(err error) bool
-		wantStatusPhase  v1beta1.FilePhase
+		wantStatusState  v1beta1.FileState
 		wantFinalizer    string
 		wantAPIFiles     []string
 	}
@@ -72,12 +72,12 @@ func TestFileReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  "",
+				wantStatusState:  "",
 				wantFinalizer:    v1beta1.FileFinalizer,
 			},
 		},
 		{
-			name: "A Host File is ignored, phase is set to Ready",
+			name: "A Host File is ignored, state is set to Ready",
 			fields: fields{
 				resources: []client.Object{federHost, makeTestFile(
 					testFederationContextId,
@@ -93,12 +93,12 @@ func TestFileReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.FilePhaseReady,
+				wantStatusState:  v1beta1.FileStateReady,
 				wantFinalizer:    v1beta1.FileFinalizer,
 			},
 		},
 		{
-			name: "A Host File is ignored, phase is set to Ready even if same file in Guest Mode exists",
+			name: "A Host File is ignored, state is set to Ready even if same file in Guest Mode exists",
 			fields: fields{
 				resources: []client.Object{feder, federHost,
 					makeTestFile(
@@ -116,7 +116,7 @@ func TestFileReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.FilePhaseReady,
+				wantStatusState:  v1beta1.FileStateReady,
 				wantFinalizer:    v1beta1.FileFinalizer,
 			},
 		},
@@ -134,7 +134,7 @@ func TestFileReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.FilePhaseReady,
+				wantStatusState:  v1beta1.FileStateReady,
 				wantFinalizer:    v1beta1.FileFinalizer,
 				wantAPIFiles:     []string{testFileExternalId},
 			},
@@ -144,7 +144,7 @@ func TestFileReconciler(t *testing.T) {
 			fields: fields{
 				resources: []client.Object{
 					feder,
-					makeTestFile(testFederationContextId, fileWithFinalizer(), fileWithPhase(v1beta1.FilePhaseReady))},
+					makeTestFile(testFederationContextId, fileWithFinalizer(), fileWithState(v1beta1.FileStateReady))},
 				mockOpgFederations: []*v1beta1.Federation{feder},
 				mockOpgFiles:       []*v1beta1.File{makeTestFile(testFederationContextId)},
 			},
@@ -154,7 +154,7 @@ func TestFileReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.FilePhaseReady,
+				wantStatusState:  v1beta1.FileStateReady,
 				wantFinalizer:    v1beta1.FileFinalizer,
 				wantAPIFiles:     []string{testFileExternalId},
 			},
@@ -209,7 +209,7 @@ func TestFileReconciler(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.resp.wantStatusPhase, reqFile.Status.Phase)
+			assert.Equal(t, tt.resp.wantStatusState, reqFile.Status.State)
 			assert.Contains(t, reqFile.Finalizers, tt.resp.wantFinalizer)
 
 		})
@@ -238,9 +238,9 @@ func fileWithDeletedAt(now time.Time) fileOpt {
 	}
 }
 
-func fileWithPhase(ph v1beta1.FilePhase) fileOpt {
+func fileWithState(state v1beta1.FileState) fileOpt {
 	return func(f *v1beta1.File) {
-		f.Status.Phase = ph
+		f.Status.State = state
 	}
 }
 

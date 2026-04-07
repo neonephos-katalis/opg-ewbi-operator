@@ -61,7 +61,7 @@ type FederationSpec struct {
 
 	// OfferedAvailabilityZones, list of AvailabilityZones the hostOP offers to the guestOP
 	// as part of this Federation
-	OfferedAvailabilityZones []string `json:"offeredAvailabilityZones,omitempty"`
+	OfferedAvailabilityZones []ZoneDetails `json:"offeredAvailabilityZones,omitempty"`
 
 	// AcceptedAvailabilityZones, subset the GuestOP accepts of the  AvailabilityZones
 	// the OP offered for this Federation
@@ -107,20 +107,11 @@ type FederationCredentials struct {
 type FederationState string
 
 const (
-	FederationStateFailed           FederationState = "Failed"
-	FederationStateTemporaryFailure FederationState = "TemporaryFailure"
-	FederationStateAvailable        FederationState = "Available"
-	FederationStateLocked           FederationState = "Locked"
-	FederationStateNotAvailable     FederationState = "NotAvailable"
-)
-
-type FederationPhase string
-
-const (
-	FederationPhaseReconciling FederationPhase = "Pending"
-	FederationPhaseReady       FederationPhase = "Ready"
-	FederationPhaseError       FederationPhase = "Error"
-	FederationPhaseUnknown     FederationPhase = "Unknown"
+	FederationStateFailed           FederationState = "FAILED"
+	FederationStateTemporaryFailure FederationState = "TEMPORARY_FAILURE"
+	FederationStateAvailable        FederationState = "AVAILABLE"
+	FederationStateLocked           FederationState = "LOCKED"
+	FederationStateNotAvailable     FederationState = "NOT_AVAILABLE"
 )
 
 // FederationStatus defines the observed state of Federation.
@@ -128,8 +119,6 @@ type FederationStatus struct {
 	FederationContextId string `json:"federationContextId,omitempty"`
 
 	State FederationState `json:"state,omitempty"`
-
-	Phase FederationPhase `json:"phase,omitempty"`
 
 	// OfferedAvailabilityZones, GuestOP offered AvailabilityZones
 	// for this Federation

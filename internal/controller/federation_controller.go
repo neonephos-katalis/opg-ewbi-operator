@@ -92,7 +92,7 @@ func (r *FederationReconciler) Reconcile(
 		if isGuest {
 			if err := r.handleExternalFederationDeletion(ctx, &f); err != nil {
 				log.Error(err, "error deleting federation")
-				f.Status.Phase = v1beta1.FederationPhaseError
+				f.Status.State = v1beta1.FederationStateNotAvailable
 				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
 					log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -117,7 +117,7 @@ func (r *FederationReconciler) Reconcile(
 		updated, err := r.handleExternalFederationCreation(ctx, &f)
 		if err != nil {
 			log.Error(err, errorCreatingFederationMsg)
-			f.Status.Phase = v1beta1.FederationPhaseError
+			f.Status.State = v1beta1.FederationStateNotAvailable
 			upErr := r.Status().Update(ctx, f.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -131,7 +131,7 @@ func (r *FederationReconciler) Reconcile(
 
 		if err := r.handleAcceptExternalAZ(ctx, &f); err != nil {
 			log.Error(err, "error accepting az federation")
-			f.Status.Phase = v1beta1.FederationPhaseError
+			f.Status.State = v1beta1.FederationStateNotAvailable
 			upErr := r.Status().Update(ctx, f.DeepCopy())
 			if upErr != nil {
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -139,7 +139,12 @@ func (r *FederationReconciler) Reconcile(
 			return ctrl.Result{}, err
 		}
 	} else {
-		f.Status.Phase = v1beta1.FederationPhaseReady
+		if f.Status.State == "" {
+			f.Status.State = v1beta1.FederationStateNotAvailable
+		}
+		if f.Spec.AcceptedAvailabilityZones != nil {
+			f.Status.State = v1beta1.FederationStateAvailable
+		}
 		upErr := r.Status().Update(ctx, f.DeepCopy())
 		if upErr != nil {
 			log.Error(upErr, errorUpdatingResourceStatusMsg)
@@ -310,7 +315,7 @@ func (r *FederationReconciler) handleExternalFederationDeletion(
 func (r *FederationReconciler) handleAcceptExternalAZ(ctx context.Context, f *v1beta1.Federation) error {
 	log := log.FromContext(ctx)
 
-	if len(f.Status.OfferedAvailabilityZones) != 1 {
+	if len(f.Status.OfferedAvailabilityZones) == 0 {
 		log.Info("No AZ was offered, no AZ available to be accepted")
 		return nil
 	}

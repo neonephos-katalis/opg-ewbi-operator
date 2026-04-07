@@ -3,7 +3,7 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: federation-host
+  namespace: katalis-dev
   annotations:
     opg.ewbi.nby.one/origin-mcc: "001" # not used, will be overridden by /partner request body
     opg.ewbi.nby.one/origin-mncs: "001" # not used, will be overridden by /partner request body
@@ -16,6 +16,14 @@ metadata:
   name: fed-e35f69d8-ae5a-456b-9f95-d950e4c03e8d # prefix-uuid
 spec:
   offeredAvailabilityZones:
-    - 2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f # uuid
+    - geographyDetails: "Milano, Italia. Area urbana a forte densità di traffico e industriale."
+      geolocation: "45.4642,9.1900"
+      zoneId: "2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f"
+    - geographyDetails: "Roma, Italia. Area periferica residenziale, bassa densità di popolazione."
+      geolocation: "41.9028,12.4964"
+      zoneId: "3a8fffaf-50de-4f93-8c6f-05f1c84b5a5f"
+    - geographyDetails: "Torino, Italia. Zona rurale vicino al confine con la Francia."
+      geolocation: "45.0703,7.6869"
+      zoneId: "4a8fffaf-50de-4f93-8c6f-05f1c84b5a5f"
   guestPartnerCredentials:
     clientId:   3acde22c-d245-480d-b01e-24e38e01806d # uuid

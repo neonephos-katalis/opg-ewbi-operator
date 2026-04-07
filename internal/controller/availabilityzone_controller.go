@@ -70,7 +70,7 @@ func (r *AvailabilityZoneReconciler) Reconcile(
 	}
 	log.Info("AZ object obtained", "name", az.Name)
 
-	az.Status.Phase = v1beta1.AvailabilityZonePhaseReady
+	az.Status.State = v1beta1.ZoneStateReady
 	upErr := r.Status().Update(ctx, az.DeepCopy())
 	if upErr != nil {
 		log.Error(upErr, errorUpdatingResourceStatusMsg)

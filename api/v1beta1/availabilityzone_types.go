@@ -44,23 +44,22 @@ type GeoLocation string
 // ZoneIdentifier Human readable name of the zone.
 type ZoneIdentifier string
 
-type AvailabilityZonePhase string
+type ZoneState string
 
 const (
-	AvailabilityZonePhaseReconciling AvailabilityZonePhase = "Pending"
-	AvailabilityZonePhaseReady       AvailabilityZonePhase = "Ready"
-	AvailabilityZonePhaseError       AvailabilityZonePhase = "Error"
-	AvailabilityZonePhaseUnknown     AvailabilityZonePhase = "Unknown"
+	ZoneStatePending ZoneState = "PENDING"
+	ZoneStateReady   ZoneState = "READY"
+	ZoneStateError   ZoneState = "ERROR"
+	ZoneStateUnknown ZoneState = "UNKNOWN"
 )
 
 // AvailabilityZoneStatus defines the observed state of AvailabilityZone.
 type AvailabilityZoneStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
-
-	Phase AvailabilityZonePhase `json:"phase,omitempty"`
-
 	// To be considered, for now these are just placeholder samples
-	FlavoursSupported []string `json:"flavoursSupported,omitempty"`
+
+	State             ZoneState `json:"state,omitempty"`
+	FlavoursSupported []string  `json:"flavoursSupported,omitempty"`
 
 	// To be considered, for now these are just placeholder samples
 	ReservedComputeResources string `json:"reservedComputeResources,omitempty"`

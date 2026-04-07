@@ -67,26 +67,15 @@ type QoSProfile struct {
 type ApplicationState string
 
 const (
-	ApplicationStatePending    ApplicationState = "Pending"
-	ApplicationStateOnboarded  ApplicationState = "Onboarded"
-	ApplicationStateDeboarding ApplicationState = "Deboarding"
-	ApplicationStateFailed     ApplicationState = "Failed"
-	ApplicationStateRemoved    ApplicationState = "Removed"
-)
-
-type ApplicationPhase string
-
-const (
-	ApplicationPhaseReconciling ApplicationPhase = "Pending"
-	ApplicationPhaseReady       ApplicationPhase = "Ready"
-	ApplicationPhaseError       ApplicationPhase = "Error"
-	ApplicationPhaseUnknown     ApplicationPhase = "Unknown"
+	ApplicationStatePending    ApplicationState = "PENDING"
+	ApplicationStateOnboarded  ApplicationState = "ONBOARDED"
+	ApplicationStateDeboarding ApplicationState = "DEBOARDING"
+	ApplicationStateFailed     ApplicationState = "FAILED"
+	ApplicationStateRemoved    ApplicationState = "REMOVED"
 )
 
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
-	Phase ApplicationPhase `json:"phase,omitempty"`
-
 	State ApplicationState `json:"state,omitempty"`
 }
 

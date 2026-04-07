@@ -98,18 +98,18 @@ type OS struct {
 	Version string `json:"version,omitempty"`
 }
 
-type FilePhase string
+type FileState string
 
 const (
-	FilePhaseReconciling FilePhase = "Pending"
-	FilePhaseReady       FilePhase = "Ready"
-	FilePhaseError       FilePhase = "Error"
-	FilePhaseUnknown     FilePhase = "Unknown"
+	FileStatePending FileState = "PENDING"
+	FileStateReady   FileState = "READY"
+	FileStateError   FileState = "ERROR"
+	FileStateUnknown FileState = "UNKNOWN"
 )
 
 // FileStatus defines the observed state of File.
 type FileStatus struct {
-	Phase FilePhase `json:"phase,omitempty"`
+	State FileState `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true

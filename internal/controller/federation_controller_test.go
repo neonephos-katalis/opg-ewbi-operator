@@ -72,7 +72,6 @@ func TestFederationReconciler(t *testing.T) {
 		wantResult         ctrl.Result
 		wantReconcileErr   bool
 		wantGetErr         func(err error) bool
-		wantStatusPhase    v1beta1.FederationPhase
 		wantStatusState    v1beta1.FederationState
 		wantFinalizer      string
 		wantOfferedAZs     []v1beta1.ZoneDetails
@@ -98,12 +97,12 @@ func TestFederationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  "",
+				wantStatusState:  "",
 				wantFinalizer:    v1beta1.FederationFinalizer,
 			},
 		},
 		{
-			name: "A Host Federation is ignored, phase is set to Ready",
+			name: "A Host Federation is ignored, state is set to Ready",
 			fields: fields{
 				resources: []client.Object{
 					makeTestFederation(
@@ -121,7 +120,7 @@ func TestFederationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusPhase:  v1beta1.FederationPhaseReady,
+				wantStatusState:  v1beta1.FederationStateAvailable,
 				wantFinalizer:    v1beta1.FederationFinalizer},
 		},
 		{
@@ -144,7 +143,6 @@ func TestFederationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:         ctrl.Result{Requeue: false},
 				wantReconcileErr:   false,
-				wantStatusPhase:    "", // Phase is not updated
 				wantStatusState:    v1beta1.FederationStateAvailable,
 				wantFinalizer:      v1beta1.FederationFinalizer,
 				wantOfferedAZs:     []v1beta1.ZoneDetails{{ZoneId: testAZName}},
@@ -178,7 +176,6 @@ func TestFederationReconciler(t *testing.T) {
 			resp: response{
 				wantResult:         ctrl.Result{Requeue: false},
 				wantReconcileErr:   false,
-				wantStatusPhase:    "", // Phase is not updated
 				wantStatusState:    v1beta1.FederationStateAvailable,
 				wantFinalizer:      v1beta1.FederationFinalizer,
 				wantOfferedAZs:     []v1beta1.ZoneDetails{{ZoneId: testAZName}},
@@ -247,7 +244,6 @@ func TestFederationReconciler(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.resp.wantStatusPhase, reqFeder.Status.Phase)
 			assert.Equal(t, tt.resp.wantStatusState, reqFeder.Status.State)
 			assert.Contains(t, reqFeder.Finalizers, tt.resp.wantFinalizer)
 			assert.Equal(t, tt.resp.wantOfferedAZs, reqFeder.Status.OfferedAvailabilityZones)
