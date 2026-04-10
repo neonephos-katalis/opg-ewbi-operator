@@ -20,6 +20,7 @@ RUN --mount=type=secret,id=netrc,dst=/root/.netrc \
 COPY cmd/main.go cmd/main.go
 COPY api/ api/
 COPY internal/ internal/
+COPY pkg/ pkg/
 
 FROM base AS builder
 # Build
