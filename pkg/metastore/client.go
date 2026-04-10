@@ -5,7 +5,7 @@ import (
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
-	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 )
 
 var _ Client = &k8sClient{}

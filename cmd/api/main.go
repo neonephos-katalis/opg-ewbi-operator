@@ -15,7 +15,7 @@ import (
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/server"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/config"
 	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/handler"
-	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 )
 
 func main() {
