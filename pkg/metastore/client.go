@@ -3,8 +3,8 @@ package metastore
 import (
 	"context"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
-	"github.com/neonephos-katalis/opg-ewbi-api/pkg/uuid"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
+	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
 	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 )
 

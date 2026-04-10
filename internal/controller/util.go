@@ -21,7 +21,7 @@ import (
 	"errors"
 
 	"github.com/go-logr/logr"
-	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	opgmodels "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"

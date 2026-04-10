@@ -3,7 +3,7 @@ package metastore
 import (
 	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 )
 
 type PartnerAvailabilityZone struct {

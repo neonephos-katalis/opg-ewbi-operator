@@ -6,7 +6,7 @@ import (
 
 	k8scl "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/pkg/metastore"
+	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/metastore"
 	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 )
 

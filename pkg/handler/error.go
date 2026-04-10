@@ -6,8 +6,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
-	"github.com/neonephos-katalis/opg-ewbi-api/pkg/metastore"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
+	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/metastore"
 )
 
 // sendErrorResponse sends a JSON response with a specified status code and error detail.

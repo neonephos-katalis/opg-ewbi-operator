@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 )
 
 func Validator() echo.MiddlewareFunc {
