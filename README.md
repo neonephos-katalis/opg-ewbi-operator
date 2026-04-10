@@ -1,6 +1,6 @@
 # opg-ewbi-operator
 
-OPG EWBI Operator implements a subset of the OPG East/WestBound Interface and translates these requests to k8s CRD resources.
+OPG EWBI Operator and API — implements a subset of the OPG East/WestBound Interface. The operator translates requests to k8s CRD resources, while the API server provides the REST interface.
 
 ## ⚠️ Under development
 
@@ -8,7 +8,11 @@ OPG EWBI Operator implements a subset of the OPG East/WestBound Interface and tr
 
 ## Description
 
-The repository implements a subset of the GSMA OPG East/WestBound Interfaces, including a k8s Operator mapping the OPG objects to k8s CRD instances, and viceversa. It relies on other components (e.g. NearbyOne's Okto orchestrator) also monitoring the generated CRs to trigger the actions required to deploy the requested applications on the federated cluster. And also the other way around, other components can create the CRs that would trigger the OPG East/Westbound Interface to interact with federated orchestrator to deploy applications externally.
+This repository is a unified monorepo containing both:
+- **OPG EWBI API** — A REST API server implementing the GSMA OPG Federation API (EWBI protocol)
+- **OPG EWBI Operator** — A Kubernetes operator that reconciles CRDs and interacts with partner OPs
+
+The system implements a subset of the GSMA OPG East/WestBound Interfaces, including a k8s Operator mapping the OPG objects to k8s CRD instances. It relies on other components (e.g. NearbyOne's Okto orchestrator) also monitoring the generated CRs to trigger the actions required to deploy the requested applications on the federated cluster.
 
 ## Funding and support
 
@@ -83,6 +87,8 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
     ```
 2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
 3. After the download, open this folder via terminal and exec the following command:
+
+  Build the **operator** image:
   ```make docker-build-controller```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos --secret id=netrc,src=$HOME/.netrc .```
@@ -94,20 +100,26 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
 
   To use the debug image, install the chart with `--set image.tag=neonephos-debug` and exec into the pod with `kubectl exec -it <pod-name> -- bash`
 
-4. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
-5. After the download, open the created folder, `opg-ewbi-api`, via terminale and exec the following command:
-  ```docker-compose build federation --no-cache ```
-   **or**
-  ```docker compose build federation --no-cache ```
-6. ```docker login ghcr.io```
-7. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
+4. Build the **API** image:
+
+  ```make docker-build-api```
+      **or**
+  ```docker build -f Dockerfile.api --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos --secret id=netrc,src=$HOME/.netrc .```
+
+  Using docker-compose:
+  ```bash
+  docker-compose build federation
+  ```
+
+5. ```docker login ghcr.io```
+6. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
       --docker-username= $username \
       --docker-password= $accessToken
   ```
-8. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
+7. In the end exec this command (in the **project root folder** via terminal)
   ```bash
   helm install federation-manager dist/chart -n federation \
   --set federation.services.federation.nodePort=30080 \
@@ -202,4 +214,55 @@ kubectl delete -f config/samples/fileGuest.yaml
 kubectl delete -f config/samples/artifactGuest.yaml
 kubectl delete -f config/samples/appGuest.yaml
 kubectl delete -f config/samples/appInstGuest.yaml
+```
+## Regenerate API Code
+
+To regenerate Go client/server code after OpenAPI specification changes:
+
+```bash
+docker-compose build apigen
+docker-compose up apigen
+```
+
+This generates code from `api/ewbi/FederationApi_v1.3.0.yaml` into:
+- `api/ewbi/client/` — Generated client code
+- `api/ewbi/server/` — Generated server code
+- `api/ewbi/models/` — Generated model definitions
+
+## Project Structure
+
+```
+.
+├── api/
+│   ├── ewbi/                          # EWBI Federation API (generated + specs)
+│   │   ├── FederationApi_v1.3.0.yaml  # OpenAPI specification
+│   │   ├── apigen.sh                  # Code generation script
+│   │   ├── client/                    # Generated client code
+│   │   ├── server/                    # Generated server code
+│   │   └── models/                    # Generated model definitions
+│   └── operator/
+│       └── v1beta1/                   # CRD type definitions
+├── cmd/
+│   ├── main.go                        # Operator entry point
+│   └── api/
+│       └── main.go                    # API server entry point
+├── internal/                          # Operator internals
+│   ├── config/                        # API server configuration
+│   ├── controller/                    # Reconcilers
+│   ├── indexer/                       # Field indexers
+│   ├── multipart/                     # Multipart form helpers
+│   ├── opg/                           # OPG client cache
+│   └── options/                       # Namespace config
+├── pkg/                               # API server packages
+│   ├── handler/                       # HTTP handlers
+│   ├── metastore/                     # K8s-backed persistence
+│   ├── deployment/                    # Install/uninstall logic
+│   └── ...
+├── config/                            # Kustomize manifests
+├── dist/chart/                        # Helm chart
+├── Dockerfile                         # Operator image
+├── Dockerfile.api                     # API server image
+├── Dockerfile.apigen                  # Code generator image
+├── docker-compose.yaml                # Local dev compose
+└── Makefile                           # Build targets
 ```
