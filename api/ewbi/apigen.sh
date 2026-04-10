@@ -3,7 +3,7 @@
 # Generate the code for the API and callbacks
 api=./swagger.yaml
 
-cd /api/federation
+cd /api/ewbi
 yq eval-all --inplace 'del(.servers, .components.securitySchemes, .security) |
         ... comments="" |
         . head_comment="DO NOT EDIT - Source: https://github.com/edge-collab/federation-ewbi" ' $api
