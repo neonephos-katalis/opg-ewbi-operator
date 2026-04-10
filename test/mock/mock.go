@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 
 	opgc "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/client"
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"

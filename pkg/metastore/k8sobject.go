@@ -16,7 +16,7 @@ import (
 	k8scli "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
-	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 )
 
 type Opt func(obj metav1.Object) error
