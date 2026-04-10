@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"sync"
 
-	opgc "github.com/neonephos-katalis/opg-ewbi-api/api/federation/client"
+	opgc "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/client"
 )
 
 type OPGClientsMap struct {

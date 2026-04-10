@@ -8,8 +8,8 @@ import (
 
 	"github.com/icza/gog"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
-	camara "github.com/neonephos-katalis/opg-ewbi-api/api/federation/server"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
+	camara "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/server"
 	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 )
 

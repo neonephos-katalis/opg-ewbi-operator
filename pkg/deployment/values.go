@@ -1,6 +1,6 @@
 package deployment
 
-import "github.com/neonephos-katalis/opg-ewbi-api/api/federation/server"
+import "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/server"
 
 type Values struct {
 	FederationContextID string                                 `json:"federationContextId,omitempty"`

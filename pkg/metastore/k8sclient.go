@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8scli "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
 )
 
