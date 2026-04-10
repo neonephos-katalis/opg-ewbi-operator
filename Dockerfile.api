@@ -18,7 +18,7 @@ COPY . ./
 
 # RUN --mount=type=cache,sharing=locked,id=gomod,target=/go/pkg/mod/cache \
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -o ./app ./cmd/app/
+    go build -o ./app ./cmd/api/
 
 # Debug image with netshoot for troubleshooting
 # Includes bash, curl, wget, tcpdump, and many other debugging tools
