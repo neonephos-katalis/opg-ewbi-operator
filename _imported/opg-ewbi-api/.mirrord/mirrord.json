@@ -1,0 +1,13 @@
+{
+    "target": {
+        "path": {
+            "deployment": "nearbyone-federation-api"
+        }
+    },
+    "feature": {
+        "env": true,
+        "network": {
+            "incoming": "steal"
+        }
+    }
+}

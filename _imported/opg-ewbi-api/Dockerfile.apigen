@@ -1,0 +1,6 @@
+# syntax = docker/dockerfile:1
+FROM golang:1.24.6-alpine AS builder
+
+RUN apk add -U yq bash sed && \
+    go install github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.2.0
+ENTRYPOINT ["/api/apigen.sh"]
