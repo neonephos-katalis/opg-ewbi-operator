@@ -1,0 +1,9 @@
+package: server
+output: server/server.gen.go
+additional-imports:
+  - package: github.com/neonephos-katalis/opg-ewbi-api/api/federation/models
+    alias: .
+generate:
+  echo-server: true
+  embedded-spec: false
+  strict-server: true

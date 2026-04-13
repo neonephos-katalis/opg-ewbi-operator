@@ -1,0 +1,10 @@
+{
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "editor.formatOnSave": true,
+    "editor.rulers": [
+        99
+    ],
+    "go.testTimeout": "20m",
+    "go.formatTool": "goimports"
+}
