@@ -77,7 +77,7 @@ federation:
     federation:
       name: nearbyone-federation-api
       port: 8080
-      nodePort: 30081  # Optional: specify a specific nodePort (30000-32767), or leave empty for auto-assignment
+      # nodePort: 30081  # Optional: specify a specific nodePort (30000-32767), or leave empty for auto-assignment
 
 fullnameOverride: nearbyone
 
