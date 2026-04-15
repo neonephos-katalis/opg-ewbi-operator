@@ -10,6 +10,14 @@ OPG EWBI Operator implements a subset of the OPG East/WestBound Interface and tr
 
 The repository implements a subset of the GSMA OPG East/WestBound Interfaces, including a k8s Operator mapping the OPG objects to k8s CRD instances, and viceversa. It relies on other components (e.g. NearbyOne's Okto orchestrator) also monitoring the generated CRs to trigger the actions required to deploy the requested applications on the federated cluster. And also the other way around, other components can create the CRs that would trigger the OPG East/Westbound Interface to interact with federated orchestrator to deploy applications externally.
 
+## Funding and support
+
+This open source project is part of activities carried out within the Important Project of Common European Interest on Next Generation Cloud Infrastructure and Services (IPCEI-CIS), an EU initiative to build a sovereign, interoperable and energy-efficient cloud‑to‑edge infrastructure in Europe.
+
+<p align="center">
+  <img src="assets/eu-funded-nextgenerationeu.png" alt="EU funding logo" width="700" />
+</p>
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. All PRs must follow conventional commits and the PR template.
@@ -127,13 +135,13 @@ docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos
 docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-arm64:v1.0.0
 docker push ghcr.io/neonephos-katalis/opg-ewbi-api-arm64:v1.0.0
 ```
-      
+
 **For Linux/AMD64:** **NOW IMAGES AVAILABLE**
 ```bash
 docker push ghcr.io/neonephos-katalis/opg-ewbi-operator-amd64:v1.0.0
 docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
 ```
-      
+
 The Nearby code is written to work in both role (HOST and GUEST).
 If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (federation-host and federation-guest)
 
@@ -195,4 +203,3 @@ kubectl delete -f config/samples/artifactGuest.yaml
 kubectl delete -f config/samples/appGuest.yaml
 kubectl delete -f config/samples/appInstGuest.yaml
 ```
-
