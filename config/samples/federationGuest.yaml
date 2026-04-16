@@ -21,7 +21,7 @@ spec:
         - "99"
   guestPartnerCredentials:
     clientId: 3acde22c-d245-480d-b01e-24e38e01806d
-    tokenUrl: "http://nearbyone-federation-api.katalis-dev.svc.cluster.local:8080"
+    tokenUrl: "http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080"
   partner:
     callbackCredentials:
       clientId: 5tyde22c-d245-480d-b01e-24e38e7689de
