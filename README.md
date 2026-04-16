@@ -35,8 +35,10 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Al
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
 
+For local end-to-end testing using Kind, see [docs/manual-testing-kind.md](docs/manual-testing-kind.md) (full Guest ↔ Host flow) and [docs/manual-callbacks-testing-kind.md](docs/manual-callbacks-testing-kind.md) (Host → Guest callback flow).
+
 ### Configuration: platform ARM64 or platform AMD64
-This code is designed to run on both ARM64 and AMD64 platforms, but to enable this, some changes need to be made to the following files: values.yaml in (dist/chart), the makefile, and docker-compose.yaml.
+This code is designed to run on both ARM64 and AMD64 platforms, but to enable this, some changes need to be made to the following files: values.yaml in (dist/chart) and the Makefile.
 
 1. For the **value.yaml** in OPG-EWBI-OPERATOR (**dist/chart**), you need to change the repository parameter values (line 7 and line 49) as follows:
 
@@ -58,20 +60,10 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
     - Line 2: ```PLATFORM ?= linux/amd64```
 
-3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow and changes the line 10:
-
-    **For Linux/ARM64**:
-     - Uncommnet the lines 5,19,28 and 36 and comment the lines 6,20,29 ans 37
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
-
-    **For Linux/AMD64**:
-     - Uncomment the lines 6,20,29 and 37 and comment the lines 5,19,28 and 36
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
-
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed.
 
-**⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
+**⚠️ Currently, the files are set for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms, follow the previously described steps (Configuration: platform ARM64 or platform AMD64)**
 
 1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
 
@@ -106,13 +98,8 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
       **or**
   ```docker build -f Dockerfile.api --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos --secret id=netrc,src=$HOME/.netrc .```
 
-  Using docker-compose:
-  ```bash
-  docker-compose build federation
-  ```
-
 5. ```docker login ghcr.io```
-6. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
+6. In your cluster create a new namespace (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
@@ -155,10 +142,10 @@ docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
 ```
 
 The Nearby code is written to work in both role (HOST and GUEST).
-If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (federation-host and federation-guest)
+If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (katalis-dev-host and katalis-dev-guest)
 
 ```bash
-helm install federationhost dist/chart -n federation-host \
+helm install federationhost dist/chart -n katalis-dev-host \
   --set federation.services.federation.nodePort=30080 \
   --set crd.enable=true
 ```
@@ -166,7 +153,7 @@ helm install federationhost dist/chart -n federation-host \
 We set crd to false since we have already installed them
 
 ```bash
-helm install federationguest dist/chart -n federation-guest \
+helm install federationguest dist/chart -n katalis-dev-guest \
 --set federation.services.federation.nodePort=30081 \
 --set crd.enable=false
 ```
@@ -191,7 +178,7 @@ kubectl apply -f config/samples/federationGuest.yaml
 In federationGuest, you will see we define the URL of the EWBI API of the host.
 
 Example:
-http://nearbyone-federation-api.federation-host.svc.cluster.local:8080
+http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080
 (and the callback url. Bear in mind the callback flow is not complete)
 
 You should see in the federation status the FederationContextId. Copy it and use this for the next CRs.
@@ -199,7 +186,7 @@ You should see in the federation status the FederationContextId. Copy it and use
 
 ```bash
 kubectl apply -f config/samples/fileGuest.yaml
-kubectl apply -f config/samples/artifactGuest.yaml
+kubectl apply -f config/samples/artefactGuest.yaml
 kubectl apply -f config/samples/appGuest.yaml
 kubectl apply -f config/samples/appInstGuest.yaml
 ```
@@ -211,7 +198,7 @@ If you delete guest ones, mirrored host resources will get deleted.
 
 ```bash
 kubectl delete -f config/samples/fileGuest.yaml
-kubectl delete -f config/samples/artifactGuest.yaml
+kubectl delete -f config/samples/artefactGuest.yaml
 kubectl delete -f config/samples/appGuest.yaml
 kubectl delete -f config/samples/appInstGuest.yaml
 ```
@@ -220,8 +207,7 @@ kubectl delete -f config/samples/appInstGuest.yaml
 To regenerate Go client/server code after OpenAPI specification changes:
 
 ```bash
-docker-compose build apigen
-docker-compose up apigen
+make apigen
 ```
 
 This generates code from `api/ewbi/FederationApi_v1.3.0.yaml` into:
@@ -263,6 +249,5 @@ This generates code from `api/ewbi/FederationApi_v1.3.0.yaml` into:
 ├── Dockerfile                         # Operator image
 ├── Dockerfile.api                     # API server image
 ├── Dockerfile.apigen                  # Code generator image
-├── docker-compose.yaml                # Local dev compose
 └── Makefile                           # Build targets
 ```
