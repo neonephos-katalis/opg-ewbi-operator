@@ -42,6 +42,7 @@ spec:
           command:
             - /manager
           image: {{ .Values.controllerManager.container.image.repository }}:{{ .Values.controllerManager.container.image.tag }}
+          imagePullPolicy: {{ .Values.controllerManager.container.image.pullPolicy | default "Always" }}
           env:
             - name: NAMESPACE
               valueFrom:
