@@ -154,15 +154,18 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 				return ctrl.Result{}, upErr
 			}
-		}
-		if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
-			log.Error(err, "error handling appInst callback")
-			a.Status.State = v1beta1.ApplicationInstanceStateFailed
-			upErr := r.Status().Update(ctx, a.DeepCopy())
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+		} else {
+			log.Info("New CR state", "state", a.Status.State)
+			if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error handling appInst callback")
+				a.Status.State = v1beta1.ApplicationInstanceStateFailed
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
 			}
 		}
+
 	}
 	return ctrl.Result{}, nil
 }
