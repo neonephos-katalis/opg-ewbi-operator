@@ -1,9 +1,9 @@
-# Create this when the Origin Partner (Client) 
+# Create this when the Origin Partner (Client)
 # credentials are created in the host system
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: katalis-dev
+  namespace: katalis-dev-host
   annotations:
     opg.ewbi.nby.one/origin-mcc: "001" # not used, will be overridden by /partner request body
     opg.ewbi.nby.one/origin-mncs: "001" # not used, will be overridden by /partner request body

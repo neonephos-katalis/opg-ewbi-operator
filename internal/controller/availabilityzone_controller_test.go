@@ -20,8 +20,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

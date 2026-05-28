@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 
-	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	opgmodels "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,8 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )
 
@@ -154,15 +154,18 @@ func (r *ApplicationInstanceReconciler) Reconcile(
 				log.Error(upErr, errorUpdatingResourceStatusMsg)
 				return ctrl.Result{}, upErr
 			}
-		}
-		if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
-			log.Error(err, "error handling appInst callback")
-			a.Status.State = v1beta1.ApplicationInstanceStateFailed
-			upErr := r.Status().Update(ctx, a.DeepCopy())
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+		} else {
+			log.Info("New CR state", "state", a.Status.State)
+			if err := r.handleExternalAppInstCallback(ctx, &a, feder); err != nil {
+				log.Error(err, "error handling appInst callback")
+				a.Status.State = v1beta1.ApplicationInstanceStateFailed
+				upErr := r.Status().Update(ctx, a.DeepCopy())
+				if upErr != nil {
+					log.Error(upErr, errorUpdatingResourceStatusMsg)
+				}
 			}
 		}
+
 	}
 	return ctrl.Result{}, nil
 }

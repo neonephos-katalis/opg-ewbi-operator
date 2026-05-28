@@ -1,0 +1,8 @@
+package: client
+output: client/client.gen.go
+additional-imports:
+  - package: github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models
+    alias: .
+generate:
+  client: true
+  embedded-spec: false

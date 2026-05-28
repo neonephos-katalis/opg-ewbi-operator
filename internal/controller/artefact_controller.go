@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 
-	opgmodels "github.com/neonephos-katalis/opg-ewbi-api/api/federation/models"
+	opgmodels "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,8 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/multipart"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )

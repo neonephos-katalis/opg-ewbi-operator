@@ -1,6 +1,6 @@
 # opg-ewbi-operator
 
-OPG EWBI Operator implements a subset of the OPG East/WestBound Interface and translates these requests to k8s CRD resources.
+OPG EWBI Operator and API — implements a subset of the OPG East/WestBound Interface. The operator translates requests to k8s CRD resources, while the API server provides the REST interface.
 
 ## ⚠️ Under development
 
@@ -8,7 +8,11 @@ OPG EWBI Operator implements a subset of the OPG East/WestBound Interface and tr
 
 ## Description
 
-The repository implements a subset of the GSMA OPG East/WestBound Interfaces, including a k8s Operator mapping the OPG objects to k8s CRD instances, and viceversa. It relies on other components (e.g. NearbyOne's Okto orchestrator) also monitoring the generated CRs to trigger the actions required to deploy the requested applications on the federated cluster. And also the other way around, other components can create the CRs that would trigger the OPG East/Westbound Interface to interact with federated orchestrator to deploy applications externally.
+This repository is a unified monorepo containing both:
+- **OPG EWBI API** — A REST API server implementing the GSMA OPG Federation API (EWBI protocol)
+- **OPG EWBI Operator** — A Kubernetes operator that reconciles CRDs and interacts with partner OPs
+
+The system implements a subset of the GSMA OPG East/WestBound Interfaces, including a k8s Operator mapping the OPG objects to k8s CRD instances. It relies on other components (e.g. NearbyOne's Okto orchestrator) also monitoring the generated CRs to trigger the actions required to deploy the requested applications on the federated cluster.
 
 ## Funding and support
 
@@ -31,8 +35,10 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Al
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
 
+For local end-to-end testing using Kind, see [docs/manual-testing-kind.md](docs/manual-testing-kind.md) (full Guest ↔ Host flow) and [docs/manual-callbacks-testing-kind.md](docs/manual-callbacks-testing-kind.md) (Host → Guest callback flow).
+
 ### Configuration: platform ARM64 or platform AMD64
-This code is designed to run on both ARM64 and AMD64 platforms, but to enable this, some changes need to be made to the following files: values.yaml in (dist/chart), the makefile, and docker-compose.yaml.
+This code is designed to run on both ARM64 and AMD64 platforms, but to enable this, some changes need to be made to the following files: values.yaml in (dist/chart) and the Makefile.
 
 1. For the **value.yaml** in OPG-EWBI-OPERATOR (**dist/chart**), you need to change the repository parameter values (line 7 and line 49) as follows:
 
@@ -54,20 +60,10 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
     - Line 2: ```PLATFORM ?= linux/amd64```
 
-3. For the docker-compose.yaml in OPG-EWBI-API, you need to uncomment the following lines 5-6, 19-20, 28-29, 36-37 as follow and changes the line 10:
-
-    **For Linux/ARM64**:
-     - Uncommnet the lines 5,19,28 and 36 and comment the lines 6,20,29 ans 37
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos```
-
-    **For Linux/AMD64**:
-     - Uncomment the lines 6,20,29 and 37 and comment the lines 5,19,28 and 36
-     - Line 10: ```image: ghcr.io/neonephos-katalis/opg-ewbi-api-amd:neonephos```
-
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed.
 
-**⚠️ Currently, the file are setted for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms fllown the the previsuly steps (Configuration: platform ARM64 or platform AMD64)**
+**⚠️ Currently, the files are set for Linux/arm64 platforms. If you need to build images for Linux/amd64 platforms, follow the previously described steps (Configuration: platform ARM64 or platform AMD64)**
 
 1. Create a `.netrc` file in your home directory (`~/.netrc` on macOS/Linux) with the following format:
 
@@ -83,6 +79,8 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
     ```
 2. ```git clone https://github.com/neonephos-katalis/opg-ewbi-operator```
 3. After the download, open this folder via terminal and exec the following command:
+
+  Build the **operator** image:
   ```make docker-build-controller```
       **or**
   ```docker build . --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos --secret id=netrc,src=$HOME/.netrc .```
@@ -94,20 +92,21 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
 
   To use the debug image, install the chart with `--set image.tag=neonephos-debug` and exec into the pod with `kubectl exec -it <pod-name> -- bash`
 
-4. ```bash git clone https://github.com/neonephos-katalis/opg-ewbi-api```
-5. After the download, open the created folder, `opg-ewbi-api`, via terminale and exec the following command:
-  ```docker-compose build federation --no-cache ```
-   **or**
-  ```docker compose build federation --no-cache ```
-6. ```docker login ghcr.io```
-7. In your cluster create a new namesapce (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
+4. Build the **API** image:
+
+  ```make docker-build-api```
+      **or**
+  ```docker build -f Dockerfile.api --no-cache -t ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos --secret id=netrc,src=$HOME/.netrc .```
+
+5. ```docker login ghcr.io```
+6. In your cluster create a new namespace (e.g. ```kubectl create ns federation```) after this exec this command. (replace $username and $accessToken with your username and accessToken used for the docker login ghcr.io command)
   ```bash
       kubectl -n federation create secret docker-registry opg-registry-secret \
       --docker-server=ghcr.io \
       --docker-username= $username \
       --docker-password= $accessToken
   ```
-8. In the end exec this command (in **OPG-EWBI-OPERATOR folder** via terminal)
+7. In the end exec this command (in the **project root folder** via terminal)
   ```bash
   helm install federation-manager dist/chart -n federation \
   --set federation.services.federation.nodePort=30080 \
@@ -143,10 +142,10 @@ docker push ghcr.io/neonephos-katalis/opg-ewbi-api-amd64:v1.0.0
 ```
 
 The Nearby code is written to work in both role (HOST and GUEST).
-If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (federation-host and federation-guest)
+If you want test in local, you need two helm installation one for the host and one for the guest, use the following configuration of the helm command, but don't forget to follow the step 8 for both namespaces (katalis-dev-host and katalis-dev-guest)
 
 ```bash
-helm install federationhost dist/chart -n federation-host \
+helm install federationhost dist/chart -n katalis-dev-host \
   --set federation.services.federation.nodePort=30080 \
   --set crd.enable=true
 ```
@@ -154,7 +153,7 @@ helm install federationhost dist/chart -n federation-host \
 We set crd to false since we have already installed them
 
 ```bash
-helm install federationguest dist/chart -n federation-guest \
+helm install federationguest dist/chart -n katalis-dev-guest \
 --set federation.services.federation.nodePort=30081 \
 --set crd.enable=false
 ```
@@ -179,7 +178,7 @@ kubectl apply -f config/samples/federationGuest.yaml
 In federationGuest, you will see we define the URL of the EWBI API of the host.
 
 Example:
-http://nearbyone-federation-api.federation-host.svc.cluster.local:8080
+http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080
 (and the callback url. Bear in mind the callback flow is not complete)
 
 You should see in the federation status the FederationContextId. Copy it and use this for the next CRs.
@@ -187,7 +186,7 @@ You should see in the federation status the FederationContextId. Copy it and use
 
 ```bash
 kubectl apply -f config/samples/fileGuest.yaml
-kubectl apply -f config/samples/artifactGuest.yaml
+kubectl apply -f config/samples/artefactGuest.yaml
 kubectl apply -f config/samples/appGuest.yaml
 kubectl apply -f config/samples/appInstGuest.yaml
 ```
@@ -199,7 +198,56 @@ If you delete guest ones, mirrored host resources will get deleted.
 
 ```bash
 kubectl delete -f config/samples/fileGuest.yaml
-kubectl delete -f config/samples/artifactGuest.yaml
+kubectl delete -f config/samples/artefactGuest.yaml
 kubectl delete -f config/samples/appGuest.yaml
 kubectl delete -f config/samples/appInstGuest.yaml
+```
+## Regenerate API Code
+
+To regenerate Go client/server code after OpenAPI specification changes:
+
+```bash
+make apigen
+```
+
+This generates code from `api/ewbi/FederationApi_v1.3.0.yaml` into:
+- `api/ewbi/client/` — Generated client code
+- `api/ewbi/server/` — Generated server code
+- `api/ewbi/models/` — Generated model definitions
+
+## Project Structure
+
+```
+.
+├── api/
+│   ├── ewbi/                          # EWBI Federation API (generated + specs)
+│   │   ├── FederationApi_v1.3.0.yaml  # OpenAPI specification
+│   │   ├── apigen.sh                  # Code generation script
+│   │   ├── client/                    # Generated client code
+│   │   ├── server/                    # Generated server code
+│   │   └── models/                    # Generated model definitions
+│   └── operator/
+│       └── v1beta1/                   # CRD type definitions
+├── cmd/
+│   ├── main.go                        # Operator entry point
+│   └── api/
+│       └── main.go                    # API server entry point
+├── internal/                          # Operator internals
+│   ├── config/                        # API server configuration
+│   ├── controller/                    # Reconcilers
+│   ├── indexer/                       # Field indexers
+│   ├── multipart/                     # Multipart form helpers
+│   ├── opg/                           # OPG client cache
+│   └── options/                       # Namespace config
+├── pkg/                               # API server packages
+│   ├── handler/                       # HTTP handlers
+│   ├── metastore/                     # K8s-backed persistence
+│   ├── deployment/                    # Install/uninstall logic
+│   └── ...
+├── config/                            # Kustomize manifests
+├── dist/chart/                        # Helm chart
+├── Dockerfile                         # Operator image
+├── Dockerfile.api                     # API server image
+├── Dockerfile.apigen                  # Code generator image
+└── Makefile                           # Build targets
 ```
