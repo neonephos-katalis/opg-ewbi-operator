@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neonephos-katalis/opg-ewbi-operator/api/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/stretchr/testify/assert"

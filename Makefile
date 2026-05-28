@@ -1,6 +1,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:neonephos
 IMG_DEBUG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator:dev-callback-1.1.3
+IMG_API ?= ghcr.io/neonephos-katalis/opg-ewbi-api:neonephos
 PLATFORM ?= linux/amd64
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
@@ -96,9 +97,17 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 build: manifests generate fmt vet ## Build manager binary.
 	go build -o bin/manager cmd/main.go
 
+.PHONY: build-api
+build-api: fmt vet ## Build API server binary.
+	go build -o bin/api ./cmd/api
+
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/main.go
+
+.PHONY: run-api
+run-api: fmt vet ## Run the API server locally (requires CONTROLLER_NAMESPACE, CAMARA_* env vars).
+	go run ./cmd/api
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
@@ -128,9 +137,32 @@ docker-push-controller: ## Push docker image with the manager.
 docker-push-debug:
 	$(CONTAINER_TOOL) push ${IMG_DEBUG}
 
+.PHONY: docker-build-api
+docker-build-api: ## Build docker image for the API server.
+	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --platform=${PLATFORM} -t ${IMG_API} -f Dockerfile.api --secret id=netrc,src=$(HOME)/.netrc .
+
+.PHONY: docker-push-api
+docker-push-api: ## Push docker image for the API server.
+	$(CONTAINER_TOOL) push ${IMG_API}
+
 .PHONY: docker-itest
 docker-itest: ## Run itests
 	 DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --target test -t ${IMG}-test --secret id=netrc,src=$(HOME)/.netrc .
+
+.PHONY: docker-build-apigen
+docker-build-apigen: ## Build the API code generator image.
+	DOCKER_BUILDKIT=1 $(CONTAINER_TOOL) build --platform=${PLATFORM} -t opg-ewbi-apigen -f Dockerfile.apigen .
+
+.PHONY: apigen
+apigen: docker-build-apigen ## Generate API models, server, and client code from OpenAPI spec.
+	$(CONTAINER_TOOL) run --rm -v $(shell pwd)/api/ewbi:/api/ewbi opg-ewbi-apigen
+
+.PHONY: swagger
+swagger: ## Start Swagger UI for the EWBI API spec on http://localhost:8082
+	$(CONTAINER_TOOL) run --rm -p 8082:8080 \
+		-v $(shell pwd)/api/ewbi/swagger.yaml:/usr/share/nginx/html/doc/swagger.yaml \
+		-e API_URL=doc/swagger.yaml \
+		swaggerapi/swagger-ui
 
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
