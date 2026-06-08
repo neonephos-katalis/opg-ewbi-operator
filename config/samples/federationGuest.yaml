@@ -1,7 +1,7 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: guest
+  namespace: katalis-guest
   annotations:
     opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d
   labels:
@@ -22,7 +22,7 @@ spec:
         - "99"
   guestPartnerCredentials:
     clientId: 3acde22c-d245-480d-b01e-24e38e01806c
-    tokenUrl: "http://tim-fm-api.host.svc.cluster.local:8080"
+    tokenUrl: "http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080"
   partner:
     callbackCredentials:
       clientId: 5tyde22c-d245-480d-b01e-24e38e7689de

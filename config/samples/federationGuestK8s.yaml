@@ -1,7 +1,7 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: guest
+  namespace: katalis-guest
   annotations:
     opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d
   labels:
@@ -12,7 +12,7 @@ metadata:
 
     opg.ewbi.k8s/federation-technology: k8s
     opg.ewbi.k8s/secret-name: kubeconfig-secret
-    opg.ewbi.k8s/namespace: host
+    opg.ewbi.k8s/namespace: katalis-host
     opg.ewbi.k8s/host-id: fed-host-k8s
   name: fed-guest-k8s
 spec:
