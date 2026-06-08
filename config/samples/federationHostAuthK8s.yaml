@@ -11,11 +11,11 @@ metadata:
     opg.ewbi.nby.one/federation-relation: host
     # opg.ewbi.nby.one/host-operator-org-id: "
     opg.ewbi.nby.one/origin-operator-name: guestName
-    opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806c # uuid, will match with clientID request
+    opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d # uuid, will match with clientID request
     opg.ewbi.nby.one/origin-country-code: ES
 
-    opg.ewbi.k8s/federation-technology: rest
-  name: fed-host-rest # prefix-uuid
+    opg.ewbi.k8s/federation-technology: k8s
+  name: fed-host-k8s # prefix-uuid
 spec:
   offeredAvailabilityZones:
     - geographyDetails: "Milano, Italia. Area urbana a forte densità di traffico e industriale."
@@ -28,4 +28,4 @@ spec:
       geolocation: "45.0703,7.6869"
       zoneId: "4a8fffaf-50de-4f93-8c6f-05f1c84b5a5f"
   guestPartnerCredentials:
-    clientId:   3acde22c-d245-480d-b01e-24e38e01806c # uuid
+    clientId:   3acde22c-d245-480d-b01e-24e38e01806d # uuid

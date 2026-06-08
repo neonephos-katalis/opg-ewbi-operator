@@ -8,9 +8,13 @@ metadata:
     opg.ewbi.nby.one/federation-relation: guest
     opg.ewbi.nby.one/host-operator-org-id: host-name
     # opg.ewbi.nby.one/origin-operator-org-id: "placeholder"
-    opg.ewbi.nby.one/id: fed-guest-rest
-    opg.ewbi.k8s/federation-technology: rest
-  name: fed-guest-rest
+    opg.ewbi.nby.one/id: fed-guest-k8s
+
+    opg.ewbi.k8s/federation-technology: k8s
+    opg.ewbi.k8s/secret-name: kubeconfig-secret
+    opg.ewbi.k8s/namespace: host
+    opg.ewbi.k8s/host-id: fed-host-k8s
+  name: fed-guest-k8s
 spec:
   originOP:
     countryCode: "ES"
@@ -21,8 +25,8 @@ spec:
       mncs:
         - "99"
   guestPartnerCredentials:
-    clientId: 3acde22c-d245-480d-b01e-24e38e01806c
-    tokenUrl: "http://tim-fm-api.host.svc.cluster.local:8080"
+    clientId: 3acde22c-d245-480d-b01e-24e38e01806d
+    tokenUrl: "http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080"
   partner:
     callbackCredentials:
       clientId: 5tyde22c-d245-480d-b01e-24e38e7689de
