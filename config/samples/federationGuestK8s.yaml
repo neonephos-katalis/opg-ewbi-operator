@@ -1,7 +1,7 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: katalis-guest
+  namespace: katalis-dev-guest
   annotations:
     opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d
   labels:
