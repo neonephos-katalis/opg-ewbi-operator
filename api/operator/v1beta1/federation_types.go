@@ -27,10 +27,16 @@ const (
 
 // labels
 const (
-	FederationContextIdLabel = "opg.ewbi.nby.one/federation-context-id"
-	FederationRelationLabel  = "opg.ewbi.nby.one/federation-relation"
-	FederationGuestUrlLabel  = "opg.ewbi.nby.one/federation-guest-url"
-	ExternalIdLabel          = "opg.ewbi.nby.one/id"
+	FederationHostOPLabel     = "opg.ewbi.nby.one/host-op"
+	FederationGuestOPLabel    = "opg.ewbi.nby.one/guest-op"
+	FederationContextIdLabel  = "opg.ewbi.nby.one/federation-context-id"
+	FederationRelationLabel   = "opg.ewbi.nby.one/federation-relation"
+	FederationGuestUrlLabel   = "opg.ewbi.nby.one/federation-guest-url"
+	ExternalIdLabel           = "opg.ewbi.nby.one/id"
+	FederationSecretNameLabel = "opg.ewbi.k8s/secret-name"
+	FederationTechnologyLabel = "opg.ewbi.k8s/federation-technology"
+	FederationNamespaceLabel  = "opg.ewbi.k8s/namespace"
+	FederationHostIdLabel     = "opg.ewbi.k8s/host-id"
 )
 
 // fields
@@ -43,6 +49,13 @@ type FederationRelation string
 const (
 	FederationRelationGuest FederationRelation = "guest"
 	FederationRelationHost  FederationRelation = "host"
+)
+
+type FederationTechnology string
+
+const (
+	FederationTechnologyK8s  FederationTechnology = "k8s"
+	FederationTechnologyRest FederationTechnology = "rest"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.

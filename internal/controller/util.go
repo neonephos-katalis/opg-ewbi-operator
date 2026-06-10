@@ -20,8 +20,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/go-logr/logr"
-	opgmodels "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -60,12 +58,16 @@ func GetFederationByContextId(
 	return &federList.Items[0], nil
 }
 
-func handleProblemDetails(log logr.Logger, code int, p *opgmodels.ProblemDetails) {
-	log.Info("response with error", "error", code, "details", p)
-}
+// func handleProblemDetails(log logr.Logger, code int, p *opgmodels.ProblemDetails) {
+// 	log.Info("response with error", "error", code, "details", p)
+// }
 
 // returns true if LabelValue is v1beta1.FederationRelationGuest
 // false otherwise (either label wasn't present or is RelationHost)
 func IsGuestResource(labels map[string]string) bool {
 	return labels[v1beta1.FederationRelationLabel] == string(v1beta1.FederationRelationGuest)
+}
+
+func IsRestTechnology(labels map[string]string) bool {
+	return labels[v1beta1.FederationTechnologyLabel] == string(v1beta1.FederationTechnologyRest)
 }

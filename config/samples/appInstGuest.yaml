@@ -1,7 +1,7 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: ApplicationInstance
 metadata:
-  namespace: katalis-dev-guest
+  namespace: guest
   labels:
     opg.ewbi.nby.one/federation-context-id: 4d559f1b-f008-58c2-a2f8-0596892a0f7a # get this from Guest Federation's status
     opg.ewbi.nby.one/federation-relation: "guest"
