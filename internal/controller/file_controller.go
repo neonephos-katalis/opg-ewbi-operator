@@ -18,20 +18,20 @@ package controller
 
 import (
 	"context"
-	"errors"
 
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
+	k8s "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
+	rest "github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	opgmodels "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
-	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/multipart"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // FileReconciler reconciles a File object
@@ -39,7 +39,14 @@ type FileReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	opg.OPGClientsMapInterface
+	K8sClient  *k8s.FileReconciler
+	RestClient *rest.FileReconciler
 }
+
+const (
+	errorUpdatingFileStatusMsg = ">>> [File] Error Updating resource status"
+	unexpectedStatusFileMsg    = ">>> [File] Unexpected Status Code"
+)
 
 // +kubebuilder:rbac:groups=opg.ewbi.nby.one,resources=files,verbs=*,namespace=foo
 // +kubebuilder:rbac:groups=opg.ewbi.nby.one,resources=files/status,verbs=get;update;patch,namespace=foo
@@ -56,20 +63,20 @@ type FileReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.4/pkg/reconcile
 func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("name", req.Name, "namespace", req.Namespace)
-	log.Info("starting reconcile function for file")
-	defer log.Info("end reconcile for file")
+	log.Info(">>> [File] starting reconcile function for file")
+	defer log.Info(">>> [File] end reconcile for file")
 
 	// Getting main file or requeue
 	var f v1beta1.File
 	if err := r.Get(ctx, req.NamespacedName, &f); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Info("file object not found")
+			log.Info(">>>> [File] Object not found")
 			return ctrl.Result{}, nil
 		}
-		log.Error(err, "error getting file object")
+		log.Error(err, ">>> [File] Error getting file object")
 		return ctrl.Result{}, err
 	}
-	log.Info("File object obtained", "name", f.Spec.FileName, "version", f.Spec.FileVersion)
+	log.Info(">>> [File] Object obtained", "name", f.Spec.FileName, "version", f.Spec.FileVersion)
 
 	// Getting file's federation or requeue by using federation-context-id label
 	isGuest := IsGuestResource(f.Labels)
@@ -82,47 +89,49 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	feder, err := GetFederationByContextId(ctx, r.Client, f.Labels[v1beta1.FederationContextIdLabel], extraLabels)
 	if err != nil {
-		log.Error(err, "A File should always have a parent federation")
+		log.Error(err, ">>> [File] Should always have a parent federation")
 		f.Status.State = v1beta1.FileStateError
 		upErr := r.Status().Update(ctx, f.DeepCopy())
 		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
+			log.Error(upErr, errorUpdatingFileStatusMsg)
 		}
 		return ctrl.Result{}, err
 	}
 
-	log.Info("Federation object obtained", "name", feder.Name)
+	isRest := IsRestTechnology(feder.Labels)
+
+	log.Info(">>> [File] Object obtained", "name", feder.Name)
 
 	if f.GetDeletionTimestamp().IsZero() {
 		if controllerutil.AddFinalizer(&f, v1beta1.FileFinalizer) {
-			log.Info("Added finalizer to File")
+			log.Info(">>> [File] Added finalizer to File")
 			if err := r.Update(ctx, f.DeepCopy()); err != nil {
-				log.Info("unable to Update File with finalizer")
+				log.Info(">>> [File] Unable to Update File with finalizer")
 				return ctrl.Result{}, err
 			}
-			log.Info("Successfully added finalizer to file")
+			log.Info(">>> [File] Successfully added finalizer to file")
 			return ctrl.Result{}, nil
 		}
 	} else {
 		if isGuest {
-			if err := r.handleExternalFileDeletion(ctx, &f, feder); err != nil {
-				log.Error(err, "error deleting file")
+			if err := r.handleExternalFileDeletion(ctx, &f, feder, isRest); err != nil {
+				log.Error(err, ">>> [File] Error deleting file")
 				f.Status.State = v1beta1.FileStateError
 				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
+					log.Error(upErr, errorUpdatingFileStatusMsg)
 				}
 				return ctrl.Result{}, err
 			}
 		}
 		// if external file is correctly deleted, we can remove the finalizer
 		if controllerutil.RemoveFinalizer(&f, v1beta1.FileFinalizer) {
-			log.Info("Removed basic finalizer for File")
+			log.Info(">>> [File] Removed basic finalizer for File")
 			if err := r.Update(ctx, f.DeepCopy()); err != nil {
 				//log.Error(err, "update failed while removing finalizers") //Commented to reduce log noise
 				return ctrl.Result{}, nil
 			}
-			log.Info("removed all finalizers, exiting...")
+			log.Info(">>> [File] Removed all finalizers, exiting...")
 			return ctrl.Result{}, nil
 		}
 	}
@@ -130,34 +139,43 @@ func (r *FileReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	// if federation is guest, send OPG API request
 	if isGuest {
 		if f.Status.State == "" {
-			if err := r.handleExternalFileCreation(ctx, &f, feder); err != nil {
-				log.Info("error creating file")
+			if err := r.handleExternalFileCreation(ctx, &f, feder, isRest); err != nil {
+				log.Info(">>> [File] Error creating file")
 				f.Status.State = v1beta1.FileStateError
 				upErr := r.Status().Update(ctx, f.DeepCopy())
 				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
+					log.Error(upErr, errorUpdatingFileStatusMsg)
 				}
 				return ctrl.Result{}, nil
 			}
-		} else {
-			log.Info("+++++++++++++++++++ File status is ", "state", f.Status.State)
+		}
+		if err := r.handelExternalFileUpdate(ctx, &f, feder, isRest); err != nil {
+			log.Info(">>> [File] Error updating File")
+			f.Status.State = v1beta1.FileStateError
+			upErr := r.Status().Update(ctx, f.DeepCopy())
+			if upErr != nil {
+				log.Error(upErr, errorUpdatingFileStatusMsg)
+			}
+			return ctrl.Result{}, nil
 		}
 	} else {
 		if f.Status.State == "" {
 			f.Status.State = v1beta1.FileStatePending
-			log.Info("Initialized new CR state", "state", f.Status.State)
+			log.Info(">>> [File] Initialized new CR state", "state", f.Status.State)
 			upErr := r.Status().Update(ctx, f.DeepCopy())
 			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
+				log.Error(upErr, errorUpdatingFileStatusMsg)
 			}
 		} else {
-			log.Info("New CR state", "state", f.Status.State)
-			if err := r.handleExternalFileCallback(ctx, &f, feder); err != nil {
-				log.Error(err, "error handling file callback")
-				f.Status.State = v1beta1.FileStateError
-				upErr := r.Status().Update(ctx, f.DeepCopy())
-				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
+			if isRest {
+				log.Info(">>> [File] Current CR state", "state", f.Status.State)
+				if err := r.handleExternalFileCallback(ctx, &f, feder); err != nil {
+					log.Error(err, ">>> [File] Error handling file callback")
+					f.Status.State = v1beta1.FileStateError
+					upErr := r.Status().Update(ctx, f.DeepCopy())
+					if upErr != nil {
+						log.Error(upErr, errorUpdatingFileStatusMsg)
+					}
 				}
 			}
 		}
@@ -173,215 +191,47 @@ func (r *FileReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.File{}).
 		Named("file").
+		WatchesRawSource(
+			source.Channel(
+				k8s.FileRemoteEvents,
+				&handler.EnqueueRequestForObject{},
+			),
+		).
 		Complete(r)
 }
 
+func (r *FileReconciler) handelExternalFileUpdate(ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation, isRest bool) error {
+	if isRest {
+		log := log.FromContext(ctx)
+		log.Info(">>> [File][REST] Current state is ", "state", f.Status.State)
+		return nil
+	} else {
+		return r.K8sClient.SyncStatusWithHost(ctx, f, feder)
+	}
+}
+
 func (r *FileReconciler) handleExternalFileCreation(
-	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation,
+	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation, isRest bool,
 ) error {
-	log := log.FromContext(ctx)
-	fileReqBody := opgmodels.UploadFileMultipartBody{
-		AppProviderId: f.Spec.AppProviderId,
-		FileId:        f.Labels[v1beta1.ExternalIdLabel],
-		FileName:      f.Spec.FileName,
-		FileRepoLocation: &opgmodels.ObjectRepoLocation{
-			Password: &f.Spec.Repo.Password,
-			RepoURL:  &f.Spec.Repo.URL,
-			Token:    &f.Spec.Repo.Token,
-			UserName: &f.Spec.Repo.UserName,
-		},
-		FileType:        opgmodels.VirtImageType(f.Spec.FileType),
-		FileVersionInfo: f.Spec.FileVersion,
-		ImgInsSetArch:   opgmodels.CPUArchType(f.Spec.Image.InstructionSetArchitecture),
-		ImgOSType: opgmodels.OSType{
-			Architecture: opgmodels.OSTypeArchitecture(f.Spec.Image.OS.Architecture),
-			Distribution: opgmodels.OSTypeDistribution(f.Spec.Image.OS.Distribution),
-			License:      opgmodels.OSTypeLicense(f.Spec.Image.OS.License),
-			Version:      opgmodels.OSTypeVersion(f.Spec.Image.OS.Version),
-		},
-		RepoType: (*opgmodels.UploadFileMultipartBodyRepoType)(&f.Spec.Repo.Type),
+	if isRest {
+		return r.RestClient.CreateFile(ctx, f, feder)
+	} else {
+		return r.K8sClient.CreateFile(ctx, f, feder)
 	}
-
-	body, contentType, err := multipart.SerializeUploadFileMultipartBody(fileReqBody)
-	if err != nil {
-		log.Error(err, "error serializing multipart body")
-		return err
-	}
-	res, err := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.GuestPartnerCredentials.TokenUrl,
-		feder.Spec.GuestPartnerCredentials.ClientId,
-	).UploadFileWithBodyWithResponse(
-		context.TODO(),
-		f.Labels[v1beta1.FederationContextIdLabel],
-		contentType,
-		body)
-	if err != nil {
-		log.Error(err, "error creating file")
-		f.Status.State = v1beta1.FileStateError
-		return err
-	}
-	statusCode := res.StatusCode()
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("FILE - Status code 2xx received from OPG API", "status", statusCode)
-
-		f.Status.State = v1beta1.FileStatePending
-		log.Info("Created external file", "state", f.Status.State)
-	case statusCode == 400:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		f.Status.State = v1beta1.FileStateError
-		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return errors.New(*res.ApplicationproblemJSON400.Detail)
-	case statusCode == 401:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 404:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 409:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 422:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 500:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		f.Status.State = v1beta1.FileStateError
-		// this should be deleted when API returns a 400 for this case
-		if *res.ApplicationproblemJSON500.Detail == "file not found" {
-			return errors.New(*res.ApplicationproblemJSON500.Detail)
-		}
-	case statusCode == 503:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 520:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
-		f.Status.State = v1beta1.FileStateError
-	default:
-		f.Status.State = v1beta1.FileStatePending
-	}
-	upErr := r.Status().Update(ctx, f)
-	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
-	}
-	return nil
 }
 
 func (r *FileReconciler) handleExternalFileCallback(
 	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation,
 ) error {
-	log := log.FromContext(ctx)
-	// Check if callback is configured
-	if feder.Spec.Partner.StatusLink == "" {
-		log.Info("No callback StatusLink configured in Federation, skipping App callback")
-		return nil
-	}
-	log.Info("Sending App callback to Guest",
-		"appId", f.Labels[v1beta1.ExternalIdLabel],
-		"state", f.Status.State,
-		"statusLink", feder.Spec.Partner.StatusLink)
-	callbackBody := opgmodels.FileStatusCallbackLinkJSONRequestBody{
-		FileId:       f.Labels[v1beta1.ExternalIdLabel],
-		UpdateStatus: opgmodels.FileStatusCallbackLinkJSONBodyUpdateStatus(f.Status.State),
-	}
-	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
-	res, err := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.Partner.StatusLink,
-		feder.Spec.Partner.CallbackCredentials.ClientId,
-	).FileStatusCallbackLinkWithResponse(
-		context.TODO(),
-		feder.Spec.Partner.CallbackCredentials.ClientId,
-		callbackBody)
-
-	if err != nil {
-		log.Error(err, "error sending App callback")
-		return err
-	}
-	statusCode := res.StatusCode()
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("****************** Successfully sent File callback to Guest", "status", statusCode)
-	case statusCode == 400:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 401:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 404:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		f.Status.State = v1beta1.FileStateError
-	default:
-		log.Info("############# File callback returned unexpected status", "status", statusCode, "body", string(res.Body))
-		f.Status.State = v1beta1.FileStatePending
-	}
-	upErr := r.Status().Update(ctx, f.DeepCopy())
-	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
-		return upErr
-	}
-	return nil
+	return r.RestClient.CallbackFile(ctx, f, feder)
 }
 
 func (r *FileReconciler) handleExternalFileDeletion(
-	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation,
+	ctx context.Context, f *v1beta1.File, feder *v1beta1.Federation, isRest bool,
 ) error {
-	log := log.FromContext(ctx)
-	log.Info("Deleting external file")
-	// we should delete the file
-	res, err := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.GuestPartnerCredentials.TokenUrl,
-		feder.Spec.GuestPartnerCredentials.ClientId,
-	).RemoveFileWithResponse(
-		context.TODO(),
-		feder.Status.FederationContextId,
-		f.Labels[v1beta1.ExternalIdLabel],
-	)
-	if err != nil {
-		log.Error(err, "error deleting federation")
-		return err
+	if isRest {
+		return r.RestClient.DeleteFile(ctx, f, feder)
+	} else {
+		return r.K8sClient.DeleteFile(ctx, f, feder)
 	}
-
-	statusCode := res.StatusCode()
-
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("Deleted")
-		// federResponse.OfferedAvailabilityZones
-	case statusCode == 400:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 401:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 404:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 409:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 422:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 500:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 503:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-		f.Status.State = v1beta1.FileStateError
-	case statusCode == 520:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
-		f.Status.State = v1beta1.FileStateError
-	default:
-		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
-		f.Status.State = v1beta1.FileStatePending
-	}
-	upErr := r.Status().Update(ctx, f.DeepCopy())
-	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
-		return upErr
-	}
-	return nil
 }

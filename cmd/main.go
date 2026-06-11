@@ -38,8 +38,10 @@ import (
 
 	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/controller"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/options"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -178,6 +180,16 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.FederationReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.FederationReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Federation")
 		os.Exit(1)
@@ -186,6 +198,16 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.FileReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.FileReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "File")
 		os.Exit(1)
@@ -194,6 +216,16 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ArtefactReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ArtefactReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Artefact")
 		os.Exit(1)
@@ -202,6 +234,16 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ApplicationReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ApplicationReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Application")
 		os.Exit(1)
@@ -210,6 +252,16 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ApplicationInstanceReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ApplicationInstanceReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "ApplicationInstance")
 		os.Exit(1)

@@ -1,0 +1,31 @@
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: Federation
+metadata:
+  namespace: katalis-dev-guest
+  annotations:
+    opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d
+  labels:
+    opg.ewbi.nby.one/federation-relation: guest
+    opg.ewbi.nby.one/host-operator-org-id: katalis-host
+    # opg.ewbi.nby.one/origin-operator-org-id: "placeholder"
+    opg.ewbi.nby.one/id: fed-guest-k8s
+    
+    opg.ewbi.k8s/federation-technology: k8s
+    opg.ewbi.k8s/secret-name: kubeconfig-secret
+    opg.ewbi.k8s/namespace: katalis-dev-host
+    opg.ewbi.k8s/host-id: fed-host-k8s
+  name: fed-guest-k8s
+spec:
+  originOP:
+    countryCode: "ES"
+    fixedNetworkCodes:
+      - "none"
+    mobileNetworkCodes:
+      mcc: "999"
+      mncs:
+        - "99"
+  guestPartnerCredentials:
+    clientId: 3acde22c-d245-480d-b01e-24e38e01806d
+  partner:
+    callbackCredentials:
+      clientId: 5tyde22c-d245-480d-b01e-24e38e7689de

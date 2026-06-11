@@ -30,6 +30,10 @@ import (
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 )
 
+const (
+	errorUpdatingAvailabilityZoneStatusMsg = ">>> [AZ] Error Updating availability zone status"
+)
+
 // AvailabilityZoneReconciler reconciles a AvailabilityZone object
 type AvailabilityZoneReconciler struct {
 	client.Client
@@ -73,7 +77,7 @@ func (r *AvailabilityZoneReconciler) Reconcile(
 	az.Status.State = v1beta1.ZoneStateReady
 	upErr := r.Status().Update(ctx, az.DeepCopy())
 	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
+		log.Error(upErr, errorUpdatingAvailabilityZoneStatusMsg)
 	}
 	return ctrl.Result{}, nil
 }
