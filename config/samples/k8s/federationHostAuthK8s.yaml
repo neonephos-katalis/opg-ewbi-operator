@@ -3,16 +3,14 @@
 apiVersion: opg.ewbi.nby.one/v1beta1
 kind: Federation
 metadata:
-  namespace: host
-  annotations:
-    opg.ewbi.nby.one/origin-mcc: "001" # not used, will be overridden by /partner request body
-    opg.ewbi.nby.one/origin-mncs: "001" # not used, will be overridden by /partner request body
+  namespace: katalis-dev-host
   labels:
     opg.ewbi.nby.one/federation-relation: host
     # opg.ewbi.nby.one/host-operator-org-id: "
     opg.ewbi.nby.one/origin-operator-name: guestName
     opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d # uuid, will match with clientID request
     opg.ewbi.nby.one/origin-country-code: ES
+
     opg.ewbi.k8s/federation-technology: k8s
   name: fed-host-k8s # prefix-uuid
 spec:

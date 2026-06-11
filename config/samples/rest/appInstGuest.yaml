@@ -1,0 +1,19 @@
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: ApplicationInstance
+metadata:
+  namespace: katalis-dev-guest
+  labels:
+    opg.ewbi.nby.one/federation-context-id: 4d559f1b-f008-58c2-a2f8-0596892a0f7a # get this from Guest Federation's status
+    opg.ewbi.nby.one/federation-relation: "guest"
+    opg.ewbi.nby.one/federation-callback-id: 5tyde22c-d245-480d-b01e-24e38e7689de
+    opg.ewbi.nby.one/id: app-inst-rest
+  name: app-inst-rest
+spec:
+  appId: app-rest
+  appProviderId: nearbycomputing
+  appVersion: 1.23.3
+  zoneInfo:
+    flavourId: NOT_SPECIFIED
+    resPool: mock-res-pool
+    resourceConsumption: RESERVED_RES_AVOID
+    zoneId: "zone-es-madrid-001"

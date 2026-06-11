@@ -68,6 +68,8 @@ func IsGuestResource(labels map[string]string) bool {
 	return labels[v1beta1.FederationRelationLabel] == string(v1beta1.FederationRelationGuest)
 }
 
+// returns true if LabelValue is v1beta1.FederationTechnologyRest
+// false otherwise (either label wasn't present or is another technology)
 func IsRestTechnology(labels map[string]string) bool {
 	return labels[v1beta1.FederationTechnologyLabel] == string(v1beta1.FederationTechnologyRest)
 }
