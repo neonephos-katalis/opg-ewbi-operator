@@ -10,16 +10,21 @@ Define documentation sets that cover two distinct areas:
 
 This issue is focused on agreeing the scope, structure, and required content.
 
+
 # 1. Federation Architecture & Mechanism
 This section documents the internal design and behaviour of the federation system.
 
 ## Topics to cover
+
+### Quick start guide
+[Quick Start Guide](Quick-start-introduction.md)
+Gives new joiners a quick overview of the project components and some brief introductions to it. 
+- Quick start guide
+- Required knowledge
+
 ### High-Level Architecture
 [Architecture](architecture.md)
 Describes the overall architecture of the Katalis platform and how the major systems interact with each other.
-
-- Quick start guide
-- Required knowledge
 - High-level architecture diagram
 - Architectural overview (components and their relationship amongst each other)
 
@@ -33,7 +38,7 @@ Describes the overall architecture of the Katalis platform and how the major sys
 - Orchestrator
 
 ### System Behaviour
-[Core components](components.md)
+[Federation model and workflows](federation.md)
 - Federation model
 - Flows: 
     - Registration
