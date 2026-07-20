@@ -314,12 +314,14 @@ func makeTestFederation(name string, opts ...federationOpt) *v1beta1.Federation 
 					MNC: []string{testFederationMNC},
 				},
 			},
-			Partner: v1beta1.Partner{
-				CallbackCredentials: v1beta1.FederationCredentials{
-					ClientId: testFederationClientId,
-					TokenUrl: testFederationTokenUrl,
+			Partner: &v1beta1.Partner{
+				RestOptions: &v1beta1.RestOptions{
+					CallbackCredentials: v1beta1.FederationCredentials{
+						ClientId: testFederationClientId,
+						TokenUrl: testFederationTokenUrl,
+					},
+					StatusLink: testFederationLink,
 				},
-				StatusLink: testFederationLink,
 			},
 			AcceptedAvailabilityZones: []string{},
 		},

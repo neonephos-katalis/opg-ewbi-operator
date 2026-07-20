@@ -1,0 +1,37 @@
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: Artefact
+metadata:
+  namespace: katalis-dev-guest
+  labels:
+    opg.ewbi.nby.one/federation-context-id: 4d559f1b-f008-58c2-a2f8-0596892a0f7a # get this from Guest Federation's status
+    opg.ewbi.nby.one/federation-relation: "guest"
+    opg.ewbi.nby.one/federation-callback-id: 5tyde22c-d245-480d-b01e-24e38e7689de
+    opg.ewbi.nby.one/id: artefact-rest
+  name: artefact-rest
+spec:
+  appProviderId: nearbycomputing
+  artefactName: ContainerDeploy001
+  artefactVersion: "14"
+  componentSpec:
+    - commandLineParams:
+        args:
+          - -g
+          - daemon off;
+        command:
+          - nginx-debug
+      computeResourceProfile:
+        cpuArchType: ISA_X86_64
+        memory: 512
+        numCPU: "1"
+      exposedInterfaces:
+        - interfaceId: interface-id
+          port: 30013
+          protocol: TCP
+          visibilityType: VISIBILITY_EXTERNAL
+      images:
+        - "file-rest"
+      name: nginx-container
+      numOfInstances: 1
+      restartPolicy: "Always"
+  descriptorType: COMPONENTSPEC
+  virtType: CONTAINER_TYPE

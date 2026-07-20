@@ -27,10 +27,14 @@ const (
 
 // labels
 const (
+	FederationHostOPLabel    = "opg.ewbi.nby.one/host-op"
+	FederationGuestOPLabel   = "opg.ewbi.nby.one/guest-op"
 	FederationContextIdLabel = "opg.ewbi.nby.one/federation-context-id"
 	FederationRelationLabel  = "opg.ewbi.nby.one/federation-relation"
 	FederationGuestUrlLabel  = "opg.ewbi.nby.one/federation-guest-url"
 	ExternalIdLabel          = "opg.ewbi.nby.one/id"
+	FederationNamespaceLabel = "opg.ewbi.k8s/namespace"
+	FederationHostIdLabel    = "opg.ewbi.k8s/host-id"
 )
 
 // fields
@@ -45,9 +49,17 @@ const (
 	FederationRelationHost  FederationRelation = "host"
 )
 
+type FederationTechnology string
+
+const (
+	FederationTechnologyK8s  FederationTechnology = "k8s"
+	FederationTechnologyRest FederationTechnology = "rest"
+)
+
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // FederationSpec defines the desired state of Federation.
+// +kubebuilder:validation:XValidation:rule="!has(self.partner) || (self.technology == 'rest' ? (has(self.partner.restOptions) && !has(self.partner.k8sOptions)) : (has(self.partner.k8sOptions) && !has(self.partner.restOptions)))",message="if partner is set, it must match .technology: restOptions for rest, k8sOptions for k8s, and only that block"
 type FederationSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -57,7 +69,8 @@ type FederationSpec struct {
 
 	OriginOP Origin `json:"originOP,omitempty"`
 
-	Partner Partner `json:"partner,omitempty"`
+	// +optional
+	Partner *Partner `json:"partner,omitempty"`
 
 	// OfferedAvailabilityZones, list of AvailabilityZones the hostOP offers to the guestOP
 	// as part of this Federation
@@ -69,6 +82,11 @@ type FederationSpec struct {
 
 	// Federation GuestPartner creds for the client to register (temporary, to be replaced by e.g. keycloack)
 	GuestPartnerCredentials FederationCredentials `json:"guestPartnerCredentials,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=k8s;rest
+	// Federation Technology, e.g. "k8s" or "rest"
+	Technology FederationTechnology `json:"technology,omitempty"`
 }
 
 type Origin struct {
@@ -90,6 +108,18 @@ type MobileNetworkCodes struct {
 }
 
 type Partner struct {
+
+	// GSMA EWBI connectivity options.
+	RestOptions *RestOptions `json:"restOptions,omitempty"`
+	// K8s connectivity options
+	K8sOptions *K8sOptions `json:"k8sOptions,omitempty"`
+}
+
+type K8sOptions struct {
+	FederationSecretName string `json:"secretName"`
+}
+
+type RestOptions struct {
 	// CallbackCredentials Authentication credentials for callbacks.
 	// Callbacks use the same security scheme, flows, and scopes as the forward path.
 	CallbackCredentials FederationCredentials `json:"callbackCredentials,omitempty"`

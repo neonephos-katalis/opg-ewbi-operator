@@ -32,12 +32,14 @@ func (f *Federation) updatek8sCustomResource(fed *opgv1beta1.Federation) *opgv1b
 			MNC: *f.OrigOPMobileNetworkCodes.Mncs,
 		},
 	}
-	fed.Spec.Partner = opgv1beta1.Partner{
-		CallbackCredentials: opgv1beta1.FederationCredentials{
-			ClientId: f.PartnerCallbackCredentials.ClientId,
-			TokenUrl: f.PartnerCallbackCredentials.TokenUrl,
+	fed.Spec.Partner = &opgv1beta1.Partner{
+		RestOptions: &opgv1beta1.RestOptions{
+			CallbackCredentials: opgv1beta1.FederationCredentials{
+				ClientId: f.PartnerCallbackCredentials.ClientId,
+				TokenUrl: f.PartnerCallbackCredentials.TokenUrl,
+			},
+			StatusLink: f.PartnerStatusLink,
 		},
-		StatusLink: f.PartnerStatusLink,
 	}
 	fed.Spec.AcceptedAvailabilityZones = aaz
 	return fed
@@ -63,8 +65,8 @@ func federationFromK8sCustomResource(fed *opgv1beta1.Federation) (*Federation, e
 				Mncs: &fed.Spec.OriginOP.MobileNetworkCodes.MNC,
 			},
 			PartnerCallbackCredentials: &models.CallbackCredentials{
-				ClientId: fed.Spec.Partner.CallbackCredentials.ClientId,
-				TokenUrl: fed.Spec.Partner.CallbackCredentials.TokenUrl,
+				ClientId: fed.Spec.Partner.RestOptions.CallbackCredentials.ClientId,
+				TokenUrl: fed.Spec.Partner.RestOptions.CallbackCredentials.TokenUrl,
 			},
 		},
 		FederationContextId:       fed.Labels[opgLabel(federationContextIDLabel)],

@@ -122,26 +122,52 @@ spec:
                 type: object
               partner:
                 properties:
-                  callbackCredentials:
-                    description: |-
-                      CallbackCredentials Authentication credentials for callbacks.
-                      Callbacks use the same security scheme, flows, and scopes as the forward path.
+                  k8sOptions:
+                    description: K8s connectivity options
                     properties:
-                      clientId:
-                        description: ClientId, e.g. "50290107-5a90-4d77-a1b8-ec9d311ab2fd"
-                        type: string
-                      tokenUrl:
-                        description: TokenUrl, e.g. http://ip:5555/cb
+                      secretName:
                         type: string
                     required:
-                    - clientId
+                    - secretName
                     type: object
-                  statusLink:
-                    type: string
-                required:
-                - statusLink
+                  restOptions:
+                    description: GSMA EWBI connectivity options.
+                    properties:
+                      callbackCredentials:
+                        description: |-
+                          CallbackCredentials Authentication credentials for callbacks.
+                          Callbacks use the same security scheme, flows, and scopes as the forward path.
+                        properties:
+                          clientId:
+                            description: ClientId, e.g. "50290107-5a90-4d77-a1b8-ec9d311ab2fd"
+                            type: string
+                          tokenUrl:
+                            description: TokenUrl, e.g. http://ip:5555/cb
+                            type: string
+                        required:
+                        - clientId
+                        type: object
+                      statusLink:
+                        type: string
+                    required:
+                    - statusLink
+                    type: object
                 type: object
+              technology:
+                description: Federation Technology, e.g. "k8s" or "rest"
+                enum:
+                - k8s
+                - rest
+                type: string
+            required:
+            - technology
             type: object
+            x-kubernetes-validations:
+            - message: 'if partner is set, it must match .technology: restOptions
+                for rest, k8sOptions for k8s, and only that block'
+              rule: '!has(self.partner) || (self.technology == ''rest'' ? (has(self.partner.restOptions)
+                && !has(self.partner.k8sOptions)) : (has(self.partner.k8sOptions)
+                && !has(self.partner.restOptions)))'
           status:
             description: FederationStatus defines the observed state of Federation.
             properties:

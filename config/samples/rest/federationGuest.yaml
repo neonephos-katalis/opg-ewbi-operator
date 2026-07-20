@@ -1,0 +1,30 @@
+apiVersion: opg.ewbi.nby.one/v1beta1
+kind: Federation
+metadata:
+  namespace: katalis-dev-guest
+  annotations:
+    opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806e
+  labels:
+    opg.ewbi.nby.one/federation-relation: guest
+    opg.ewbi.nby.one/host-operator-org-id: hostName
+    # opg.ewbi.nby.one/origin-operator-org-id: "placeholder"
+    opg.ewbi.nby.one/id: fed-guest-rest
+  name: fed-guest-rest
+spec:
+  technology: rest
+  originOP:
+    countryCode: "ES"
+    fixedNetworkCodes:
+      - "none"
+    mobileNetworkCodes:
+      mcc: "999"
+      mncs:
+        - "99"
+  guestPartnerCredentials:
+    clientId: 3acde22c-d245-480d-b01e-24e38e01806e
+    tokenUrl: "http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080"
+  partner:
+    restOptions:
+      callbackCredentials:
+        clientId: 5tyde22c-d245-480d-b01e-24e38e7689de
+      statusLink: "http://nearbyone-federation-api.katalis-dev-guest.svc.cluster.local:8080"
