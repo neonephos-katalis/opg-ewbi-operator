@@ -230,9 +230,3 @@ Kubernetes Custom Resources
 The Kubernetes-native interface used by operators and automation systems.
 
 The operator acts as the bridge between these two models.
-
-## Documentation Structure
-
-## Prerequisites
-
-## Getting started
