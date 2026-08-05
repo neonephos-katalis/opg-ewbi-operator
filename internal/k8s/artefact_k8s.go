@@ -151,6 +151,6 @@ func (r *ArtefactReconciler) DeleteArtefact(ctx context.Context, a *v1beta1.Arte
 		return err
 	}
 	log.Info(">>> [Artefact][K8s] Stopping background watcher for remote host")
-	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationHostIdLabel], a.Name)
+	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationNamespaceLabel], a.Name)
 	return nil
 }

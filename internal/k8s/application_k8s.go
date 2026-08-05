@@ -150,6 +150,6 @@ func (r *ApplicationReconciler) DeleteApplication(ctx context.Context, a *v1beta
 		return err
 	}
 	log.Info(">>> [App][K8s] Stopping background watcher for remote host")
-	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationHostIdLabel], a.Name)
+	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationNamespaceLabel], a.Name)
 	return nil
 }

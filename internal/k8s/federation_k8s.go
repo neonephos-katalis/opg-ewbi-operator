@@ -228,6 +228,6 @@ func (r *FederationReconciler) DeleteFederation(ctx context.Context, f *v1beta1.
 		return err
 	}
 	log.Info(">>> [Federation][K8s] Stopping background watcher for remote host")
-	StopRemoteResourceWatcher(f.Labels[v1beta1.FederationHostIdLabel], f.Name)
+	StopRemoteResourceWatcher(f.Labels[v1beta1.FederationNamespaceLabel], f.Name)
 	return nil
 }
