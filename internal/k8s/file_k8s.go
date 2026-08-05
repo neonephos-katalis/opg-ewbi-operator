@@ -161,6 +161,6 @@ func (r *FileReconciler) DeleteFile(ctx context.Context, f *v1beta1.File, feder 
 		return err
 	}
 	log.Info(">>> [File][K8s] Stopping background watcher for remote host")
-	StopRemoteResourceWatcher(f.Labels[v1beta1.FederationHostIdLabel], f.Name)
+	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationNamespaceLabel], f.Name)
 	return nil
 }

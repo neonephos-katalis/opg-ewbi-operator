@@ -172,6 +172,6 @@ func (r *ApplicationInstanceReconciler) DeleteApplicationInstance(ctx context.Co
 		return err
 	}
 	log.Info(">>> [AppInst][K8s] Stopping background watcher for remote host")
-	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationHostIdLabel], a.Name)
+	StopRemoteResourceWatcher(feder.Labels[v1beta1.FederationNamespaceLabel], a.Name)
 	return nil
 }

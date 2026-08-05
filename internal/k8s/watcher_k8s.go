@@ -41,7 +41,10 @@ var ApplicationInstanceRemoteEvents = make(chan event.GenericEvent)
 func StartRemoteResourceWatcher(ctx context.Context, hostClient dynamic.Interface, namespace, localResourceName, localResourceNS string, group, version, resource string) {
 	watchKey := fmt.Sprintf("%s/%s", namespace, localResourceName)
 
-	if _, loaded := activeResourceWatchers.LoadOrStore(watchKey, true); loaded {
+	watcherCtx, cancel := context.WithCancel(ctx)
+	if _, loaded := activeResourceWatchers.LoadOrStore(watchKey, cancel); loaded {
+		// Someone is already watching this key; discard the context we just made.
+		cancel()
 		return
 	}
 
@@ -106,7 +109,7 @@ func StartRemoteResourceWatcher(ctx context.Context, hostClient dynamic.Interfac
 	})
 
 	// Avviamo l'informer in background
-	go informer.Run(ctx.Done())
+	go informer.Run(watcherCtx.Done())
 }
 
 func StopRemoteResourceWatcher(namespace, localResourceName string) {
