@@ -1,350 +1,273 @@
 # EWBI Federation Platform Architecture
 
-# Purpose
+## Purpose
 
-This document provides a high-level architectural overview of the EWBI Federation Platform.
+This document describes the high-level architecture of the EWBI Federation Platform.
 
-It explains:
+It focuses on the major building blocks of the platform, the boundaries between them, and how independent operator environments communicate.
 
-- The overall system architecture
-- The major platform components
-- Component responsibilities
-- How operators interact
-- The relationship between Kubernetes resources and the EWBI APIs
-- The architectural boundaries of the platform
-
-This document intentionally focuses on architecture and component relationships.
-
-Detailed federation workflows, onboarding procedures, resource lifecycles, state synchronisation and deployment processes are described in their respective documentation.
+Detailed implementation information is provided in [Core Components](components.md), while federation workflows and runtime behaviour are described in [Federation Model and Workflows](federation.md).
 
 ---
 
-# System Context
+## System Context
 
-The EWBI Federation Platform extends existing operator platforms with standards-based federation capabilities.
+The EWBI Federation Platform extends an existing operator platform with capabilities for interoperability and federation.
 
-Each participating operator deploys an identical federation stack consisting of the EWBI API and EWBI Operator. These components enable operators to establish federation relationships and exchange federation resources using the GSMA EWBI interfaces. (Operators may deploy the federation manager components with slightly different applications to manage them, e.g. K8s native, OpenShift, NearbyOne)
+Each participating operator maintains its own Kubernetes environment, federation components, infrastructure and operational policies. The federation layer provides a standardised interface through which these independent platforms can exchange federation information and coordinate operations.
 
-The platform integrates with existing orchestration systems and does not replace local workload management platforms.
+At a high level, an operator environment contains:
 
-At a high level, the platform consists of:
+* Kubernetes resources used to represent federation state
+* An EWBI Operator responsible for the Kubernetes-facing federation layer
+* An EWBI API providing the operator-to-operator federation interface
+* A local orchestration platform responsible for workload execution
 
-- A Kubernetes cluster
-- An EWBI API implementing the GSMA specification
-- A Kubernetes Operator providing a Kubernetes-native interface
-- Kubernetes Custom Resources representing federation objects
-- An orchestration platform responsible for workload execution
+The federation platform therefore complements the operator's existing platform rather than replacing it.
 
-The platform follows a distributed peer-to-peer model. There is no central federation controller or broker.
-
----
-
-# Architectural Principles
-
-The platform is designed around several key architectural principles.
-
-## Federation Through Standard Interfaces
-
-Operators communicate using GSMA-defined EWBI APIs while retaining complete administrative independence.
-
-Federation does not require operators to expose internal platform implementations or relinquish control of local resources.
-
-## Kubernetes-Native Management
-
-Federation resources are represented as Kubernetes Custom Resources (CRs).
-
-This enables operators to manage federation using familiar Kubernetes tooling while integrating naturally with automation systems and GitOps workflows.
-
-## Declarative Reconciliation
-
-Desired federation state is expressed through Kubernetes resources.
-
-The EWBI Operator continuously reconciles the desired state with the actual federation state by communicating with partner operators through the EWBI APIs.
-
-_(To be updated with Kubernetes communication model changes introduced in Phase 2.)_
-
-## Asynchronous Operations
-
-Many federation operations involve communication between independent platforms and therefore complete asynchronously.
-
-Resource creation initiates federation workflows, while status updates and callbacks communicate progress and completion.
+The cross-operator boundary is provided by the EWBI interface. Internal platform and infrastructure implementations remain under the control of each individual operator.
 
 ---
 
-# High-Level Architecture
+## Architectural Principles
 
-The platform is composed of several logical components deployed within each participating operator environment.
+### Standards-Based Federation
 
-```text
-                   Operator Platform A
+Operators communicate using the GSMA-defined EWBI interfaces.
 
-+-------------------------------------------------------+
-|                                                       |
-|               Kubernetes Cluster                      |
-|                                                       |
-|  +-----------------------------------------------+    |
-|  | Kubernetes API                                |    |
-|  +----------------------+------------------------+    |
-|                         |                             |
-|                  EWBI Operator                       |
-|                         |                             |
-|                     EWBI API                         |
-|                         |                             |
-|              Local Orchestration Platform            |
-|                                                       |
-+-------------------------+-----------------------------+
-                          |
-                   GSMA EWBI REST APIs
-                          |
-+-------------------------+-----------------------------+
-|                                                       |
-|               Kubernetes Cluster                      |
-|                                                       |
-|  +-----------------------------------------------+    |
-|  | Kubernetes API                                |    |
-|  +----------------------+------------------------+    |
-|                         |                             |
-|                  EWBI Operator                       |
-|                         |                             |
-|                     EWBI API                         |
-|                         |                             |
-|              Local Orchestration Platform            |
-|                                                       |
-+-------------------------------------------------------+
+This provides a common interoperability boundary between independent operator platforms without requiring them to use the same underlying infrastructure or internal implementation.
 
-                   Operator Platform B
+### Administrative Independence
+
+Each operator remains responsible for its own platform and infrastructure.
+
+Federation allows capabilities to be shared between operators without requiring a central operational platform or exposing the internal implementation of either operator.
+
+### Kubernetes-Native Management
+
+Federation resources are represented within Kubernetes.
+
+This provides a local management boundary for federation resources while the EWBI APIs provide the interoperability boundary between operators.
+
+### Distributed Federation
+
+The platform follows a distributed, peer-to-peer model.
+
+There is no central federation broker or controller through which all operators must communicate. Operators communicate directly with their federation partners.
+
+### Separation of Federation and Workload Execution
+
+The federation layer coordinates federation operations and exchanges the information required to request workloads.
+
+Actual workload execution remains under the control of the local operator platform.
+
+This separation allows different operators to use different orchestration technologies while participating in the same federation.
+
+---
+
+## High-Level Architecture
+
+Each participating operator maintains its own independent environment.
+
+```mermaid
+flowchart LR
+
+    subgraph A["Operator A"]
+        direction TB
+
+        subgraph AK["Kubernetes Environment"]
+            ACR["Federation Custom Resources"]
+            AOP["EWBI Operator"]
+        end
+
+        ACR --> AOP
+        AOP --> AAPI["EWBI API"]
+    end
+
+    subgraph B["Operator B"]
+        direction TB
+
+        subgraph BK["Kubernetes Environment"]
+            BCR["Federation Custom Resources"]
+            BOP["EWBI Operator"]
+        end
+
+        BCR --> BOP
+        BOP --> BAPI["EWBI API"]
+    end
+
+    AAPI <--> |"EWBI"| BAPI
 ```
 
-Each operator deploys the same federation components.
+The diagram shows the principal architectural boundary between two independent operator environments.
 
-Communication between operators occurs exclusively through the EWBI APIs, while each operator remains responsible for managing its own infrastructure and operational policies.
+Within each operator, Kubernetes resources are managed by the EWBI Operator. The EWBI API provides the external interface through which the two operators communicate.
 
----
-
-# Architectural Decisions
-
-## Why Kubernetes Operators?
-
-The GSMA EWBI specification defines federation using REST APIs.
-
-The platform introduces a Kubernetes-native management model through the Kubernetes Operator pattern.
-
-This allows federation resources to be managed using standard Kubernetes workflows while maintaining compatibility with the EWBI specification.
-
-Benefits include:
-
-- Declarative resource management
-- Event-driven lifecycle handling
-- Native Kubernetes integration
-- GitOps compatibility
-- Integration with automation systems
-
-## Why Custom Resources?
-
-Federation concepts are represented as Kubernetes Custom Resources.
-
-This allows operators to manage federation resources using standard Kubernetes tools, APIs and operational procedures.
-
-Resources become Kubernetes objects that can be managed through familiar workflows.
-
-## Why Peer-to-Peer Federation?
-
-The platform is intended to support federation between independent organisations.
-
-There is no central federation controller, broker or shared operational platform.
-
-Each operator deploys an equivalent federation stack and communicates directly with federation partners through the EWBI APIs.
-
-This approach preserves administrative independence while providing interoperability.
+The diagram deliberately does not show the internal implementation of the Operator or API. Those details are described in [Core Components](components.md).
 
 ---
 
-# Architecture Components
+## Federation Platform Boundary
 
-This section provides a high-level overview of the primary architectural components.
+The federation components sit alongside the operator's existing platform rather than replacing it.
 
-Detailed implementation behaviour is described in the Components documentation.
+```mermaid
+flowchart TB
 
-## Local Orchestration Platform
+    subgraph OP["Operator Environment"]
 
-The federation platform integrates with an operator's existing orchestration platform.
+        subgraph FED["EWBI Federation Platform"]
+            CR["Federation Custom Resources"]
+            OPERATOR["EWBI Operator"]
+            API["EWBI API"]
 
-This platform remains responsible for infrastructure management and workload execution, while the federation platform coordinates resource sharing and cross-operator operations.
+            CR --> OPERATOR
+            OPERATOR --> API
+        end
 
-Typical responsibilities include:
+        subgraph LOCAL["Local Operator Platform"]
+            ORCH["Local Orchestration Platform"]
+            INFRA["Operator Infrastructure"]
+            WORK["Application Workloads"]
 
-- Resource scheduling
-- Workload placement
-- Infrastructure management
-- Application lifecycle management
-- Platform-specific operations
+            ORCH --> INFRA
+            ORCH --> WORK
+        end
 
-The federation platform does not replace these capabilities.
+        API --> ORCH
+    end
 
----
-
-## Kubernetes
-
-Kubernetes provides the management interface used to administer federation resources.
-
-Operators interact with the platform by creating and managing Kubernetes Custom Resources that represent federation objects.
-
-Using Kubernetes enables federation operations to integrate with existing automation systems, CI/CD pipelines and GitOps workflows.
-
----
-
-## EWBI Operator
-
-The EWBI Operator provides the Kubernetes-native interface to federation.
-
-It continuously watches Custom Resources and reconciles the desired state with the remote federation platform.
-
-Its responsibilities include:
-
-- Watching Kubernetes Custom Resources
-- Validating resource changes
-- Executing reconciliation loops
-- Translating Kubernetes resources into EWBI operations
-- Updating resource status
-- Processing asynchronous callbacks
-
-The Operator acts as the bridge between Kubernetes and the EWBI APIs.
-
----
-
-## EWBI API
-
-The EWBI API implements the GSMA-defined federation interfaces.
-
-It exposes REST endpoints used by partner operators to perform federation operations.
-
-Its responsibilities include:
-
-- Exposing EWBI endpoints
-- Receiving federation requests
-- Validating requests
-- Processing federation operations
-- Sending callbacks
-- Returning operation status
-
-All communication between operators occurs through this component.
-
----
-
-## Kubernetes Custom Resources
-
-Federation resources are represented as Kubernetes Custom Resources.
-
-These resources provide a declarative representation of federation objects and allow operators to manage federation using standard Kubernetes tooling.
-
-Examples include:
-
-- Federation
-- File
-- Artefact
-- Application
-- ApplicationInstance
-
-The Operator translates these resources into the corresponding EWBI operations.
-
----
-
-# Deployment Model
-
-The platform follows a distributed deployment model.
-
-Each participating operator deploys:
-
-- A Kubernetes cluster
-- The EWBI API
-- The EWBI Operator
-- Federation Custom Resources
-
-Operators communicate directly through the GSMA-defined EWBI APIs.
-
-Within a federation relationship, an operator may assume:
-
-- A Guest role
-- A Host role
-
-These are logical federation roles and do not affect the deployed architecture.
-
----
-
-# Component Relationships
-
-The following diagram illustrates the relationship between the major components.
-
-```text
-User / Automation
-        │
-        ▼
-
-Kubernetes API
-        │
-        ▼
-
-EWBI Operator
-        │
-        ▼
-
-EWBI API
-        │
-        ▼
-
-Partner EWBI API
-        │
-        ▼
-
-Partner EWBI Operator
-        │
-        ▼
-
-Partner Kubernetes Platform
+    PARTNER["Federation Partner"] <--> |"EWBI"| API
 ```
 
-Users and automation systems interact with Kubernetes through Custom Resources.
+The federation platform provides the federation interface and coordination layer.
 
-The EWBI Operator monitors these resources and determines when federation operations need to be performed.
+The local operator platform remains responsible for infrastructure and workload execution.
 
-The Operator communicates with the local EWBI API, which exchanges federation information with partner operators using the GSMA-defined EWBI interfaces.
-
-Responses and asynchronous callbacks are reflected back into Kubernetes resources, ensuring resource status accurately represents the current federation state.
-
-This separation of responsibilities allows Kubernetes to remain the primary management interface while the EWBI APIs provide standards-based interoperability between operators.
+The connection between the federation layer and the local orchestration platform is an architectural boundary rather than a specification of a particular implementation. The exact mechanism used to consume federation resources and execute workloads may differ between operators.
 
 ---
 
-# Architecture Boundaries
+## Component Relationships
 
-The EWBI Federation Platform is responsible for:
+The architecture is based on several distinct responsibilities.
 
-- Federation establishment
-- Resource exchange
-- Cross-operator communication
-- Federation lifecycle coordination
-- Status management
+### Kubernetes
 
-The platform is not responsible for:
+Kubernetes provides the local environment in which federation resources are represented and managed.
 
-- Kubernetes cluster management
-- Infrastructure provisioning
-- Virtual machine lifecycle management
-- Network provisioning
-- Application scheduling
-- Application runtime execution
+### EWBI Operator
 
-These responsibilities remain within the local operator platform.
+The EWBI Operator connects Kubernetes-managed federation resources with federation operations.
+
+It operates within the local Kubernetes environment and interacts with the local EWBI API.
+
+The internal controller structure and implementation are described in [Core Components](components.md).
+
+### EWBI API
+
+The EWBI API provides the external federation interface.
+
+It receives and exposes the operations required for communication between federation partners using the EWBI protocol.
+
+The API also provides the boundary between external federation requests and the local platform representation of those requests.
+
+### Federation Custom Resources
+
+Federation Custom Resources provide the Kubernetes representation of federation objects.
+
+They allow federation state and requests to be represented within the operator's local Kubernetes environment.
+
+The individual resource types and their implementation are described in [Core Components](components.md).
+
+### Local Orchestration Platform
+
+The local orchestration platform remains responsible for executing workloads within the operator's infrastructure.
+
+The federation architecture does not require a particular orchestration technology.
+
+The exact relationship between federation resources and the local orchestration system is therefore operator-specific.
 
 ---
 
-# Related Documentation
+## Operator-to-Operator Interface
 
-- [Quick Start Guide](Quick-start-introduction.md)
-- [Core Components](components.md)
-- [Federation Model and Workflows](federation.md)
-- [Security](security.md)
-- [Diagrams](diagrams.md)
-- [Deployment Guide](deployment.md)
-- [Connectivity Guide](connectivity.md)
-- [Troubleshooting Guide](troubleshooting.md)
+The EWBI API provides the communication boundary between independent operators.
+
+```mermaid
+flowchart LR
+
+    A["Operator A"] --> AAPI["EWBI API"]
+    AAPI <--> |"GSMA EWBI interfaces"| BAPI["EWBI API"]
+    BAPI --> B["Operator B"]
+```
+
+The EWBI interface allows each operator to retain its own internal architecture while exposing a common federation interface to its partners.
+
+No central federation service is required for operators to communicate.
+
+---
+
+## Architectural Boundaries
+
+The following boundaries are important to the design.
+
+### Federation Platform Responsibilities
+
+The federation platform provides:
+
+* Federation management
+* Federation resource representation
+* Cross-operator EWBI communication
+* Coordination of federation operations
+* Federation-related state management
+
+### Local Operator Platform Responsibilities
+
+The following remain under the control of the individual operator:
+
+* Kubernetes cluster administration
+* Infrastructure provisioning
+* Infrastructure capacity management
+* Infrastructure-level networking
+* Workload scheduling
+* Application runtime execution
+* Operator-specific orchestration
+
+The federation platform therefore does not prescribe how an operator manages or executes workloads internally.
+
+---
+
+## Guest and Host Roles
+
+An operator may participate as a Guest or Host within a federation relationship.
+
+These are logical roles rather than separate architectural deployments.
+
+Both operators can use the same high-level federation architecture:
+
+```mermaid
+flowchart LR
+
+    G["Guest Operator"]
+    H["Host Operator"]
+
+    G <--> |"EWBI"| H
+```
+
+The role determines how an operator participates in a particular federation relationship rather than requiring a different set of federation components.
+
+The detailed differences in Guest and Host behaviour are described in [Federation Model and Workflows](federation.md).
+
+---
+
+## Related Documentation
+
+* [Quick Start Guide](Quick-start-introduction.md) — Introduction to the platform and its key concepts.
+* [Core Components](components.md) — Detailed responsibilities and implementation of the platform components.
+* [Federation Model and Workflows](federation.md) — Detailed federation behaviour and resource workflows.
+* [Security](security.md) — Security model and trust boundaries.
+* [Diagrams](diagrams.md) — Collection of the platform's Mermaid diagrams.
+* [Deployment Guide](deployment.md) — Installation and configuration.
+* [Connectivity Guide](connectivity.md) — Connectivity requirements between operators.
+* [Troubleshooting Guide](troubleshooting.md) — Verification and troubleshooting.

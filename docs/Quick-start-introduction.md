@@ -2,231 +2,202 @@
 
 ## Introduction
 
-This documentation describes the deployment, operation, and usage of the EWBI Federation Platform.
+This documentation describes the EWBI Federation Platform and provides an introduction to how it enables independent operator platforms to cooperate.
 
-The platform provides an implementation of the GSMA East-West Bound Interface (EWBI), enabling Operator Platforms to establish federation relationships and securely share edge computing capabilities, resources, and application workloads across organisations.
+The platform provides an implementation of the **GSMA East-West Bound Interface (EWBI)**, enabling operators to establish federation relationships and exchange information about edge resources and application workloads.
 
 The documentation is intended for:
 
-- Mobile Network Operators (MNOs)
-- Telecommunications operators
-- Edge platform providers
-- Platform administrators
-- Developers integrating with EWBI-enabled platforms
+* Mobile Network Operators (MNOs)
+* Telecommunications operators
+* Edge platform providers
+* Platform administrators
+* Developers integrating with EWBI-enabled platforms
 
-No prior federation experience is assumed.
+No previous federation experience is assumed.
+
+This document provides a high-level introduction to the main concepts. More detailed information about the architecture, implementation and operation of the platform is provided in the other documentation.
 
 ---
 
-## What This Documentation Covers
-
-This documentation focuses on the EWBI Federation platform implementation, including federation establishment, resource onboarding, application lifecycle management and operational procedures.
-
-It does not attempt to replace the GSMA EWBI specification, which should be consulted for interface definitions and protocol requirements.
-
-
 ## What is Federation?
 
-Federation enables two independent Operator Platforms to cooperate while maintaining administrative independence.
+Federation allows two independent operator platforms to cooperate while maintaining control over their own infrastructure and operations.
 
-Through federation, one operator can:
+Within a federation, one operator can make edge capabilities available to another operator. This can allow a partner to discover available resources, onboard applications and request workloads to be deployed on infrastructure operated by the other organisation.
 
-- Discover resources offered by another operator
-- Deploy applications into partner infrastructure
-- Access partner Availability Zones
-- Exchange lifecycle information
-- Share edge capabilities using standardised APIs
+A typical federation therefore involves two roles:
 
-EWBI defines the interfaces used to establish and manage these relationships.
+* A **Guest Operator**, which consumes capabilities from a partner.
+* A **Host Operator**, which provides capabilities and hosts workloads for a partner.
+
+The operators remain administratively independent while using agreed interfaces to exchange the information required to cooperate.
+
+For the detailed federation model and operational workflows, see [Federation Model and Workflows](federation.md).
 
 ---
 
 ## What is EWBI?
 
-EWBI (East-West Bound Interface) is a GSMA-defined set of APIs that enables interoperability between Operator Platforms.
+**EWBI (East-West Bound Interface)** is a GSMA-defined set of interfaces for interoperability between Operator Platforms.
 
-EWBI standardises:
+The EWBI APIs provide a standardised way for participating operators to exchange federation information and perform operations such as:
 
-- Federation establishment
-- Availability Zone synchronisation
-- Application onboarding
-- Application deployment
-- Resource management
-- Edge discovery
-- Status notifications and callbacks
+* Establishing federation relationships
+* Sharing Availability Zone information
+* Onboarding application resources
+* Requesting application deployments
+* Exchanging status information
 
-The APIs allow participating operators to exchange information using a common interface, regardless of the underlying platform implementation.
+The EWBI Federation Platform implements these interfaces so that operators can participate in federation without needing to expose the internal implementation of their own platform.
+
+The detailed implementation of the EWBI interfaces is described in [Core Components](components.md).
 
 ---
 
 ## Federation at a Glance
 
-At a high level, federation enables one operator to deploy and manage applications on infrastructure owned by another operator.
+At a conceptual level, federation can be viewed as a Guest requesting and using capabilities provided by a Host.
 
-A typical workflow looks like:
+```text
+Guest Operator                         Host Operator
 
-Guest Operator                    Host Operator
-────────────────────────────────────────────────────
+Establish federation  ──────────────►  Accept / establish federation
 
-Create Federation      ────────►  Validate Federation
+Discover zones        ◄──────────────  Offer Availability Zones
 
-Discover Zones         ────────►  Offer Availability Zones
+Select zones          ──────────────►  Make selected zones available
 
-Select Zones           ────────►  Expose Zone Resources
+Onboard resources     ──────────────►  Receive application resources
 
-Upload Resources       ────────►  Receive Resources
+Request deployment    ──────────────►  Deploy application
 
-Onboard Application    ────────►  Validate Application
+Receive status        ◄──────────────  Return application status
+```
 
-Deploy Application     ────────►  Host Application Instance
+The diagram shows the overall relationship rather than the internal implementation.
 
-Receive Updates        ◄────────  Send Status Callbacks
+The detailed sequence of these operations, including resource creation, status changes and callbacks, is described in [Federation Model and Workflows](federation.md).
 
+---
 
+## Main Platform Components
 
-## How the Platform Works
+The federation platform is built around several main components.
 
-The platform consists of two major components:
+### Kubernetes
 
-### EWBI API
+Kubernetes provides the platform environment in which federation resources are represented and managed.
 
-The API service implements the EWBI interfaces defined by the GSMA specification.
-It exposes REST endpoints used to:
-
-- Create federations
-- Exchange Availability Zone information
-- Onboard applications
-- Manage application lifecycle operations
-- Exchange status notifications
+It provides the management interface used by operators and automation systems.
 
 ### EWBI Operator
 
-The Kubernetes Operator provides a cloud-native interface for managing federation resources.
-The operator reconciles Kubernetes Custom Resources and translates them into EWBI API operations.
-This allows federation actions to be managed using standard Kubernetes workflows.
+The EWBI Operator provides the Kubernetes-native interface to federation.
+
+It manages federation resources within Kubernetes and connects those resources to federation operations.
+
+The detailed implementation of the Operator is described in [Core Components](components.md).
+
+### EWBI API
+
+The EWBI API provides the external interface used for communication between federated operators.
+
+It implements the EWBI interfaces and allows an operator to receive and process federation requests from a partner.
+
+### Federation Custom Resources
+
+Federation concepts are represented as Kubernetes Custom Resources.
+
+These resources provide the Kubernetes representation of objects such as federations, applications and application instances.
+
+The complete resource model is described in [Core Components](components.md) and the behaviour of those resources is described in [Federation Model and Workflows](federation.md).
+
+### Local Orchestrator
+
+The local orchestrator is responsible for executing workloads within an operator's infrastructure.
+
+It is **operator-specific** and is not defined by the EWBI interface itself. Different operators may therefore use different orchestration platforms.
+
+The federation platform provides the information required for workload management, while the local operator remains responsible for how workloads are actually executed.
 
 ---
 
 ## Federation Roles
 
-A federation relationship involves two logical roles.
+A federation relationship has two logical roles.
 
 ### Guest Operator
 
-Consumes capabilities exposed by a partner operator and initiates federation operations.
+The Guest Operator consumes capabilities provided by a federation partner.
+
+The Guest can use the federation relationship to discover available zones, make resources available to its applications and request workloads to be deployed by the Host Operator.
 
 ### Host Operator
 
-Provides capabilities and resources to federation partners and hosts deployed workloads.
+The Host Operator provides capabilities to its federation partner.
+
+The Host makes Availability Zones available and provides the infrastructure on which partner workloads can be deployed.
+
+These roles describe how an operator participates in a particular federation relationship. They do not necessarily imply a different set of federation components.
 
 ---
 
-
 ## Key Concepts
-
-Before deploying the platform, operators should understand the following concepts.
 
 ### Federation
 
-A trusted relationship between two Operator Platforms.
+A **Federation** represents a relationship between two independent Operator Platforms.
+
+It provides the context in which resources and operations are exchanged between the operators.
 
 ### Availability Zone
 
-An Availability Zone is a location where a Host Operator makes edge resources available to federation partners.
+An **Availability Zone** represents a location where the Host Operator makes edge resources available to a federation partner.
 
-During federation establishment, a Host Operator offers one or more Availability Zones and a Guest Operator subscribes to those it wishes to use.
-
-Application Instances are deployed within Availability Zones.
-
+A Guest can select the zones it wants to use within a federation.
 
 ### Federation Context
 
-Each federation relationship is assigned a unique Federation Context Identifier.
-This identifier is used in subsequent operations such as:
+A **Federation Context** identifies a specific federation relationship between two operators.
 
-- Zone subscription
-- File onboarding
-- Application onboarding
-- Application deployment
+The Federation Context identifier is associated with subsequent federation operations so that resources and requests can be linked to the appropriate federation relationship.
 
-It's a unique identifier for a particular federation relationship
+### File
 
-## Resource Model
+A **File** represents an application image or other deployable file that can be made available to a federation partner.
 
-The EWBI resource model represents the dependencies between federation resources required to share and deploy applications across federated operators.
+Files provide the deployable content required by an application.
 
-Each resource introduces additional information required before an application can be deployed in a partner Availability Zone.
+### Artefact
 
-The platform uses a hierarchical resource model.
-Resources generally cannot be created out of sequence because higher-level resources depend on the existence of lower-level resources. The onboarding examples included with the project follow this ordering.
+An **Artefact** describes information required to deploy a workload.
 
-```text
-Federation
-    └── File
-          └── Artefact
-                └── Application
-                      └── ApplicationInstance
-```
-Each resource builds upon the previous resource.
+It can contain information such as workload components, images, resource requirements and deployment-related parameters.
 
-- A Federation establishes trust between operators.
-- A File represents an image that can be deployed.
-- An Artefact describes how a workload should be deployed.
-- An Application defines a logical service.
-- An Application Instance represents a running deployment of an Application within a specific Availability Zone.
+### Application
 
-## State-Based Operations and Reconciliation
+An **Application** represents a logical application that is onboarded into the federation.
 
-The platform uses Kubernetes Operators to manage federation resources.
+An application can reference the artefacts required to deploy its workload and contain application metadata and relevant requirements.
 
-When a Custom Resource (CR) is created, the operator:
+### Application Instance
 
-1. Detects the change.
-2. Validates the resource.
-3. Calls the appropriate EWBI API.
-4. Updates status information.
-5. Processes asynchronous callbacks.
+An **Application Instance** represents a requested instance of an application running within a particular Availability Zone.
 
-Federation operations are asynchronous.
+It connects an application to a specific deployment location and contains information required for that deployment.
 
-Creating a resource does not necessarily mean the corresponding federation operation has completed successfully.
+The relationships and lifecycle of these resources are described in more detail in [Federation Model and Workflows](federation.md).
 
-Operators should monitor resource status and reconciliation progress rather than assuming immediate completion.
+---
 
+## What Happens Next?
 
-### Why Kubernetes Custom Resources?
+Once the basic concepts are understood, the remaining documentation can be read according to what you need to understand or do:
 
-EWBI is defined as a REST API specification.
-
-This platform adds a Kubernetes-native management layer by representing federation resources as Custom Resources (CRs).
-
-Operators therefore manage federated resources using standard Kubernetes workflows, while the EWBI Operator handles communication with federation partners through the EWBI APIs.
-
-This approach allows federation operations to be integrated into existing GitOps, automation and Kubernetes management processes.
-
-
-
-## Callbacks
-
-Callbacks allow long-running federation operations to complete asynchronously while keeping both operators informed of status changes.
-
-Without callbacks, operators would need to continuously poll federation APIs to determine operation status.
-
-Callbacks are used for:
-
-- Federation status updates
-- Availability Zone updates
-- Application onboarding status
-- Application Instance status
-
-## EWBI API and Kubernetes Resources
-
-The platform provides two ways to interact with federation functionality:
-
-EWBI API
-The standards-based REST API defined by the GSMA EWBI specification.
-
-Kubernetes Custom Resources
-The Kubernetes-native interface used by operators and automation systems.
-
-The operator acts as the bridge between these two models.
+* [Architecture](architecture.md) — Understand the overall system architecture and the relationships between its major components.
+* [Core Components](components.md) — Understand the implementation and responsibilities of the individual components.
+* [Federation Model and Workflows](federation.md) — Understand how federation operations, resource flows and status updates work.
+* [Deployment](deployment.md) — Learn how to install and configure the federation components.
+* [Connectivity](connectivity.md) — Understand the network and connectivity requirements between operators.
+* [Troubleshooting](troubleshooting.md) — Verify a deployment and diagnose common problems.
