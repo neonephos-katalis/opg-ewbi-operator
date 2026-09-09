@@ -1,0 +1,504 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: availabilityzones.opg.ewbi.katalis.com
+spec:
+  group: opg.ewbi.katalis.com
+  names:
+    kind: AvailabilityZone
+    listKind: AvailabilityZoneList
+    plural: availabilityzones
+    shortNames:
+    - avazone
+    singular: availabilityzone
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.relationType
+      name: relationType
+      type: string
+    - jsonPath: .spec.federationContextId
+      name: federationContextId
+      type: string
+    - jsonPath: .spec.zoneId
+      name: zoneId
+      type: string
+    - jsonPath: .status.state
+      name: state
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: AvailabilityZone is the Schema for the availabilityzones API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AvailabilityZoneSpec defines the desired state of AvailabilityZone
+            properties:
+              availZoneNotifLink:
+                type: string
+              federationContextId:
+                description: This identifier shall be provided by the partner OP on
+                  successful verification and validation of the federation create
+                  request and is used by partner op to identify this newly created
+                  federation context. Originating OP shall provide this identifier
+                  in any subsequent request towards the partner op.
+                pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                type: string
+              relationType:
+                enum:
+                - HOST
+                - GUEST
+                type: string
+              zoneId:
+                description: Human readable name of the zone.
+                pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                type: string
+            required:
+            - federationContextId
+            - relationType
+            type: object
+          status:
+            description: AvailabilityZoneStatus defines the observed state of AvailabilityZone.
+            properties:
+              computeResourceQuotaLimits:
+                description: Max quota on resources partner OP allows over reserved
+                  resources.
+                items:
+                  properties:
+                    cpuArchType:
+                      description: CPU Instruction Set Architecture (ISA) E.g., Intel,
+                        Arm etc.
+                      enum:
+                      - ISA_X86_64
+                      - ISA_ARM_64
+                      type: string
+                    cpuExclusivity:
+                      description: Support for exclusive CPUs
+                      type: boolean
+                    diskStorage:
+                      description: Amount of disk storage in Gbytes for a given ISA
+                        type
+                      format: int32
+                      type: integer
+                    fpga:
+                      description: Number of FPGAs available for a given ISA type
+                      type: integer
+                    gpu:
+                      items:
+                        properties:
+                          gpuMemory:
+                            description: GPU memory in Mbytes
+                            type: integer
+                          gpuModeName:
+                            description: Model name corresponding to vendorType may
+                              include info e.g. for NVIDIA, model name could be "Tesla
+                              M60", "Tesla V100" etc.
+                            type: string
+                          gpuVendorType:
+                            description: GPU vendor name e.g. NVIDIA, AMD etc.
+                            enum:
+                            - GPU_PROVIDER_NVIDIA
+                            - GPU_PROVIDER_AMD
+                            example: Nvidia
+                            type: string
+                          numGPU:
+                            description: Number of GPUs
+                            type: integer
+                        required:
+                        - gpuMemory
+                        - gpuModeName
+                        - gpuVendorType
+                        - numGPU
+                        type: object
+                      type: array
+                    hugepages:
+                      items:
+                        properties:
+                          number:
+                            description: Total number of huge pages
+                            type: integer
+                          pageSize:
+                            description: Size of hugepage
+                            enum:
+                            - 2MB
+                            - 4MB
+                            - 1GB
+                            type: string
+                        required:
+                        - number
+                        - pageSize
+                        type: object
+                      type: array
+                    memory:
+                      description: Amount of RAM in Mbytes
+                      format: int64
+                      type: integer
+                    numCPU:
+                      description: Number of vcpus in whole, decimal up to millivcpu,
+                        or millivcpu format.
+                      example:
+                        decimal:
+                          value: "0.500"
+                        millivcpu:
+                          value: 500m
+                        whole:
+                          value: "2"
+                      pattern: ^\d+((\.\d{1,3})|(m))?$
+                      type: string
+                    vpu:
+                      description: Number of Intel VPUs available for a given ISA
+                        type
+                      type: integer
+                  required:
+                  - cpuArchType
+                  - memory
+                  - numCPU
+                  type: object
+                minItems: 1
+                type: array
+              flavoursSupported:
+                items:
+                  properties:
+                    cpuArchType:
+                      description: CPU Instruction Set Architecture (ISA) E.g., Intel,
+                        Arm etc.
+                      enum:
+                      - ISA_X86
+                      - ISA_X86_64
+                      - ISA_ARM_64
+                      type: string
+                    cpuExclusivity:
+                      description: Support for exclusive CPUs
+                      type: boolean
+                    flavourId:
+                      description: An identifier to refer to a specific combination
+                        of compute resources
+                      type: string
+                    fpga:
+                      description: Number of FPGAs
+                      format: int32
+                      type: integer
+                    gpu:
+                      items:
+                        properties:
+                          gpuMemory:
+                            description: GPU memory in Mbytes
+                            type: integer
+                          gpuModeName:
+                            description: Model name corresponding to vendorType may
+                              include info e.g. for NVIDIA, model name could be "Tesla
+                              M60", "Tesla V100" etc.
+                            type: string
+                          gpuVendorType:
+                            description: GPU vendor name e.g. NVIDIA, AMD etc.
+                            enum:
+                            - GPU_PROVIDER_NVIDIA
+                            - GPU_PROVIDER_AMD
+                            example: Nvidia
+                            type: string
+                          numGPU:
+                            description: Number of GPUs
+                            type: integer
+                        required:
+                        - gpuMemory
+                        - gpuModeName
+                        - gpuVendorType
+                        - numGPU
+                        type: object
+                      type: array
+                    hugepages:
+                      items:
+                        properties:
+                          number:
+                            description: Total number of huge pages
+                            type: integer
+                          pageSize:
+                            description: Size of hugepage
+                            enum:
+                            - 2MB
+                            - 4MB
+                            - 1GB
+                            type: string
+                        required:
+                        - number
+                        - pageSize
+                        type: object
+                      type: array
+                    memorySize:
+                      description: Amount of RAM in Mbytes
+                      format: int32
+                      type: integer
+                    numCPU:
+                      description: Number of available vCPUs
+                      format: int32
+                      type: integer
+                    storageSize:
+                      description: Amount of disk storage in Gbytes
+                      format: int32
+                      type: integer
+                    supportedOSTypes:
+                      description: A list of operating systems which this flavour
+                        configuration can support e.g., RHEL Linux, Ubuntu 18.04 LTS,
+                        MS Windows 2012 R2.
+                      items:
+                        properties:
+                          architecture:
+                            enum:
+                            - x86_64
+                            - x86
+                            example: x86_64
+                            type: string
+                          distribution:
+                            enum:
+                            - RHEL
+                            - UBUNTU
+                            - COREOS
+                            - FEDORA
+                            - WINDOWS
+                            - OTHER
+                            type: string
+                          license:
+                            enum:
+                            - OS_LICENSE_TYPE_FREE
+                            - OS_LICENSE_TYPE_ON_DEMAND
+                            - NOT_SPECIFIED
+                            type: string
+                          version:
+                            enum:
+                            - OS_VERSION_UBUNTU_2204_LTS
+                            - OS_VERSION_RHEL_8
+                            - OS_VERSION_RHEL_7
+                            - OS_VERSION_DEBIAN_11
+                            - OS_VERSION_COREOS_STABLE
+                            - OS_MS_WINDOWS_2012_R2
+                            - OTHER
+                            type: string
+                        required:
+                        - architecture
+                        - distribution
+                        - license
+                        - version
+                        type: object
+                      minItems: 1
+                      type: array
+                    vpu:
+                      description: Number of Intel VPUs available
+                      type: integer
+                  required:
+                  - cpuArchType
+                  - flavourId
+                  - memorySize
+                  - numCPU
+                  - storageSize
+                  - supportedOSTypes
+                  type: object
+                minItems: 1
+                type: array
+              networkResources:
+                properties:
+                  dedicatedNIC:
+                    description: Number of network interface cards which can be dedicatedly
+                      assigned to application pods on isolated networks. This includes
+                      virtual as well physical NICs
+                    format: int32
+                    type: integer
+                  egressBandWidth:
+                    description: Max dl throughput that this edge can offer. It is
+                      defined in Mbps.
+                    format: int32
+                    type: integer
+                  supportDPDK:
+                    description: If this zone supports DPDK based networking.
+                    type: boolean
+                  supportSriov:
+                    description: If this zone support SRIOV networks or not
+                    type: boolean
+                required:
+                - dedicatedNIC
+                - egressBandWidth
+                - supportDPDK
+                - supportSriov
+                type: object
+              reservedComputeResources:
+                description: Resources exclusively reserved for the originator OP.
+                items:
+                  properties:
+                    cpuArchType:
+                      description: CPU Instruction Set Architecture (ISA) E.g., Intel,
+                        Arm etc.
+                      enum:
+                      - ISA_X86_64
+                      - ISA_ARM_64
+                      type: string
+                    cpuExclusivity:
+                      description: Support for exclusive CPUs
+                      type: boolean
+                    diskStorage:
+                      description: Amount of disk storage in Gbytes for a given ISA
+                        type
+                      format: int32
+                      type: integer
+                    fpga:
+                      description: Number of FPGAs available for a given ISA type
+                      type: integer
+                    gpu:
+                      items:
+                        properties:
+                          gpuMemory:
+                            description: GPU memory in Mbytes
+                            type: integer
+                          gpuModeName:
+                            description: Model name corresponding to vendorType may
+                              include info e.g. for NVIDIA, model name could be "Tesla
+                              M60", "Tesla V100" etc.
+                            type: string
+                          gpuVendorType:
+                            description: GPU vendor name e.g. NVIDIA, AMD etc.
+                            enum:
+                            - GPU_PROVIDER_NVIDIA
+                            - GPU_PROVIDER_AMD
+                            example: Nvidia
+                            type: string
+                          numGPU:
+                            description: Number of GPUs
+                            type: integer
+                        required:
+                        - gpuMemory
+                        - gpuModeName
+                        - gpuVendorType
+                        - numGPU
+                        type: object
+                      type: array
+                    hugepages:
+                      items:
+                        properties:
+                          number:
+                            description: Total number of huge pages
+                            type: integer
+                          pageSize:
+                            description: Size of hugepage
+                            enum:
+                            - 2MB
+                            - 4MB
+                            - 1GB
+                            type: string
+                        required:
+                        - number
+                        - pageSize
+                        type: object
+                      type: array
+                    memory:
+                      description: Amount of RAM in Mbytes
+                      format: int64
+                      type: integer
+                    numCPU:
+                      description: Number of vcpus in whole, decimal up to millivcpu,
+                        or millivcpu format.
+                      example:
+                        decimal:
+                          value: "0.500"
+                        millivcpu:
+                          value: 500m
+                        whole:
+                          value: "2"
+                      pattern: ^\d+((\.\d{1,3})|(m))?$
+                      type: string
+                    vpu:
+                      description: Number of Intel VPUs available for a given ISA
+                        type
+                      type: integer
+                  required:
+                  - cpuArchType
+                  - memory
+                  - numCPU
+                  type: object
+                minItems: 1
+                type: array
+              state:
+                enum:
+                - FAILED
+                - TEMPORARY_FAILURE
+                - AVAILABLE
+                - LOCKED
+                - NOT_AVAILABLE
+                type: string
+              zoneServiceLevelObjsInfo:
+                description: It is a measure of the actual amount of data that is
+                  being sent over a network per unit of time and indicates máximum
+                  supported value for a zone
+                properties:
+                  jitterRanges:
+                    properties:
+                      maxJitter:
+                        description: The maximum limit of network jitter between UC
+                          and Edge App in milli seconds.
+                        format: int32
+                        type: integer
+                      minJitter:
+                        format: int32
+                        minimum: 1
+                        type: integer
+                    type: object
+                  latencyRanges:
+                    properties:
+                      maxLatency:
+                        description: The maximum limit of latency between UC and Edge
+                          App in milli seconds.
+                        format: int32
+                        type: integer
+                      minLatency:
+                        description: The time for data/packet to reach from UC to
+                          edge application. It represent mínimum latency in milli
+                          seconds that may exist between UCs and edge apps in this
+                          zone but it can be higher in actual.
+                        format: int32
+                        minimum: 1
+                        type: integer
+                    type: object
+                  throughputRanges:
+                    properties:
+                      maxThroughput:
+                        description: The maximum limit of network throughput between
+                          UC and Edge App in Mega bits per seconds (Mbps).
+                        format: int32
+                        type: integer
+                      minThroughput:
+                        description: The minimum limit of network throughput between
+                          UC and Edge App in Mega bits per seconds (Mbps).
+                        format: int32
+                        minimum: 1
+                        type: integer
+                    type: object
+                required:
+                - jitterRanges
+                - latencyRanges
+                - throughputRanges
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

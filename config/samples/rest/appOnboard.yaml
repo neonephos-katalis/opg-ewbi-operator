@@ -1,0 +1,28 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: ApplicationOnboarding
+metadata:
+  namespace: guest
+  name: apponboard-45559f1bre564rhr54fe 
+spec:
+  relationType: GUEST
+  federationContextId: c3d13748-0b70-5b1c-8a01-d97e2ca502e7
+  appInfo:
+    appStatusCallbackLink:  "http://katalis-fm-api.guest.svc.cluster.local:8080"
+    appId: a3e559f1bf00858c2a2f80596892a0f7
+    appProviderId: nearbycomputing
+    appDeploymentZones:
+      - zoneId: 2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f
+        countryCode: IT
+    appMetaData:
+      appName: appName01
+      version: 1.0.0
+      accessToken: accessTokenaccessTokenaccessToken
+      appDescription: This is a sample application for onboarding
+    appQoSProfile:
+      latencyConstraints: NONE
+      bandwidthRequired: 1
+      multiUserClients: APP_TYPE_SINGLE_USER
+      noOfUsersPerAppInst: 1
+      appProvisioning: true
+    appComponentSpecs: 
+      - artefactId: 234e4567-e89b-12d3-a456-426614174001

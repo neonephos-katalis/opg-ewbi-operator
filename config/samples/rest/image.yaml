@@ -1,0 +1,22 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: Image
+metadata:
+  namespace: guest
+  name: image-123e4567
+spec:
+  relationType: GUEST
+  federationContextId: c3d13748-0b70-5b1c-8a01-d97e2ca502e7
+  imageId: 123e4567-e89b-12d3-a456-426614174002
+  imageBody:
+    appProviderId: nearbycomputing
+    imageName: "nginx_latest"
+    imageDescription: "nginx_latest"
+    imageType: DOCKER
+    imageVersionInfo: "latest"
+    imgOSType:
+      architecture: x86_64
+      distribution: UBUNTU
+      license: OS_LICENSE_TYPE_FREE
+      version: OS_VERSION_UBUNTU_2204_LTS
+    imgInsSetArch: ISA_X86_64
+  imageNotifLink: "http://katalis-fm-api.guest.svc.cluster.local:8080"

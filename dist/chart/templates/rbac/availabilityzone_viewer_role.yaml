@@ -2,7 +2,7 @@
 # This rule is not used by the project opg-ewbi itself.
 # It is provided to allow the cluster admin to help manage permissions for users.
 #
-# Grants read-only access to opg.ewbi.nby.one resources.
+# Grants read-only access to opg.ewbi.katalis.com resources.
 # This role is intended for users who need visibility into these resources
 # without permissions to modify them. It is ideal for monitoring purposes and limited-access viewing.
 
@@ -17,7 +17,7 @@ metadata:
   name: availabilityzone-viewer-role
 rules:
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
   - availabilityzones
   verbs:
@@ -25,7 +25,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
   - availabilityzones/status
   verbs:

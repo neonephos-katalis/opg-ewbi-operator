@@ -16,5 +16,5 @@ spec:
       nodePort: {{ .Values.federation.services.federation.nodePort }}
       {{- end }}
   selector:
-    control-plane: federation-api
+    control-plane: katalis-fm-api
 {{- end }}

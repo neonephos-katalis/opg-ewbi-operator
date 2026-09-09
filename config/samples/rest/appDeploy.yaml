@@ -1,0 +1,19 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: ApplicationDeployment
+metadata:
+  namespace: guest
+  name: appdeploy-67gx5fht632dty6543567yh43
+spec:
+  relationType: GUEST
+  federationContextId: c3d13748-0b70-5b1c-8a01-d97e2ca502e7
+  appId: a3e559f1bf00858c2a2f80596892a0f7
+  appInstanceId: appInstanceIdk8s
+  zoneId: 2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f
+  appProviderId: nearbycomputing
+  appDetails:
+    appVersion: 1.23.3
+    zoneInfo:
+      flavourId: NOT_SPECIFIED
+      resPool: mock_res_pool
+      resourceConsumption: RESERVED_RES_AVOID
+    appInstCallbackLink: "http://katalis-fm-api.host.svc.cluster.local:8080"

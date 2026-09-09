@@ -181,7 +181,7 @@ Expected:
 | Host resource patched but guest state does not change | Guest API not deployed or not reachable | Verify guest federation API pod/service is running |
 | Host state changes but callback is never delivered | `partner.statusLink` missing or wrong in Federation spec | Verify guest federation `spec.partner.statusLink` |
 | Callback returns error | Guest-side object not found | Verify guest resource exists and labels match the expected federation context |
-| Guest status remains PENDING | Callback ID or federation context mismatch | Check `opg.ewbi.nby.one/federation-callback-id` and `opg.ewbi.nby.one/federation-context-id` labels |
+| Guest status remains PENDING | Callback ID or federation context mismatch | Check `opg.ewbi.katalis.com/federation-callback-id` and `opg.ewbi.katalis.com/federation-context-id` labels |
 | Patch succeeds but wrong resource updated | Using generated host object name from a previous run | Re-list host resources and patch the current object name |
 | No callback logs visible | Wrong namespace or pod selected | Check logs in both `katalis-dev-host` and `katalis-dev-guest` |
 

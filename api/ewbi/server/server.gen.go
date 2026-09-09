@@ -19,6 +19,12 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Retrieves the existing federationContextId with partner operator platform.
+	// (GET /fed-context-id)
+	GetFederationContextId(ctx echo.Context) error
+	// Retrieves REST APIs supported by an OP for federation services.
+	// (GET /federation-resources)
+	GetFederationAPIs(ctx echo.Context) error
 	// Creates one direction federation with partner operator platform.
 	// (POST /partner)
 	CreateFederation(ctx echo.Context) error
@@ -38,14 +44,71 @@ type ServerInterface interface {
 	// (POST /{federationCallbackId}/fileStatusCallbackLink)
 	FileStatusCallbackLink(ctx echo.Context, federationCallbackId FederationCallbackId) error
 
+	// (POST /{federationCallbackId}/partnerDetailsCallbackLink')
+	PartnerDetailsCallback(ctx echo.Context, federationCallbackId FederationCallbackId) error
+
 	// (POST /{federationCallbackId}/partnerStatusLink)
 	PartnerStatusLink(ctx echo.Context, federationCallbackId FederationCallbackId) error
 
 	// (POST /{federationCallbackId}/resourceReservationCallbackLink)
 	ResourceReservationCallbackLink(ctx echo.Context, federationCallbackId FederationCallbackId) error
+	// Originating OP uses this procedure to request enabling alarm reporting with Partner OP.
+	// (POST /{federationContextId}/alarms)
+	CreateAlarmReportingSubscription(ctx echo.Context, federationContextId FederationContextId) error
+	// Remove the Service API Session earlier created with Service API forwarding request.
+	// (DELETE /{federationContextId}/apiservice/connid/{connectID}/custid/{customerID})
+	RemoveServiceAPISession(ctx echo.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID) error
+	// Retrieve the Service API context information of an existing API session identified by connectID, customerID
+	// (GET /{federationContextId}/apiservice/connid/{connectID}/custid/{customerID})
+	GetServiceAPISessionInfo(ctx echo.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID) error
+	// Service API request forwarding to the Partner OP
+	// (POST /{federationContextId}/apiservice/{serviceAPINameVal})
+	APIForwarding(ctx echo.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal) error
+	// Originating OP uses this procedure to Subscribe for Application's policy capability at Partner OP.
+	// (POST /{federationContextId}/app-policies-subscription)
+	CreateApplicationPolicySubscription(ctx echo.Context, federationContextId FederationContextId) error
+	// Origination OP uses this procedure to retrieve application-level policies to federated applications at Partner OP.
+	// (GET /{federationContextId}/app-policies-subscription/{appl-policy-subs-id})
+	RetrieveApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params RetrieveApplicationPolicyParams) error
+	// Modify application-level policy associated with federated applications with the partner OP
+	// (PATCH /{federationContextId}/app-policies-subscription/{appl-policy-subs-id})
+	ModifyApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error
+	// Origination OP uses this procedure to apply application-level policies to federated applications at Partner OP.
+	// (POST /{federationContextId}/app-policies-subscription/{appl-policy-subs-id})
+	ApplyApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error
+	// Remove applications from federated applications at Partner OP.
+	// (POST /{federationContextId}/app-policies-subscription/{appl-policy-subs-id}/app-policy-cancel)
+	RemoveApplicationPolicies(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error
+	// Originating OP uses this procedure to Subscribe for Application's Events Notifications.
+	// (POST /{federationContextId}/appl-event-notifications)
+	CreateApplicationEventSubscription(ctx echo.Context, federationContextId FederationContextId) error
+	// Remove existing application notification subscription with the partner OP
+	// (DELETE /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	DeleteApplNotifSubscription(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error
+	// Originating OP uses this procedure to retrieve subscription meta-information about application-level notifications.
+	// (GET /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	RetrieveApplSubsMetaInfo(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params RetrieveApplSubsMetaInfoParams) error
+	// Modify existing application events notification subscription with the partner OP
+	// (PATCH /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	ModifyApplEventNotifSubscription(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error
+	// Originating OP uses this procedure to add applications for reporting of application events by Partner OP.
+	// (POST /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	SubscribeApplsEvtNotif(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params SubscribeApplsEvtNotifParams) error
+	// Remove applications from the reporting of application-level event notifications.
+	// (POST /{federationContextId}/appl-event-notifications/{app-notif-subs-id}/app-events)
+	RetrieveAppsEventsInfo(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error
+	// Remove applications from the reporting of application-level event notifications.
+	// (POST /{federationContextId}/appl-event-notifications/{app-notif-subs-id}/cancel)
+	RemoveAppsEventSubscription(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error
+	// Register an application-level policy with the partner OP
+	// (POST /{federationContextId}/appl-policies-subscription/{appl-policy-subs-id}/app-policy-registration)
+	RegisterApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error
+	// Originating OP uses this procedure to retrieve application policy templates from Partner OP.
+	// (GET /{federationContextId}/appl-policies-subscription/{appl-policy-subs-id}/app-policy-templates)
+	RetrieveAppPolicyTemplates(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params RetrieveAppPolicyTemplatesParams) error
 	// Instantiates an application on a partner OP zone.
 	// (POST /{federationContextId}/application/lcm)
-	InstallApp(ctx echo.Context, federationContextId FederationContextId) error
+	InstallApp(ctx echo.Context, federationContextId FederationContextId, params InstallAppParams) error
 	// Retrieves all application instance of partner OP
 	// (GET /{federationContextId}/application/lcm/app/{appId}/appProvider/{appProviderId})
 	GetAllAppInstances(ctx echo.Context, federationContextId FederationContextId, appId AppIdentifier, appProviderId AppProviderId) error
@@ -58,7 +121,7 @@ type ServerInterface interface {
 	// Submits an application details to a partner OP. Based on the details provided,  partner OP shall do bookkeeping, resource validation and other pre-deployment operations.
 	// (POST /{federationContextId}/application/onboarding)
 	OnboardApplication(ctx echo.Context, federationContextId FederationContextId) error
-	// Deboards the application from any zones, if any, and deletes the App.
+	// Deboards the application from all zones, if any, and deletes the App.
 	// (DELETE /{federationContextId}/application/onboarding/app/{appId})
 	DeleteApp(ctx echo.Context, federationContextId FederationContextId, appId AppIdentifier) error
 	// Retrieves application details from partner OP
@@ -70,7 +133,7 @@ type ServerInterface interface {
 	// Onboards an existing application to a new zone within partner OP.
 	// (POST /{federationContextId}/application/onboarding/app/{appId}/additionalZones)
 	OnboardExistingAppNewZones(ctx echo.Context, federationContextId FederationContextId, appId AppIdentifier) error
-	// Deboards an application from partner OP zones
+	// Deboards an application from specific partner OP zones
 	// (DELETE /{federationContextId}/application/onboarding/app/{appId}/zone/{zoneId})
 	DeboardApplication(ctx echo.Context, federationContextId FederationContextId, appId AppIdentifier, zoneId ZoneIdentifier) error
 	// Forbid/allow application instantiation on a partner zone
@@ -88,6 +151,27 @@ type ServerInterface interface {
 	// Edge discovery procedures towards partner OP over E/WBI. Originating OP request partner OP to provide a list of candidate zones where an application instance can be created. Partner OP applies a set of filtering criteria's to select candidate zones.
 	// (POST /{federationContextId}/edgenodesharing/edgeDiscovery)
 	GetCandidateZones(ctx echo.Context, federationContextId FederationContextId) error
+	// Originating OP uses this procedure to request enabling event reporting with Partner OP.
+	// (POST /{federationContextId}/events)
+	CreateEventSubscription(ctx echo.Context, federationContextId FederationContextId) error
+	// Remove existing alarm subscription with the partner OP
+	// (DELETE /{federationContextId}/events/{alarm_subs_id})
+	DeleteAlarmSubscription(ctx echo.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier) error
+	// Retrieves active alarms list with the partner OP.
+	// (GET /{federationContextId}/events/{alarm_subs_id})
+	GetAlarmsList(ctx echo.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params GetAlarmsListParams) error
+	// Remove existing event subscription with the partner OP
+	// (DELETE /{federationContextId}/events/{event_subs_id})
+	DeleteEventSubscription(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier) error
+	// Retrieves events list with the partner OP.
+	// (GET /{federationContextId}/events/{event_subs_id})
+	GetEventsList(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params GetEventsListParams) error
+	// Originating OP uses this procedure to create an event criterion at Partner OP.
+	// (POST /{federationContextId}/events/{event_subs_id})
+	CreateEventCriterion(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier) error
+	// Remove existing event criterion with the partner OP
+	// (DELETE /{federationContextId}/events/{event_subs_id}/event-id/{eventId})
+	DeleteEventCriterion(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier) error
 	// Uploads an image file. Originating OP uses this api to onboard an application image to partner OP.
 	// (POST /{federationContextId}/files)
 	UploadFile(ctx echo.Context, federationContextId FederationContextId) error
@@ -97,10 +181,13 @@ type ServerInterface interface {
 	// View an image file from partner OP.
 	// (GET /{federationContextId}/files/{fileId})
 	ViewFile(ctx echo.Context, federationContextId FederationContextId, fileId FileId) error
+	// Retrieves health status of the federation context with the Partner OP.
+	// (GET /{federationContextId}/health)
+	GetFederationHealth(ctx echo.Context, federationContextId FederationContextId) error
 	// Retrieves the resource pool reserved by an ISV
 	// (GET /{federationContextId}/isv/resource/zone/{zoneId}/appProvider/{appProviderId})
 	ViewISVResPool(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId) error
-	// Reserves resources (compute, network and storage)  on a partner OP zone. ISVs registered with home OP reserves resources on a partner OP zone.
+	// Reserves resources (compute, network and storage)  on a partner OP zone.   ISVs registered with home OP reserves resources on a partner OP zone.
 	// (POST /{federationContextId}/isv/resource/zone/{zoneId}/appProvider/{appProviderId})
 	CreateResourcePools(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId) error
 	// Deletes the resource pool reserved by an ISV
@@ -109,6 +196,45 @@ type ServerInterface interface {
 	// Updates resources reserved for a pool by an ISV
 	// (PATCH /{federationContextId}/isv/resource/zone/{zoneId}/appProvider/{appProviderId}/pool/{poolId})
 	UpdateISVResPool(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId, poolId PoolId) error
+	// Originating OP subscribe for edge cloud resource monitoring info with partner OP.
+	// (POST /{federationContextId}/monioring-subscriptions)
+	SubscribeMonitoringInfo(ctx echo.Context, federationContextId FederationContextId, params SubscribeMonitoringInfoParams) error
+	// Originating OP uses this procedure to request enabling network capabilities events reporting by the Partner OP.
+	// (POST /{federationContextId}/network-caps-events)
+	CreateNetworkCapsEventSubscription(ctx echo.Context, federationContextId FederationContextId) error
+	// Remove existing network events notification subscription with the partner OP
+	// (DELETE /{federationContextId}/network-events/{nw-event-subs-id})
+	DeleteNwEventNotifSubscription(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier) error
+	// Originating OP uses this procedure to add an intent to Partner OP to report network capability applied by Partner OP.
+	// (POST /{federationContextId}/network-events/{nw-event-subs-id})
+	CreateNetworkCapEvent(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params CreateNetworkCapEventParams) error
+	// Remove existing network event notification with the partner OP
+	// (DELETE /{federationContextId}/network-events/{nw-event-subs-id}/nw-caps)
+	DeleteNetworkCapSubscription(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params DeleteNetworkCapSubscriptionParams) error
+	// Retrieves network capabilities subscribed list with the partner OP.
+	// (GET /{federationContextId}/network-events/{nw-event-subs-id}/nw-caps)
+	GetNetworkCapsSubscribedList(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params GetNetworkCapsSubscribedListParams) error
+	// Originating OP uses this procedure to Subscribe for Operation's policy capability at Partner OP.
+	// (POST /{federationContextId}/ops-policies-subscription)
+	CreateOperationPolicySubscription(ctx echo.Context, federationContextId FederationContextId) error
+	// Remove applications from federated applications at Partner OP.
+	// (POST /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/ops-policy-cancel)
+	RemoveOperationPolicies(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error
+	// Register an operation-level policy with the partner OP
+	// (POST /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/ops-policy-registration)
+	RegisterOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error
+	// Originating OP uses this procedure to retrieve operations policy templates from Partner OP.
+	// (GET /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/ops-policy-templates)
+	RetrieveOpsPolicyTemplates(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params RetrieveOpsPolicyTemplatesParams) error
+	// Origination OP uses this procedure to retrieve application-level policies to federated applications at Partner OP.
+	// (GET /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/policy-association)
+	RetrieveOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params RetrieveOperationPolicyParams) error
+	// Modify operation-level policy associated with federated applications with the Partner OP
+	// (PATCH /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/policy-association)
+	ModifyOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error
+	// Origination OP uses this procedure to apply application-level policies to federated applications at Partner OP.
+	// (POST /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/policy-association)
+	ApplyOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error
 	// Remove existing federation with the partner OP
 	// (DELETE /{federationContextId}/partner)
 	DeleteFederationDetails(ctx echo.Context, federationContextId FederationContextId) error
@@ -118,9 +244,21 @@ type ServerInterface interface {
 	// API used by the Originating OP towards the partner OP, to update the parameters associated to the existing federation
 	// (PATCH /{federationContextId}/partner)
 	UpdateFederation(ctx echo.Context, federationContextId FederationContextId) error
-	// Validates the authenticity of a roaming user from home OP
-	// (GET /{federationContextId}/roaminguserauth/device/{deviceId}/token/{authToken})
-	AuthenticateDevice(ctx echo.Context, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken) error
+	// Registers a callback to be called when there are updates on details about the federation context with the partner OP. The callback body shall provide info about the zones offered by the partner, partner OP network codes, information about edge discovery and LCM service etc.
+	// (POST /{federationContextId}/partner)
+	PartnerDetails(ctx echo.Context, federationContextId FederationContextId) error
+	// Retrieves the list of Service APIs and associated information that a partner OP supports
+	// (GET /{federationContextId}/partner/service/{serviceType})
+	GetServiceAPIsDetails(ctx echo.Context, federationContextId FederationContextId, serviceType ServiceType) error
+	// Retrieves details about OP capabilities of the federated partner.
+	// (GET /{federationContextId}/platform-caps)
+	GetPlatformCapabilities(ctx echo.Context, federationContextId FederationContextId, params GetPlatformCapabilitiesParams) error
+	// API used by the Originating OP to renew the existing federation
+	// (POST /{federationContextId}/renew)
+	RenewFederation(ctx echo.Context, federationContextId FederationContextId) error
+	// Retrieves details about the computation and network resources that partner OP has reserved for this zone.
+	// (GET /{federationContextId}/zones)
+	GetZoneData(ctx echo.Context, federationContextId FederationContextId, params GetZoneDataParams) error
 	// Originating OP informs partner OP that it is willing to access the specified zones and partner OP shall reserve compute and network resources for these zones.
 	// (POST /{federationContextId}/zones)
 	ZoneSubscribe(ctx echo.Context, federationContextId FederationContextId) error
@@ -129,12 +267,30 @@ type ServerInterface interface {
 	ZoneUnsubscribe(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier) error
 	// Retrieves details about the computation and network resources that partner OP has reserved for this zone.
 	// (GET /{federationContextId}/zones/{zoneId})
-	GetZoneData(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier) error
+	GetZoneDetails(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetFederationContextId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFederationContextId(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFederationContextId(ctx)
+	return err
+}
+
+// GetFederationAPIs converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFederationAPIs(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFederationAPIs(ctx)
+	return err
 }
 
 // CreateFederation converts echo context to params.
@@ -226,6 +382,24 @@ func (w *ServerInterfaceWrapper) FileStatusCallbackLink(ctx echo.Context) error 
 	return err
 }
 
+// PartnerDetailsCallback converts echo context to params.
+func (w *ServerInterfaceWrapper) PartnerDetailsCallback(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationCallbackId" -------------
+	var federationCallbackId FederationCallbackId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationCallbackId", ctx.Param("federationCallbackId"), &federationCallbackId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationCallbackId: %s", err))
+	}
+
+	ctx.Set(NotifClientCredentialsScopes, []string{"fed-mgmt-notif"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PartnerDetailsCallback(ctx, federationCallbackId)
+	return err
+}
+
 // PartnerStatusLink converts echo context to params.
 func (w *ServerInterfaceWrapper) PartnerStatusLink(ctx echo.Context) error {
 	var err error
@@ -258,6 +432,486 @@ func (w *ServerInterfaceWrapper) ResourceReservationCallbackLink(ctx echo.Contex
 	return err
 }
 
+// CreateAlarmReportingSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateAlarmReportingSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateAlarmReportingSubscription(ctx, federationContextId)
+	return err
+}
+
+// RemoveServiceAPISession converts echo context to params.
+func (w *ServerInterfaceWrapper) RemoveServiceAPISession(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "connectID" -------------
+	var connectID ConnectID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "connectID", ctx.Param("connectID"), &connectID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter connectID: %s", err))
+	}
+
+	// ------------- Path parameter "customerID" -------------
+	var customerID CustomerID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "customerID", ctx.Param("customerID"), &customerID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter customerID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RemoveServiceAPISession(ctx, federationContextId, connectID, customerID)
+	return err
+}
+
+// GetServiceAPISessionInfo converts echo context to params.
+func (w *ServerInterfaceWrapper) GetServiceAPISessionInfo(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "connectID" -------------
+	var connectID ConnectID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "connectID", ctx.Param("connectID"), &connectID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter connectID: %s", err))
+	}
+
+	// ------------- Path parameter "customerID" -------------
+	var customerID CustomerID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "customerID", ctx.Param("customerID"), &customerID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter customerID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetServiceAPISessionInfo(ctx, federationContextId, connectID, customerID)
+	return err
+}
+
+// APIForwarding converts echo context to params.
+func (w *ServerInterfaceWrapper) APIForwarding(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "serviceAPINameVal" -------------
+	var serviceAPINameVal ServiceAPINameVal
+
+	err = runtime.BindStyledParameterWithOptions("simple", "serviceAPINameVal", ctx.Param("serviceAPINameVal"), &serviceAPINameVal, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter serviceAPINameVal: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.APIForwarding(ctx, federationContextId, serviceAPINameVal)
+	return err
+}
+
+// CreateApplicationPolicySubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateApplicationPolicySubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateApplicationPolicySubscription(ctx, federationContextId)
+	return err
+}
+
+// RetrieveApplicationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) RetrieveApplicationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "appl-policy-subs-id" -------------
+	var applPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "appl-policy-subs-id", ctx.Param("appl-policy-subs-id"), &applPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RetrieveApplicationPolicyParams
+	// ------------- Optional query parameter "policy-search-type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "policy-search-type", ctx.QueryParams(), &params.PolicySearchType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter policy-search-type: %s", err))
+	}
+
+	// ------------- Optional query parameter "policy-search-value" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "policy-search-value", ctx.QueryParams(), &params.PolicySearchValue)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter policy-search-value: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetrieveApplicationPolicy(ctx, federationContextId, applPolicySubsId, params)
+	return err
+}
+
+// ModifyApplicationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) ModifyApplicationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "appl-policy-subs-id" -------------
+	var applPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "appl-policy-subs-id", ctx.Param("appl-policy-subs-id"), &applPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ModifyApplicationPolicy(ctx, federationContextId, applPolicySubsId)
+	return err
+}
+
+// ApplyApplicationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) ApplyApplicationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "appl-policy-subs-id" -------------
+	var applPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "appl-policy-subs-id", ctx.Param("appl-policy-subs-id"), &applPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ApplyApplicationPolicy(ctx, federationContextId, applPolicySubsId)
+	return err
+}
+
+// RemoveApplicationPolicies converts echo context to params.
+func (w *ServerInterfaceWrapper) RemoveApplicationPolicies(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "appl-policy-subs-id" -------------
+	var applPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "appl-policy-subs-id", ctx.Param("appl-policy-subs-id"), &applPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RemoveApplicationPolicies(ctx, federationContextId, applPolicySubsId)
+	return err
+}
+
+// CreateApplicationEventSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateApplicationEventSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateApplicationEventSubscription(ctx, federationContextId)
+	return err
+}
+
+// DeleteApplNotifSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteApplNotifSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "app-notif-subs-id" -------------
+	var appNotifSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "app-notif-subs-id", ctx.Param("app-notif-subs-id"), &appNotifSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app-notif-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteApplNotifSubscription(ctx, federationContextId, appNotifSubsId)
+	return err
+}
+
+// RetrieveApplSubsMetaInfo converts echo context to params.
+func (w *ServerInterfaceWrapper) RetrieveApplSubsMetaInfo(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "app-notif-subs-id" -------------
+	var appNotifSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "app-notif-subs-id", ctx.Param("app-notif-subs-id"), &appNotifSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app-notif-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RetrieveApplSubsMetaInfoParams
+	// ------------- Required query parameter "info-type" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "info-type", ctx.QueryParams(), &params.InfoType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter info-type: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetrieveApplSubsMetaInfo(ctx, federationContextId, appNotifSubsId, params)
+	return err
+}
+
+// ModifyApplEventNotifSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) ModifyApplEventNotifSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "app-notif-subs-id" -------------
+	var appNotifSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "app-notif-subs-id", ctx.Param("app-notif-subs-id"), &appNotifSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app-notif-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ModifyApplEventNotifSubscription(ctx, federationContextId, appNotifSubsId)
+	return err
+}
+
+// SubscribeApplsEvtNotif converts echo context to params.
+func (w *ServerInterfaceWrapper) SubscribeApplsEvtNotif(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "app-notif-subs-id" -------------
+	var appNotifSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "app-notif-subs-id", ctx.Param("app-notif-subs-id"), &appNotifSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app-notif-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SubscribeApplsEvtNotifParams
+
+	headers := ctx.Request().Header
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey TransactionId
+		n := len(valueList)
+		if n != 1 {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for Idempotency-Key, got %d", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter Idempotency-Key: %s", err))
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter Idempotency-Key is required, but not found"))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.SubscribeApplsEvtNotif(ctx, federationContextId, appNotifSubsId, params)
+	return err
+}
+
+// RetrieveAppsEventsInfo converts echo context to params.
+func (w *ServerInterfaceWrapper) RetrieveAppsEventsInfo(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "app-notif-subs-id" -------------
+	var appNotifSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "app-notif-subs-id", ctx.Param("app-notif-subs-id"), &appNotifSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app-notif-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetrieveAppsEventsInfo(ctx, federationContextId, appNotifSubsId)
+	return err
+}
+
+// RemoveAppsEventSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) RemoveAppsEventSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "app-notif-subs-id" -------------
+	var appNotifSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "app-notif-subs-id", ctx.Param("app-notif-subs-id"), &appNotifSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter app-notif-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RemoveAppsEventSubscription(ctx, federationContextId, appNotifSubsId)
+	return err
+}
+
+// RegisterApplicationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) RegisterApplicationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "appl-policy-subs-id" -------------
+	var applPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "appl-policy-subs-id", ctx.Param("appl-policy-subs-id"), &applPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RegisterApplicationPolicy(ctx, federationContextId, applPolicySubsId)
+	return err
+}
+
+// RetrieveAppPolicyTemplates converts echo context to params.
+func (w *ServerInterfaceWrapper) RetrieveAppPolicyTemplates(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "appl-policy-subs-id" -------------
+	var applPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "appl-policy-subs-id", ctx.Param("appl-policy-subs-id"), &applPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RetrieveAppPolicyTemplatesParams
+	// ------------- Optional query parameter "appl-policy-type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "appl-policy-type", ctx.QueryParams(), &params.ApplPolicyType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter appl-policy-type: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetrieveAppPolicyTemplates(ctx, federationContextId, applPolicySubsId, params)
+	return err
+}
+
 // InstallApp converts echo context to params.
 func (w *ServerInterfaceWrapper) InstallApp(ctx echo.Context) error {
 	var err error
@@ -269,8 +923,30 @@ func (w *ServerInterfaceWrapper) InstallApp(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params InstallAppParams
+
+	headers := ctx.Request().Header
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey TransactionId
+		n := len(valueList)
+		if n != 1 {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Expected one value for Idempotency-Key, got %d", n))
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter Idempotency-Key: %s", err))
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Header parameter Idempotency-Key is required, but not found"))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.InstallApp(ctx, federationContextId)
+	err = w.Handler.InstallApp(ctx, federationContextId, params)
 	return err
 }
 
@@ -634,6 +1310,192 @@ func (w *ServerInterfaceWrapper) GetCandidateZones(ctx echo.Context) error {
 	return err
 }
 
+// CreateEventSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateEventSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateEventSubscription(ctx, federationContextId)
+	return err
+}
+
+// DeleteAlarmSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteAlarmSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "alarm_subs_id" -------------
+	var alarmSubsId SubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "alarm_subs_id", ctx.Param("alarm_subs_id"), &alarmSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter alarm_subs_id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteAlarmSubscription(ctx, federationContextId, alarmSubsId)
+	return err
+}
+
+// GetAlarmsList converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAlarmsList(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "alarm_subs_id" -------------
+	var alarmSubsId SubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "alarm_subs_id", ctx.Param("alarm_subs_id"), &alarmSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter alarm_subs_id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAlarmsListParams
+	// ------------- Optional query parameter "alarm_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "alarm_type", ctx.QueryParams(), &params.AlarmType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter alarm_type: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAlarmsList(ctx, federationContextId, alarmSubsId, params)
+	return err
+}
+
+// DeleteEventSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteEventSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "event_subs_id" -------------
+	var eventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_subs_id", ctx.Param("event_subs_id"), &eventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter event_subs_id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteEventSubscription(ctx, federationContextId, eventSubsId)
+	return err
+}
+
+// GetEventsList converts echo context to params.
+func (w *ServerInterfaceWrapper) GetEventsList(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "event_subs_id" -------------
+	var eventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_subs_id", ctx.Param("event_subs_id"), &eventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter event_subs_id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetEventsListParams
+	// ------------- Optional query parameter "event_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "event_type", ctx.QueryParams(), &params.EventType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter event_type: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetEventsList(ctx, federationContextId, eventSubsId, params)
+	return err
+}
+
+// CreateEventCriterion converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateEventCriterion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "event_subs_id" -------------
+	var eventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_subs_id", ctx.Param("event_subs_id"), &eventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter event_subs_id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateEventCriterion(ctx, federationContextId, eventSubsId)
+	return err
+}
+
+// DeleteEventCriterion converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteEventCriterion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "event_subs_id" -------------
+	var eventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_subs_id", ctx.Param("event_subs_id"), &eventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter event_subs_id: %s", err))
+	}
+
+	// ------------- Path parameter "eventId" -------------
+	var eventId EventIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "eventId", ctx.Param("eventId"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter eventId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteEventCriterion(ctx, federationContextId, eventSubsId, eventId)
+	return err
+}
+
 // UploadFile converts echo context to params.
 func (w *ServerInterfaceWrapper) UploadFile(ctx echo.Context) error {
 	var err error
@@ -695,6 +1557,22 @@ func (w *ServerInterfaceWrapper) ViewFile(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.ViewFile(ctx, federationContextId, fileId)
+	return err
+}
+
+// GetFederationHealth converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFederationHealth(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFederationHealth(ctx, federationContextId)
 	return err
 }
 
@@ -842,6 +1720,355 @@ func (w *ServerInterfaceWrapper) UpdateISVResPool(ctx echo.Context) error {
 	return err
 }
 
+// SubscribeMonitoringInfo converts echo context to params.
+func (w *ServerInterfaceWrapper) SubscribeMonitoringInfo(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SubscribeMonitoringInfoParams
+	// ------------- Required query parameter "monType" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "monType", ctx.QueryParams(), &params.MonType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter monType: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.SubscribeMonitoringInfo(ctx, federationContextId, params)
+	return err
+}
+
+// CreateNetworkCapsEventSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateNetworkCapsEventSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateNetworkCapsEventSubscription(ctx, federationContextId)
+	return err
+}
+
+// DeleteNwEventNotifSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNwEventNotifSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "nw-event-subs-id" -------------
+	var nwEventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "nw-event-subs-id", ctx.Param("nw-event-subs-id"), &nwEventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-event-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteNwEventNotifSubscription(ctx, federationContextId, nwEventSubsId)
+	return err
+}
+
+// CreateNetworkCapEvent converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateNetworkCapEvent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "nw-event-subs-id" -------------
+	var nwEventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "nw-event-subs-id", ctx.Param("nw-event-subs-id"), &nwEventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-event-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateNetworkCapEventParams
+	// ------------- Required query parameter "nw-cap-id" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "nw-cap-id", ctx.QueryParams(), &params.NwCapId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-cap-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateNetworkCapEvent(ctx, federationContextId, nwEventSubsId, params)
+	return err
+}
+
+// DeleteNetworkCapSubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteNetworkCapSubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "nw-event-subs-id" -------------
+	var nwEventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "nw-event-subs-id", ctx.Param("nw-event-subs-id"), &nwEventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-event-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteNetworkCapSubscriptionParams
+	// ------------- Required query parameter "nw-event-id" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "nw-event-id", ctx.QueryParams(), &params.NwEventId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-event-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteNetworkCapSubscription(ctx, federationContextId, nwEventSubsId, params)
+	return err
+}
+
+// GetNetworkCapsSubscribedList converts echo context to params.
+func (w *ServerInterfaceWrapper) GetNetworkCapsSubscribedList(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "nw-event-subs-id" -------------
+	var nwEventSubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "nw-event-subs-id", ctx.Param("nw-event-subs-id"), &nwEventSubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-event-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetNetworkCapsSubscribedListParams
+	// ------------- Required query parameter "nw-event-type" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "nw-event-type", ctx.QueryParams(), &params.NwEventType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nw-event-type: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetNetworkCapsSubscribedList(ctx, federationContextId, nwEventSubsId, params)
+	return err
+}
+
+// CreateOperationPolicySubscription converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateOperationPolicySubscription(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateOperationPolicySubscription(ctx, federationContextId)
+	return err
+}
+
+// RemoveOperationPolicies converts echo context to params.
+func (w *ServerInterfaceWrapper) RemoveOperationPolicies(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "ops-policy-subs-id" -------------
+	var opsPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ops-policy-subs-id", ctx.Param("ops-policy-subs-id"), &opsPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RemoveOperationPolicies(ctx, federationContextId, opsPolicySubsId)
+	return err
+}
+
+// RegisterOperationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) RegisterOperationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "ops-policy-subs-id" -------------
+	var opsPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ops-policy-subs-id", ctx.Param("ops-policy-subs-id"), &opsPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RegisterOperationPolicy(ctx, federationContextId, opsPolicySubsId)
+	return err
+}
+
+// RetrieveOpsPolicyTemplates converts echo context to params.
+func (w *ServerInterfaceWrapper) RetrieveOpsPolicyTemplates(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "ops-policy-subs-id" -------------
+	var opsPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ops-policy-subs-id", ctx.Param("ops-policy-subs-id"), &opsPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RetrieveOpsPolicyTemplatesParams
+	// ------------- Optional query parameter "ops-policy-type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "ops-policy-type", ctx.QueryParams(), &params.OpsPolicyType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-type: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetrieveOpsPolicyTemplates(ctx, federationContextId, opsPolicySubsId, params)
+	return err
+}
+
+// RetrieveOperationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) RetrieveOperationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "ops-policy-subs-id" -------------
+	var opsPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ops-policy-subs-id", ctx.Param("ops-policy-subs-id"), &opsPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-subs-id: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RetrieveOperationPolicyParams
+	// ------------- Optional query parameter "policy-search-type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "policy-search-type", ctx.QueryParams(), &params.PolicySearchType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter policy-search-type: %s", err))
+	}
+
+	// ------------- Optional query parameter "policy-search-value" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "policy-search-value", ctx.QueryParams(), &params.PolicySearchValue)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter policy-search-value: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RetrieveOperationPolicy(ctx, federationContextId, opsPolicySubsId, params)
+	return err
+}
+
+// ModifyOperationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) ModifyOperationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "ops-policy-subs-id" -------------
+	var opsPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ops-policy-subs-id", ctx.Param("ops-policy-subs-id"), &opsPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ModifyOperationPolicy(ctx, federationContextId, opsPolicySubsId)
+	return err
+}
+
+// ApplyOperationPolicy converts echo context to params.
+func (w *ServerInterfaceWrapper) ApplyOperationPolicy(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// ------------- Path parameter "ops-policy-subs-id" -------------
+	var opsPolicySubsId EventSubscriptionIdentifier
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ops-policy-subs-id", ctx.Param("ops-policy-subs-id"), &opsPolicySubsId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ops-policy-subs-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ApplyOperationPolicy(ctx, federationContextId, opsPolicySubsId)
+	return err
+}
+
 // DeleteFederationDetails converts echo context to params.
 func (w *ServerInterfaceWrapper) DeleteFederationDetails(ctx echo.Context) error {
 	var err error
@@ -890,8 +2117,8 @@ func (w *ServerInterfaceWrapper) UpdateFederation(ctx echo.Context) error {
 	return err
 }
 
-// AuthenticateDevice converts echo context to params.
-func (w *ServerInterfaceWrapper) AuthenticateDevice(ctx echo.Context) error {
+// PartnerDetails converts echo context to params.
+func (w *ServerInterfaceWrapper) PartnerDetails(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "federationContextId" -------------
 	var federationContextId FederationContextId
@@ -901,24 +2128,98 @@ func (w *ServerInterfaceWrapper) AuthenticateDevice(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
 	}
 
-	// ------------- Path parameter "deviceId" -------------
-	var deviceId DeviceId
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PartnerDetails(ctx, federationContextId)
+	return err
+}
 
-	err = runtime.BindStyledParameterWithOptions("simple", "deviceId", ctx.Param("deviceId"), &deviceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+// GetServiceAPIsDetails converts echo context to params.
+func (w *ServerInterfaceWrapper) GetServiceAPIsDetails(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter deviceId: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
 	}
 
-	// ------------- Path parameter "authToken" -------------
-	var authToken AuthorizationToken
+	// ------------- Path parameter "serviceType" -------------
+	var serviceType ServiceType
 
-	err = runtime.BindStyledParameterWithOptions("simple", "authToken", ctx.Param("authToken"), &authToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "serviceType", ctx.Param("serviceType"), &serviceType, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter authToken: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter serviceType: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.AuthenticateDevice(ctx, federationContextId, deviceId, authToken)
+	err = w.Handler.GetServiceAPIsDetails(ctx, federationContextId, serviceType)
+	return err
+}
+
+// GetPlatformCapabilities converts echo context to params.
+func (w *ServerInterfaceWrapper) GetPlatformCapabilities(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetPlatformCapabilitiesParams
+	// ------------- Optional query parameter "capType" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "capType", ctx.QueryParams(), &params.CapType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter capType: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetPlatformCapabilities(ctx, federationContextId, params)
+	return err
+}
+
+// RenewFederation converts echo context to params.
+func (w *ServerInterfaceWrapper) RenewFederation(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RenewFederation(ctx, federationContextId)
+	return err
+}
+
+// GetZoneData converts echo context to params.
+func (w *ServerInterfaceWrapper) GetZoneData(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "federationContextId" -------------
+	var federationContextId FederationContextId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "federationContextId", ctx.Param("federationContextId"), &federationContextId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter federationContextId: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetZoneDataParams
+	// ------------- Optional query parameter "zoneId" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "zoneId", ctx.QueryParams(), &params.ZoneId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter zoneId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetZoneData(ctx, federationContextId, params)
 	return err
 }
 
@@ -962,8 +2263,8 @@ func (w *ServerInterfaceWrapper) ZoneUnsubscribe(ctx echo.Context) error {
 	return err
 }
 
-// GetZoneData converts echo context to params.
-func (w *ServerInterfaceWrapper) GetZoneData(ctx echo.Context) error {
+// GetZoneDetails converts echo context to params.
+func (w *ServerInterfaceWrapper) GetZoneDetails(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "federationContextId" -------------
 	var federationContextId FederationContextId
@@ -982,7 +2283,7 @@ func (w *ServerInterfaceWrapper) GetZoneData(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetZoneData(ctx, federationContextId, zoneId)
+	err = w.Handler.GetZoneDetails(ctx, federationContextId, zoneId)
 	return err
 }
 
@@ -1014,14 +2315,35 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/fed-context-id", wrapper.GetFederationContextId)
+	router.GET(baseURL+"/federation-resources", wrapper.GetFederationAPIs)
 	router.POST(baseURL+"/partner", wrapper.CreateFederation)
 	router.POST(baseURL+"/:federationCallbackId/appInstCallbackLink", wrapper.AppInstCallbackLink)
 	router.POST(baseURL+"/:federationCallbackId/appStatusCallbackLink", wrapper.AppStatusCallbackLink)
 	router.POST(baseURL+"/:federationCallbackId/artefactStatusCallbackLink", wrapper.ArtefactStatusCallbackLink)
 	router.POST(baseURL+"/:federationCallbackId/availZoneNotifLink", wrapper.AvailZoneNotifLink)
 	router.POST(baseURL+"/:federationCallbackId/fileStatusCallbackLink", wrapper.FileStatusCallbackLink)
+	router.POST(baseURL+"/:federationCallbackId/partnerDetailsCallbackLink'", wrapper.PartnerDetailsCallback)
 	router.POST(baseURL+"/:federationCallbackId/partnerStatusLink", wrapper.PartnerStatusLink)
 	router.POST(baseURL+"/:federationCallbackId/resourceReservationCallbackLink", wrapper.ResourceReservationCallbackLink)
+	router.POST(baseURL+"/:federationContextId/alarms", wrapper.CreateAlarmReportingSubscription)
+	router.DELETE(baseURL+"/:federationContextId/apiservice/connid/:connectID/custid/:customerID", wrapper.RemoveServiceAPISession)
+	router.GET(baseURL+"/:federationContextId/apiservice/connid/:connectID/custid/:customerID", wrapper.GetServiceAPISessionInfo)
+	router.POST(baseURL+"/:federationContextId/apiservice/:serviceAPINameVal", wrapper.APIForwarding)
+	router.POST(baseURL+"/:federationContextId/app-policies-subscription", wrapper.CreateApplicationPolicySubscription)
+	router.GET(baseURL+"/:federationContextId/app-policies-subscription/:appl-policy-subs-id", wrapper.RetrieveApplicationPolicy)
+	router.PATCH(baseURL+"/:federationContextId/app-policies-subscription/:appl-policy-subs-id", wrapper.ModifyApplicationPolicy)
+	router.POST(baseURL+"/:federationContextId/app-policies-subscription/:appl-policy-subs-id", wrapper.ApplyApplicationPolicy)
+	router.POST(baseURL+"/:federationContextId/app-policies-subscription/:appl-policy-subs-id/app-policy-cancel", wrapper.RemoveApplicationPolicies)
+	router.POST(baseURL+"/:federationContextId/appl-event-notifications", wrapper.CreateApplicationEventSubscription)
+	router.DELETE(baseURL+"/:federationContextId/appl-event-notifications/:app-notif-subs-id", wrapper.DeleteApplNotifSubscription)
+	router.GET(baseURL+"/:federationContextId/appl-event-notifications/:app-notif-subs-id", wrapper.RetrieveApplSubsMetaInfo)
+	router.PATCH(baseURL+"/:federationContextId/appl-event-notifications/:app-notif-subs-id", wrapper.ModifyApplEventNotifSubscription)
+	router.POST(baseURL+"/:federationContextId/appl-event-notifications/:app-notif-subs-id", wrapper.SubscribeApplsEvtNotif)
+	router.POST(baseURL+"/:federationContextId/appl-event-notifications/:app-notif-subs-id/app-events", wrapper.RetrieveAppsEventsInfo)
+	router.POST(baseURL+"/:federationContextId/appl-event-notifications/:app-notif-subs-id/cancel", wrapper.RemoveAppsEventSubscription)
+	router.POST(baseURL+"/:federationContextId/appl-policies-subscription/:appl-policy-subs-id/app-policy-registration", wrapper.RegisterApplicationPolicy)
+	router.GET(baseURL+"/:federationContextId/appl-policies-subscription/:appl-policy-subs-id/app-policy-templates", wrapper.RetrieveAppPolicyTemplates)
 	router.POST(baseURL+"/:federationContextId/application/lcm", wrapper.InstallApp)
 	router.GET(baseURL+"/:federationContextId/application/lcm/app/:appId/appProvider/:appProviderId", wrapper.GetAllAppInstances)
 	router.DELETE(baseURL+"/:federationContextId/application/lcm/app/:appId/instance/:appInstanceId/zone/:zoneId", wrapper.RemoveApp)
@@ -1037,28 +2359,57 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/:federationContextId/artefact/:artefactId", wrapper.RemoveArtefact)
 	router.GET(baseURL+"/:federationContextId/artefact/:artefactId", wrapper.GetArtefact)
 	router.POST(baseURL+"/:federationContextId/edgenodesharing/edgeDiscovery", wrapper.GetCandidateZones)
+	router.POST(baseURL+"/:federationContextId/events", wrapper.CreateEventSubscription)
+	router.DELETE(baseURL+"/:federationContextId/events/:alarm_subs_id", wrapper.DeleteAlarmSubscription)
+	router.GET(baseURL+"/:federationContextId/events/:alarm_subs_id", wrapper.GetAlarmsList)
+	router.DELETE(baseURL+"/:federationContextId/events/:event_subs_id", wrapper.DeleteEventSubscription)
+	router.GET(baseURL+"/:federationContextId/events/:event_subs_id", wrapper.GetEventsList)
+	router.POST(baseURL+"/:federationContextId/events/:event_subs_id", wrapper.CreateEventCriterion)
+	router.DELETE(baseURL+"/:federationContextId/events/:event_subs_id/event-id/:eventId", wrapper.DeleteEventCriterion)
 	router.POST(baseURL+"/:federationContextId/files", wrapper.UploadFile)
 	router.DELETE(baseURL+"/:federationContextId/files/:fileId", wrapper.RemoveFile)
 	router.GET(baseURL+"/:federationContextId/files/:fileId", wrapper.ViewFile)
+	router.GET(baseURL+"/:federationContextId/health", wrapper.GetFederationHealth)
 	router.GET(baseURL+"/:federationContextId/isv/resource/zone/:zoneId/appProvider/:appProviderId", wrapper.ViewISVResPool)
 	router.POST(baseURL+"/:federationContextId/isv/resource/zone/:zoneId/appProvider/:appProviderId", wrapper.CreateResourcePools)
 	router.DELETE(baseURL+"/:federationContextId/isv/resource/zone/:zoneId/appProvider/:appProviderId/pool/:poolId", wrapper.RemoveISVResPool)
 	router.PATCH(baseURL+"/:federationContextId/isv/resource/zone/:zoneId/appProvider/:appProviderId/pool/:poolId", wrapper.UpdateISVResPool)
+	router.POST(baseURL+"/:federationContextId/monioring-subscriptions", wrapper.SubscribeMonitoringInfo)
+	router.POST(baseURL+"/:federationContextId/network-caps-events", wrapper.CreateNetworkCapsEventSubscription)
+	router.DELETE(baseURL+"/:federationContextId/network-events/:nw-event-subs-id", wrapper.DeleteNwEventNotifSubscription)
+	router.POST(baseURL+"/:federationContextId/network-events/:nw-event-subs-id", wrapper.CreateNetworkCapEvent)
+	router.DELETE(baseURL+"/:federationContextId/network-events/:nw-event-subs-id/nw-caps", wrapper.DeleteNetworkCapSubscription)
+	router.GET(baseURL+"/:federationContextId/network-events/:nw-event-subs-id/nw-caps", wrapper.GetNetworkCapsSubscribedList)
+	router.POST(baseURL+"/:federationContextId/ops-policies-subscription", wrapper.CreateOperationPolicySubscription)
+	router.POST(baseURL+"/:federationContextId/ops-policies-subscription/:ops-policy-subs-id/ops-policy-cancel", wrapper.RemoveOperationPolicies)
+	router.POST(baseURL+"/:federationContextId/ops-policies-subscription/:ops-policy-subs-id/ops-policy-registration", wrapper.RegisterOperationPolicy)
+	router.GET(baseURL+"/:federationContextId/ops-policies-subscription/:ops-policy-subs-id/ops-policy-templates", wrapper.RetrieveOpsPolicyTemplates)
+	router.GET(baseURL+"/:federationContextId/ops-policies-subscription/:ops-policy-subs-id/policy-association", wrapper.RetrieveOperationPolicy)
+	router.PATCH(baseURL+"/:federationContextId/ops-policies-subscription/:ops-policy-subs-id/policy-association", wrapper.ModifyOperationPolicy)
+	router.POST(baseURL+"/:federationContextId/ops-policies-subscription/:ops-policy-subs-id/policy-association", wrapper.ApplyOperationPolicy)
 	router.DELETE(baseURL+"/:federationContextId/partner", wrapper.DeleteFederationDetails)
 	router.GET(baseURL+"/:federationContextId/partner", wrapper.GetFederationDetails)
 	router.PATCH(baseURL+"/:federationContextId/partner", wrapper.UpdateFederation)
-	router.GET(baseURL+"/:federationContextId/roaminguserauth/device/:deviceId/token/:authToken", wrapper.AuthenticateDevice)
+	router.POST(baseURL+"/:federationContextId/partner", wrapper.PartnerDetails)
+	router.GET(baseURL+"/:federationContextId/partner/service/:serviceType", wrapper.GetServiceAPIsDetails)
+	router.GET(baseURL+"/:federationContextId/platform-caps", wrapper.GetPlatformCapabilities)
+	router.POST(baseURL+"/:federationContextId/renew", wrapper.RenewFederation)
+	router.GET(baseURL+"/:federationContextId/zones", wrapper.GetZoneData)
 	router.POST(baseURL+"/:federationContextId/zones", wrapper.ZoneSubscribe)
 	router.DELETE(baseURL+"/:federationContextId/zones/:zoneId", wrapper.ZoneUnsubscribe)
-	router.GET(baseURL+"/:federationContextId/zones/:zoneId", wrapper.GetZoneData)
+	router.GET(baseURL+"/:federationContextId/zones/:zoneId", wrapper.GetZoneDetails)
 
 }
 
 type N400ApplicationProblemPlusJSONResponse ProblemDetails
 
+type N400BadRequestApplicationProblemPlusJSONResponse ProblemDetails
+
 type N401ApplicationProblemPlusJSONResponse ProblemDetails
 
 type N404ApplicationProblemPlusJSONResponse ProblemDetails
+
+type N404NotFoundApplicationProblemPlusJSONResponse ProblemDetails
 
 type N409ApplicationProblemPlusJSONResponse ProblemDetails
 
@@ -1071,6 +2422,249 @@ type N503ApplicationProblemPlusJSONResponse ProblemDetails
 type N520ApplicationProblemPlusJSONResponse ProblemDetails
 
 type DefaultResponse struct {
+}
+
+type GetFederationContextIdRequestObject struct {
+}
+
+type GetFederationContextIdResponseObject interface {
+	VisitGetFederationContextIdResponse(w http.ResponseWriter) error
+}
+
+type GetFederationContextId200ResponseHeaders struct {
+	AcceptEncoding  string
+	ContentEncoding string
+	Location        string
+}
+
+type GetFederationContextId200JSONResponse struct {
+	Body struct {
+		// FederationContextId This identifier shall be provided by the partner OP on successful verification and validation of the federation create request and is used by partner op to identify this newly created federation context. Originating OP shall provide this identifier in any subsequent request towards the partner op.
+		FederationContextId *FederationContextId `json:"FederationContextId,omitempty"`
+	}
+	Headers GetFederationContextId200ResponseHeaders
+}
+
+func (response GetFederationContextId200JSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Encoding", fmt.Sprint(response.Headers.AcceptEncoding))
+	w.Header().Set("Content-Encoding", fmt.Sprint(response.Headers.ContentEncoding))
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type GetFederationContextId400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId400ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId401ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId404ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId409ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId422ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId500ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId503ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextId520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationContextId520ApplicationProblemPlusJSONResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationContextIddefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetFederationContextIddefaultResponse) VisitGetFederationContextIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetFederationAPIsRequestObject struct {
+}
+
+type GetFederationAPIsResponseObject interface {
+	VisitGetFederationAPIsResponse(w http.ResponseWriter) error
+}
+
+type GetFederationAPIs200JSONResponse struct {
+	FederationSupportedAPIs FederationSupportedAPIs `json:"federationSupportedAPIs"`
+}
+
+func (response GetFederationAPIs200JSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs400ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs401ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs404ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs409ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs422ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs500ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs503ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIs520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationAPIs520ApplicationProblemPlusJSONResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationAPIsdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetFederationAPIsdefaultResponse) VisitGetFederationAPIsResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
 }
 
 type CreateFederationRequestObject struct {
@@ -1103,7 +2697,7 @@ func (response CreateFederation200JSONResponse) VisitCreateFederationResponse(w 
 }
 
 type CreateFederation400ApplicationProblemPlusJSONResponse struct {
-	N400ApplicationProblemPlusJSONResponse
+	N400BadRequestApplicationProblemPlusJSONResponse
 }
 
 func (response CreateFederation400ApplicationProblemPlusJSONResponse) VisitCreateFederationResponse(w http.ResponseWriter) error {
@@ -1125,7 +2719,7 @@ func (response CreateFederation401ApplicationProblemPlusJSONResponse) VisitCreat
 }
 
 type CreateFederation404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response CreateFederation404ApplicationProblemPlusJSONResponse) VisitCreateFederationResponse(w http.ResponseWriter) error {
@@ -1769,6 +3363,120 @@ func (response FileStatusCallbackLinkdefaultResponse) VisitFileStatusCallbackLin
 	return nil
 }
 
+type PartnerDetailsCallbackRequestObject struct {
+	FederationCallbackId FederationCallbackId `json:"federationCallbackId"`
+	Body                 *PartnerDetailsCallbackJSONRequestBody
+}
+
+type PartnerDetailsCallbackResponseObject interface {
+	VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error
+}
+
+type PartnerDetailsCallback204Response struct {
+}
+
+func (response PartnerDetailsCallback204Response) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type PartnerDetailsCallback400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback400ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback401ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback404ApplicationProblemPlusJSONResponse struct {
+	N404ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback404ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback409ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback422ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback500ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback503ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallback520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetailsCallback520ApplicationProblemPlusJSONResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsCallbackdefaultResponse struct {
+	StatusCode int
+}
+
+func (response PartnerDetailsCallbackdefaultResponse) VisitPartnerDetailsCallbackResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
 type PartnerStatusLinkRequestObject struct {
 	FederationCallbackId FederationCallbackId `json:"federationCallbackId"`
 	Body                 *PartnerStatusLinkJSONRequestBody
@@ -1997,8 +3705,2086 @@ func (response ResourceReservationCallbackLinkdefaultResponse) VisitResourceRese
 	return nil
 }
 
+type CreateAlarmReportingSubscriptionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Body                *CreateAlarmReportingSubscriptionJSONRequestBody
+}
+
+type CreateAlarmReportingSubscriptionResponseObject interface {
+	VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type CreateAlarmReportingSubscription200JSONResponse SubscriptionIdentifier
+
+func (response CreateAlarmReportingSubscription200JSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription400ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription401ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription404ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription409ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription422ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription500ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription503ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAlarmReportingSubscription520ApplicationProblemPlusJSONResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAlarmReportingSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateAlarmReportingSubscriptiondefaultResponse) VisitCreateAlarmReportingSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RemoveServiceAPISessionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	ConnectID           ConnectID           `json:"connectID"`
+	CustomerID          CustomerID          `json:"customerID"`
+}
+
+type RemoveServiceAPISessionResponseObject interface {
+	VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error
+}
+
+type RemoveServiceAPISession200JSONResponse struct {
+	// ConnectID An identifier generated by the Partner OP to represent the end user identity in the Service API request.
+	ConnectID      ConnectID      `json:"connectID"`
+	ExpiryDuration ExpiryInterval `json:"expiryDuration"`
+}
+
+func (response RemoveServiceAPISession200JSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession400ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession401ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession404ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession409ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession422ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession500ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession503ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISession520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveServiceAPISession520ApplicationProblemPlusJSONResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveServiceAPISessiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response RemoveServiceAPISessiondefaultResponse) VisitRemoveServiceAPISessionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetServiceAPISessionInfoRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	ConnectID           ConnectID           `json:"connectID"`
+	CustomerID          CustomerID          `json:"customerID"`
+}
+
+type GetServiceAPISessionInfoResponseObject interface {
+	VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error
+}
+
+type GetServiceAPISessionInfo200JSONResponse struct {
+	ServiceAPIRespBody *ServiceAPIContent `json:"ServiceAPIRespBody,omitempty"`
+
+	// ConnectID An identifier generated by the Partner OP to represent the end user identity in the Service API request.
+	ConnectID      ConnectID      `json:"connectID"`
+	ExpiryDuration ExpiryInterval `json:"expiryDuration"`
+}
+
+func (response GetServiceAPISessionInfo200JSONResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPISessionInfo401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPISessionInfo401ApplicationProblemPlusJSONResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPISessionInfo404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPISessionInfo404ApplicationProblemPlusJSONResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPISessionInfo422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPISessionInfo422ApplicationProblemPlusJSONResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPISessionInfo500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPISessionInfo500ApplicationProblemPlusJSONResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPISessionInfo503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPISessionInfo503ApplicationProblemPlusJSONResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPISessionInfodefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetServiceAPISessionInfodefaultResponse) VisitGetServiceAPISessionInfoResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type APIForwardingRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	ServiceAPINameVal   ServiceAPINameVal   `json:"serviceAPINameVal"`
+	Body                *APIForwardingJSONRequestBody
+}
+
+type APIForwardingResponseObject interface {
+	VisitAPIForwardingResponse(w http.ResponseWriter) error
+}
+
+type APIForwarding200ResponseHeaders struct {
+	Location string
+}
+
+type APIForwarding200JSONResponse struct {
+	Body    ServiceAPIResponse
+	Headers APIForwarding200ResponseHeaders
+}
+
+func (response APIForwarding200JSONResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type APIForwarding400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response APIForwarding400ApplicationProblemPlusJSONResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type APIForwarding401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response APIForwarding401ApplicationProblemPlusJSONResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type APIForwarding404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response APIForwarding404ApplicationProblemPlusJSONResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type APIForwarding422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response APIForwarding422ApplicationProblemPlusJSONResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type APIForwarding500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response APIForwarding500ApplicationProblemPlusJSONResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type APIForwardingdefaultResponse struct {
+	StatusCode int
+}
+
+func (response APIForwardingdefaultResponse) VisitAPIForwardingResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type CreateApplicationPolicySubscriptionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+}
+
+type CreateApplicationPolicySubscriptionResponseObject interface {
+	VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error
+}
+
+type CreateApplicationPolicySubscription200ResponseHeaders struct {
+	AcceptEncoding  string
+	ContentEncoding string
+	Location        string
+}
+
+type CreateApplicationPolicySubscription200JSONResponse struct {
+	Body struct {
+		ApplPolicySubscriptionId *string `json:"applPolicySubscriptionId,omitempty"`
+	}
+	Headers CreateApplicationPolicySubscription200ResponseHeaders
+}
+
+func (response CreateApplicationPolicySubscription200JSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Encoding", fmt.Sprint(response.Headers.AcceptEncoding))
+	w.Header().Set("Content-Encoding", fmt.Sprint(response.Headers.ContentEncoding))
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateApplicationPolicySubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription400ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription401ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription404ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription409ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription422ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription500ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription503ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationPolicySubscription520ApplicationProblemPlusJSONResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationPolicySubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateApplicationPolicySubscriptiondefaultResponse) VisitCreateApplicationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RetrieveApplicationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	ApplPolicySubsId    EventSubscriptionIdentifier `json:"appl-policy-subs-id"`
+	Params              RetrieveApplicationPolicyParams
+}
+
+type RetrieveApplicationPolicyResponseObject interface {
+	VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error
+}
+
+type RetrieveApplicationPolicy200JSONResponse AssocApplPolicies
+
+func (response RetrieveApplicationPolicy200JSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy400ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy401ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy404ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy409ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy422ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy500ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy503ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplicationPolicy520ApplicationProblemPlusJSONResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplicationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response RetrieveApplicationPolicydefaultResponse) VisitRetrieveApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type ModifyApplicationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	ApplPolicySubsId    EventSubscriptionIdentifier `json:"appl-policy-subs-id"`
+	Body                *ModifyApplicationPolicyJSONRequestBody
+}
+
+type ModifyApplicationPolicyResponseObject interface {
+	VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error
+}
+
+type ModifyApplicationPolicy200Response struct {
+}
+
+func (response ModifyApplicationPolicy200Response) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type ModifyApplicationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy400ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy401ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy404ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy409ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy422ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy500ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy503ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplicationPolicy520ApplicationProblemPlusJSONResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplicationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response ModifyApplicationPolicydefaultResponse) VisitModifyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type ApplyApplicationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	ApplPolicySubsId    EventSubscriptionIdentifier `json:"appl-policy-subs-id"`
+	Body                *ApplyApplicationPolicyJSONRequestBody
+}
+
+type ApplyApplicationPolicyResponseObject interface {
+	VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error
+}
+
+type ApplyApplicationPolicy200JSONResponse AssocApplPolicies
+
+func (response ApplyApplicationPolicy200JSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy400ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy401ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy404ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy409ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy422ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy500ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy503ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyApplicationPolicy520ApplicationProblemPlusJSONResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyApplicationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response ApplyApplicationPolicydefaultResponse) VisitApplyApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RemoveApplicationPoliciesRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	ApplPolicySubsId    EventSubscriptionIdentifier `json:"appl-policy-subs-id"`
+	Body                *RemoveApplicationPoliciesJSONRequestBody
+}
+
+type RemoveApplicationPoliciesResponseObject interface {
+	VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error
+}
+
+type RemoveApplicationPolicies200JSONResponse AssocApplPolicies
+
+func (response RemoveApplicationPolicies200JSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies400ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies401ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies404ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies409ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies422ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies500ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies503ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPolicies520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveApplicationPolicies520ApplicationProblemPlusJSONResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveApplicationPoliciesdefaultResponse struct {
+	StatusCode int
+}
+
+func (response RemoveApplicationPoliciesdefaultResponse) VisitRemoveApplicationPoliciesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type CreateApplicationEventSubscriptionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Body                *CreateApplicationEventSubscriptionJSONRequestBody
+}
+
+type CreateApplicationEventSubscriptionResponseObject interface {
+	VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type CreateApplicationEventSubscription200ResponseHeaders struct {
+	AcceptEncoding  string
+	ContentEncoding string
+	Location        string
+}
+
+type CreateApplicationEventSubscription200JSONResponse struct {
+	Body struct {
+		AppEventSubsId              *string              `json:"appEventSubsId,omitempty"`
+		ApplEventSubscriptionConfig *PeriodicNotifConfig `json:"applEventSubscriptionConfig,omitempty"`
+
+		// NumEvtsPerNotif The number of applications events that the Partner OP should include in a notification
+		NumEvtsPerNotif *int `json:"numEvtsPerNotif,omitempty"`
+	}
+	Headers CreateApplicationEventSubscription200ResponseHeaders
+}
+
+func (response CreateApplicationEventSubscription200JSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Encoding", fmt.Sprint(response.Headers.AcceptEncoding))
+	w.Header().Set("Content-Encoding", fmt.Sprint(response.Headers.ContentEncoding))
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateApplicationEventSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription400ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription401ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription404ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription409ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription422ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription500ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription503ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateApplicationEventSubscription520ApplicationProblemPlusJSONResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateApplicationEventSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateApplicationEventSubscriptiondefaultResponse) VisitCreateApplicationEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type DeleteApplNotifSubscriptionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	AppNotifSubsId      EventSubscriptionIdentifier `json:"app-notif-subs-id"`
+}
+
+type DeleteApplNotifSubscriptionResponseObject interface {
+	VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type DeleteApplNotifSubscription200Response struct {
+}
+
+func (response DeleteApplNotifSubscription200Response) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type DeleteApplNotifSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription400ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription401ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription404ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription409ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription422ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription500ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription503ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteApplNotifSubscription520ApplicationProblemPlusJSONResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApplNotifSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response DeleteApplNotifSubscriptiondefaultResponse) VisitDeleteApplNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RetrieveApplSubsMetaInfoRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	AppNotifSubsId      EventSubscriptionIdentifier `json:"app-notif-subs-id"`
+	Params              RetrieveApplSubsMetaInfoParams
+}
+
+type RetrieveApplSubsMetaInfoResponseObject interface {
+	VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error
+}
+
+type RetrieveApplSubsMetaInfo200JSONResponse struct {
+	union json.RawMessage
+}
+
+func (response RetrieveApplSubsMetaInfo200JSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.union)
+}
+
+type RetrieveApplSubsMetaInfo400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo400ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo401ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo404ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo409ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo422ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo500ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo503ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfo520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveApplSubsMetaInfo520ApplicationProblemPlusJSONResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveApplSubsMetaInfodefaultResponse struct {
+	StatusCode int
+}
+
+func (response RetrieveApplSubsMetaInfodefaultResponse) VisitRetrieveApplSubsMetaInfoResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type ModifyApplEventNotifSubscriptionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	AppNotifSubsId      EventSubscriptionIdentifier `json:"app-notif-subs-id"`
+	Body                *ModifyApplEventNotifSubscriptionJSONRequestBody
+}
+
+type ModifyApplEventNotifSubscriptionResponseObject interface {
+	VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type ModifyApplEventNotifSubscription200Response struct {
+}
+
+func (response ModifyApplEventNotifSubscription200Response) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type ModifyApplEventNotifSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription400ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription401ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription404ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription409ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription422ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription500ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription503ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyApplEventNotifSubscription520ApplicationProblemPlusJSONResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyApplEventNotifSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response ModifyApplEventNotifSubscriptiondefaultResponse) VisitModifyApplEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type SubscribeApplsEvtNotifRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	AppNotifSubsId      EventSubscriptionIdentifier `json:"app-notif-subs-id"`
+	Params              SubscribeApplsEvtNotifParams
+	Body                *SubscribeApplsEvtNotifJSONRequestBody
+}
+
+type SubscribeApplsEvtNotifResponseObject interface {
+	VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error
+}
+
+type SubscribeApplsEvtNotif200JSONResponse struct {
+	AddAppsForNotif *AddAppsForNotif `json:"addAppsForNotif,omitempty"`
+}
+
+func (response SubscribeApplsEvtNotif200JSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif400ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif401ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif404ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif409ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif422ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif500ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif503ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotif520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeApplsEvtNotif520ApplicationProblemPlusJSONResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeApplsEvtNotifdefaultResponse struct {
+	StatusCode int
+}
+
+func (response SubscribeApplsEvtNotifdefaultResponse) VisitSubscribeApplsEvtNotifResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RetrieveAppsEventsInfoRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	AppNotifSubsId      EventSubscriptionIdentifier `json:"app-notif-subs-id"`
+	Body                *RetrieveAppsEventsInfoJSONRequestBody
+}
+
+type RetrieveAppsEventsInfoResponseObject interface {
+	VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error
+}
+
+type RetrieveAppsEventsInfo200JSONResponse AggrApplEventsList
+
+func (response RetrieveAppsEventsInfo200JSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo400ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo401ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo404ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo409ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo422ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo500ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo503ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfo520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppsEventsInfo520ApplicationProblemPlusJSONResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppsEventsInfodefaultResponse struct {
+	StatusCode int
+}
+
+func (response RetrieveAppsEventsInfodefaultResponse) VisitRetrieveAppsEventsInfoResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RemoveAppsEventSubscriptionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	AppNotifSubsId      EventSubscriptionIdentifier `json:"app-notif-subs-id"`
+	Body                *RemoveAppsEventSubscriptionJSONRequestBody
+}
+
+type RemoveAppsEventSubscriptionResponseObject interface {
+	VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type RemoveAppsEventSubscription200JSONResponse RemoveAppsForNotif
+
+func (response RemoveAppsEventSubscription200JSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription400ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription401ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription404ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription409ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription422ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription500ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription503ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveAppsEventSubscription520ApplicationProblemPlusJSONResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveAppsEventSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response RemoveAppsEventSubscriptiondefaultResponse) VisitRemoveAppsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RegisterApplicationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	ApplPolicySubsId    EventSubscriptionIdentifier `json:"appl-policy-subs-id"`
+	Body                *RegisterApplicationPolicyJSONRequestBody
+}
+
+type RegisterApplicationPolicyResponseObject interface {
+	VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error
+}
+
+type RegisterApplicationPolicy200JSONResponse struct {
+	PolicyId string `json:"policyId"`
+
+	// PplConcretePolicy Application policy id and policy parameter value limits registered by the Originating OP
+	PplConcretePolicy ApplConcretePolicy `json:"pplConcretePolicy"`
+}
+
+func (response RegisterApplicationPolicy200JSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy400ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy401ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy404ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy409ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy422ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy500ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy503ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterApplicationPolicy520ApplicationProblemPlusJSONResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterApplicationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response RegisterApplicationPolicydefaultResponse) VisitRegisterApplicationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RetrieveAppPolicyTemplatesRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	ApplPolicySubsId    EventSubscriptionIdentifier `json:"appl-policy-subs-id"`
+	Params              RetrieveAppPolicyTemplatesParams
+}
+
+type RetrieveAppPolicyTemplatesResponseObject interface {
+	VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error
+}
+
+type RetrieveAppPolicyTemplates200JSONResponse struct {
+	// ApplPolicyTemplateList List of Application policy templates from the Partner OP
+	ApplPolicyTemplateList *ApplPolicyTemplateList `json:"applPolicyTemplateList,omitempty"`
+}
+
+func (response RetrieveAppPolicyTemplates200JSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates400ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates401ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates404ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates409ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates422ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates500ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates503ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplates520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveAppPolicyTemplates520ApplicationProblemPlusJSONResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveAppPolicyTemplatesdefaultResponse struct {
+	StatusCode int
+}
+
+func (response RetrieveAppPolicyTemplatesdefaultResponse) VisitRetrieveAppPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
 type InstallAppRequestObject struct {
 	FederationContextId FederationContextId `json:"federationContextId"`
+	Params              InstallAppParams
 	Body                *InstallAppJSONRequestBody
 }
 
@@ -2006,12 +5792,19 @@ type InstallAppResponseObject interface {
 	VisitInstallAppResponse(w http.ResponseWriter) error
 }
 
-type InstallApp202Response struct {
+type InstallApp202JSONResponse struct {
+	// AppInstIdentifier Unique identifier generated by the partner OP to identify an instance of the application on a specific zone.
+	AppInstIdentifier InstanceIdentifier `json:"appInstIdentifier"`
+
+	// ZoneId Human readable name of the zone.
+	ZoneId ZoneIdentifier `json:"zoneId"`
 }
 
-func (response InstallApp202Response) VisitInstallAppResponse(w http.ResponseWriter) error {
+func (response InstallApp202JSONResponse) VisitInstallAppResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(202)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type InstallApp400ApplicationProblemPlusJSONResponse struct {
@@ -2037,7 +5830,7 @@ func (response InstallApp401ApplicationProblemPlusJSONResponse) VisitInstallAppR
 }
 
 type InstallApp404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response InstallApp404ApplicationProblemPlusJSONResponse) VisitInstallAppResponse(w http.ResponseWriter) error {
@@ -2164,7 +5957,7 @@ func (response GetAllAppInstances401ApplicationProblemPlusJSONResponse) VisitGet
 }
 
 type GetAllAppInstances404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response GetAllAppInstances404ApplicationProblemPlusJSONResponse) VisitGetAllAppInstancesResponse(w http.ResponseWriter) error {
@@ -2280,7 +6073,7 @@ func (response RemoveApp401ApplicationProblemPlusJSONResponse) VisitRemoveAppRes
 }
 
 type RemoveApp404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response RemoveApp404ApplicationProblemPlusJSONResponse) VisitRemoveAppResponse(w http.ResponseWriter) error {
@@ -2366,8 +6159,13 @@ type GetAppInstanceDetailsResponseObject interface {
 }
 
 type GetAppInstanceDetails200JSONResponse struct {
-	// AccessPointInfo Information about the IP and Port exposed by the OP. Application clients shall use these access points to reach this application instance.
-	AccessPointInfo *AccessPointInfo `json:"accessPointInfo,omitempty"`
+	// AccesspointInfo Information about the IP and Port exposed by the OP. Application clients shall use these access points to reach this application instance
+	AccesspointInfo *[]struct {
+		AccessPoints ServiceEndpoint `json:"accessPoints"`
+
+		// InterfaceId This is the interface identifier that app provider defines when application is onboarded.
+		InterfaceId string `json:"interfaceId"`
+	} `json:"accesspointInfo,omitempty"`
 
 	// AppInstanceState Running status of the application instance.
 	AppInstanceState *InstanceState `json:"appInstanceState,omitempty"`
@@ -2403,7 +6201,7 @@ func (response GetAppInstanceDetails401ApplicationProblemPlusJSONResponse) Visit
 }
 
 type GetAppInstanceDetails404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response GetAppInstanceDetails404ApplicationProblemPlusJSONResponse) VisitGetAppInstanceDetailsResponse(w http.ResponseWriter) error {
@@ -2486,6 +6284,14 @@ type OnboardApplicationResponseObject interface {
 	VisitOnboardApplicationResponse(w http.ResponseWriter) error
 }
 
+type OnboardApplication200Response struct {
+}
+
+func (response OnboardApplication200Response) VisitOnboardApplicationResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
 type OnboardApplication202Response struct {
 }
 
@@ -2517,7 +6323,7 @@ func (response OnboardApplication401ApplicationProblemPlusJSONResponse) VisitOnb
 }
 
 type OnboardApplication404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response OnboardApplication404ApplicationProblemPlusJSONResponse) VisitOnboardApplicationResponse(w http.ResponseWriter) error {
@@ -2608,6 +6414,14 @@ func (response DeleteApp200Response) VisitDeleteAppResponse(w http.ResponseWrite
 	return nil
 }
 
+type DeleteApp202Response struct {
+}
+
+func (response DeleteApp202Response) VisitDeleteAppResponse(w http.ResponseWriter) error {
+	w.WriteHeader(202)
+	return nil
+}
+
 type DeleteApp400ApplicationProblemPlusJSONResponse struct {
 	N400ApplicationProblemPlusJSONResponse
 }
@@ -2631,7 +6445,7 @@ func (response DeleteApp401ApplicationProblemPlusJSONResponse) VisitDeleteAppRes
 }
 
 type DeleteApp404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response DeleteApp404ApplicationProblemPlusJSONResponse) VisitDeleteAppResponse(w http.ResponseWriter) error {
@@ -2715,11 +6529,17 @@ type ViewApplicationResponseObject interface {
 }
 
 type ViewApplication200JSONResponse struct {
-	// AppComponentSpecs An application may consist of more than one component. Each component is associated with a descriptor and may exposes its services externally or internally. App providers are required to provide details about all these components, their associated descriptors and their DNS names.
+	// AppComponentSpecs An application may consist of more than one component. Each component is associated with a descriptor and may exposes its services externally or internally.  App providers are required to provide details about all these components, their associated descriptors and their DNS names.
 	AppComponentSpecs AppComponentSpecs `json:"appComponentSpecs"`
 
-	// AppDeploymentZones Details about partner OP zones where the application should be made available. This field when specified will instruct the OP to restrict application instantiation only on the listed zones.
-	AppDeploymentZones []ZoneIdentifier `json:"appDeploymentZones"`
+	// AppDeploymentZones Details about partner OP zones where the application should be made available;  This field when specified will instruct the OP to restrict application instantiation only on the listed zones.
+	AppDeploymentZones []struct {
+		// CountryCode ISO 3166-1 Alpha-2 code for the country of Partner operator
+		CountryCode CountryCode `json:"countryCode"`
+
+		// ZoneInfo Human readable name of the zone.
+		ZoneInfo ZoneIdentifier `json:"zoneInfo"`
+	} `json:"appDeploymentZones"`
 
 	// AppId Identifier used to refer to an application.
 	AppId AppIdentifier `json:"appId"`
@@ -2727,11 +6547,14 @@ type ViewApplication200JSONResponse struct {
 	// AppMetaData Application metadata details
 	AppMetaData AppMetaData `json:"appMetaData"`
 
-	// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+	// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 	AppProviderId AppProviderId `json:"appProviderId"`
 
 	// AppQoSProfile Parameters corresponding to the performance constraints, tenancy details etc.
 	AppQoSProfile AppQoSProfile `json:"appQoSProfile"`
+
+	// OnboardStatusInfo Defines change in application status. This change could be related to application itself or an application instance status
+	OnboardStatusInfo OnboardStatusInfo `json:"onboardStatusInfo"`
 }
 
 func (response ViewApplication200JSONResponse) VisitViewApplicationResponse(w http.ResponseWriter) error {
@@ -2764,7 +6587,7 @@ func (response ViewApplication401ApplicationProblemPlusJSONResponse) VisitViewAp
 }
 
 type ViewApplication404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response ViewApplication404ApplicationProblemPlusJSONResponse) VisitViewApplicationResponse(w http.ResponseWriter) error {
@@ -2848,6 +6671,14 @@ type UpdateApplicationResponseObject interface {
 	VisitUpdateApplicationResponse(w http.ResponseWriter) error
 }
 
+type UpdateApplication200Response struct {
+}
+
+func (response UpdateApplication200Response) VisitUpdateApplicationResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
 type UpdateApplication202Response struct {
 }
 
@@ -2879,7 +6710,7 @@ func (response UpdateApplication401ApplicationProblemPlusJSONResponse) VisitUpda
 }
 
 type UpdateApplication404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response UpdateApplication404ApplicationProblemPlusJSONResponse) VisitUpdateApplicationResponse(w http.ResponseWriter) error {
@@ -2963,6 +6794,14 @@ type OnboardExistingAppNewZonesResponseObject interface {
 	VisitOnboardExistingAppNewZonesResponse(w http.ResponseWriter) error
 }
 
+type OnboardExistingAppNewZones200Response struct {
+}
+
+func (response OnboardExistingAppNewZones200Response) VisitOnboardExistingAppNewZonesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
 type OnboardExistingAppNewZones202Response struct {
 }
 
@@ -2994,7 +6833,7 @@ func (response OnboardExistingAppNewZones401ApplicationProblemPlusJSONResponse) 
 }
 
 type OnboardExistingAppNewZones404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response OnboardExistingAppNewZones404ApplicationProblemPlusJSONResponse) VisitOnboardExistingAppNewZonesResponse(w http.ResponseWriter) error {
@@ -3078,6 +6917,14 @@ type DeboardApplicationResponseObject interface {
 	VisitDeboardApplicationResponse(w http.ResponseWriter) error
 }
 
+type DeboardApplication200Response struct {
+}
+
+func (response DeboardApplication200Response) VisitDeboardApplicationResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
 type DeboardApplication202Response struct {
 }
 
@@ -3109,7 +6956,7 @@ func (response DeboardApplication401ApplicationProblemPlusJSONResponse) VisitDeb
 }
 
 type DeboardApplication404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response DeboardApplication404ApplicationProblemPlusJSONResponse) VisitDeboardApplicationResponse(w http.ResponseWriter) error {
@@ -3224,7 +7071,7 @@ func (response LockUnlockApplicationZone401ApplicationProblemPlusJSONResponse) V
 }
 
 type LockUnlockApplicationZone404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response LockUnlockApplicationZone404ApplicationProblemPlusJSONResponse) VisitLockUnlockApplicationZoneResponse(w http.ResponseWriter) error {
@@ -3315,6 +7162,14 @@ func (response UploadArtefact200Response) VisitUploadArtefactResponse(w http.Res
 	return nil
 }
 
+type UploadArtefact202Response struct {
+}
+
+func (response UploadArtefact202Response) VisitUploadArtefactResponse(w http.ResponseWriter) error {
+	w.WriteHeader(202)
+	return nil
+}
+
 type UploadArtefact400ApplicationProblemPlusJSONResponse struct {
 	N400ApplicationProblemPlusJSONResponse
 }
@@ -3338,7 +7193,7 @@ func (response UploadArtefact401ApplicationProblemPlusJSONResponse) VisitUploadA
 }
 
 type UploadArtefact404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response UploadArtefact404ApplicationProblemPlusJSONResponse) VisitUploadArtefactResponse(w http.ResponseWriter) error {
@@ -3429,6 +7284,14 @@ func (response RemoveArtefact200Response) VisitRemoveArtefactResponse(w http.Res
 	return nil
 }
 
+type RemoveArtefact202Response struct {
+}
+
+func (response RemoveArtefact202Response) VisitRemoveArtefactResponse(w http.ResponseWriter) error {
+	w.WriteHeader(202)
+	return nil
+}
+
 type RemoveArtefact400ApplicationProblemPlusJSONResponse struct {
 	N400ApplicationProblemPlusJSONResponse
 }
@@ -3452,7 +7315,7 @@ func (response RemoveArtefact401ApplicationProblemPlusJSONResponse) VisitRemoveA
 }
 
 type RemoveArtefact404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response RemoveArtefact404ApplicationProblemPlusJSONResponse) VisitRemoveArtefactResponse(w http.ResponseWriter) error {
@@ -3536,20 +7399,20 @@ type GetArtefactResponseObject interface {
 }
 
 type GetArtefact200JSONResponse struct {
-	// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+	// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 	AppProviderId AppProviderId `json:"appProviderId"`
 
 	// ArtefactDescription Brief description of the artefact by the application provider
-	ArtefactDescription *string `json:"artefactDescription,omitempty"`
+	ArtefactDescription *ArtefactDescription `json:"artefactDescription,omitempty"`
 
-	// ArtefactDescriptorType Type of descriptor present in the artefact. App provider can either define either a Helm chart or a Terraform script or container spec.
-	ArtefactDescriptorType UploadArtefactMultipartBodyArtefactDescriptorType `json:"artefactDescriptorType"`
+	// ArtefactDescriptorType Type of descriptor present in the artefact.  App provider can either define either a Helm chart or a Terraform script or container spec.
+	ArtefactDescriptorType ArtefactDescriptorType `json:"artefactDescriptorType"`
 
 	// ArtefactFileFormat Artefacts like Helm charts or Terraform scripts may need compressed format.
-	ArtefactFileFormat *UploadArtefactMultipartBodyArtefactFileFormat `json:"artefactFileFormat,omitempty"`
+	ArtefactFileFormat *ArtefactFileFormat `json:"artefactFileFormat,omitempty"`
 
 	// ArtefactFileName Name of the file.
-	ArtefactFileName *string `json:"artefactFileName,omitempty"`
+	ArtefactFileName *ArtefactFileName `json:"artefactFileName,omitempty"`
 
 	// ArtefactId A globally unique identifier associated with the artefact. Originating OP generates this identifier when artefact is submitted over NBI.
 	ArtefactId ArtefactId `json:"artefactId"`
@@ -3559,14 +7422,11 @@ type GetArtefact200JSONResponse struct {
 	ArtefactRepoLocation *ObjectRepoLocation `json:"artefactRepoLocation,omitempty"`
 
 	// ArtefactVersionInfo Artefact version information
-	ArtefactVersionInfo string                                     `json:"artefactVersionInfo"`
-	ArtefactVirtType    UploadArtefactMultipartBodyArtefactVirtType `json:"artefactVirtType"`
+	ArtefactVersionInfo ArtefactVersionInfo `json:"artefactVersionInfo"`
+	ArtefactVirtType    ArtefactVirtType    `json:"artefactVirtType"`
 
-	// ComponentSpec Details about compute, networking and storage requirements for each component of the application. App provider should define all information needed to instantiate the component. If artefact is being defined at component level this section should have information just about the component. In case the artefact is being defined at application level the section should provide details about all the components.
-	ComponentSpec *[]ComponentSpec `json:"componentSpec,omitempty"`
-
-	// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal. OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
-	RepoType *UploadArtefactMultipartBodyRepoType `json:"repoType,omitempty"`
+	// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal.  OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
+	RepoType *RepoType `json:"repoType,omitempty"`
 }
 
 func (response GetArtefact200JSONResponse) VisitGetArtefactResponse(w http.ResponseWriter) error {
@@ -3599,7 +7459,7 @@ func (response GetArtefact401ApplicationProblemPlusJSONResponse) VisitGetArtefac
 }
 
 type GetArtefact404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response GetArtefact404ApplicationProblemPlusJSONResponse) VisitGetArtefactResponse(w http.ResponseWriter) error {
@@ -3682,7 +7542,7 @@ type GetCandidateZonesResponseObject interface {
 	VisitGetCandidateZonesResponse(w http.ResponseWriter) error
 }
 
-type GetCandidateZones200JSONResponse DiscoveredEdgeNodes
+type GetCandidateZones200JSONResponse NodeDiscoveryResponse
 
 func (response GetCandidateZones200JSONResponse) VisitGetCandidateZonesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -3714,7 +7574,7 @@ func (response GetCandidateZones401ApplicationProblemPlusJSONResponse) VisitGetC
 }
 
 type GetCandidateZones404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response GetCandidateZones404ApplicationProblemPlusJSONResponse) VisitGetCandidateZonesResponse(w http.ResponseWriter) error {
@@ -3755,6 +7615,821 @@ func (response GetCandidateZonesdefaultResponse) VisitGetCandidateZonesResponse(
 	return nil
 }
 
+type CreateEventSubscriptionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Body                *CreateEventSubscriptionJSONRequestBody
+}
+
+type CreateEventSubscriptionResponseObject interface {
+	VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type CreateEventSubscription200JSONResponse EventSubscriptionInfo
+
+func (response CreateEventSubscription200JSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription400ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription401ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription404ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription409ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription422ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription500ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription503ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventSubscription520ApplicationProblemPlusJSONResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateEventSubscriptiondefaultResponse) VisitCreateEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type DeleteAlarmSubscriptionRequestObject struct {
+	FederationContextId FederationContextId    `json:"federationContextId"`
+	AlarmSubsId         SubscriptionIdentifier `json:"alarm_subs_id"`
+}
+
+type DeleteAlarmSubscriptionResponseObject interface {
+	VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type DeleteAlarmSubscription200Response struct {
+}
+
+func (response DeleteAlarmSubscription200Response) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type DeleteAlarmSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription400ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription401ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription404ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription409ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription422ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription500ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription503ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAlarmSubscription520ApplicationProblemPlusJSONResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAlarmSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response DeleteAlarmSubscriptiondefaultResponse) VisitDeleteAlarmSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetAlarmsListRequestObject struct {
+	FederationContextId FederationContextId    `json:"federationContextId"`
+	AlarmSubsId         SubscriptionIdentifier `json:"alarm_subs_id"`
+	Params              GetAlarmsListParams
+}
+
+type GetAlarmsListResponseObject interface {
+	VisitGetAlarmsListResponse(w http.ResponseWriter) error
+}
+
+type GetAlarmsList200JSONResponse struct {
+	// ActiveAlarmsList List of active alarms
+	ActiveAlarmsList *ActiveAlarmsList `json:"activeAlarmsList,omitempty"`
+}
+
+func (response GetAlarmsList200JSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList400ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList401ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList404ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList409ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList422ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList500ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList503ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsList520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetAlarmsList520ApplicationProblemPlusJSONResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAlarmsListdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetAlarmsListdefaultResponse) VisitGetAlarmsListResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type DeleteEventSubscriptionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	EventSubsId         EventSubscriptionIdentifier `json:"event_subs_id"`
+}
+
+type DeleteEventSubscriptionResponseObject interface {
+	VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type DeleteEventSubscription200Response struct {
+}
+
+func (response DeleteEventSubscription200Response) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type DeleteEventSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription400ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription401ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription404ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription409ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription422ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription500ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription503ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventSubscription520ApplicationProblemPlusJSONResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response DeleteEventSubscriptiondefaultResponse) VisitDeleteEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetEventsListRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	EventSubsId         EventSubscriptionIdentifier `json:"event_subs_id"`
+	Params              GetEventsListParams
+}
+
+type GetEventsListResponseObject interface {
+	VisitGetEventsListResponse(w http.ResponseWriter) error
+}
+
+type GetEventsList200JSONResponse struct {
+	// EventCriterionList List of event criterion
+	EventCriterionList *EventTypeList `json:"eventCriterionList,omitempty"`
+
+	// EventIdList List of events detected
+	EventIdList *EventsList `json:"eventIdList,omitempty"`
+}
+
+func (response GetEventsList200JSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList400ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList401ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList404ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList409ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList422ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList500ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList503ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsList520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetEventsList520ApplicationProblemPlusJSONResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetEventsListdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetEventsListdefaultResponse) VisitGetEventsListResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type CreateEventCriterionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	EventSubsId         EventSubscriptionIdentifier `json:"event_subs_id"`
+	Body                *CreateEventCriterionJSONRequestBody
+}
+
+type CreateEventCriterionResponseObject interface {
+	VisitCreateEventCriterionResponse(w http.ResponseWriter) error
+}
+
+type CreateEventCriterion200JSONResponse EventInfo
+
+func (response CreateEventCriterion200JSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion400ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion401ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion404ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion409ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion422ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion500ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion503ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriterion520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateEventCriterion520ApplicationProblemPlusJSONResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateEventCriteriondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateEventCriteriondefaultResponse) VisitCreateEventCriterionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type DeleteEventCriterionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	EventSubsId         EventSubscriptionIdentifier `json:"event_subs_id"`
+	EventId             EventIdentifier             `json:"eventId"`
+}
+
+type DeleteEventCriterionResponseObject interface {
+	VisitDeleteEventCriterionResponse(w http.ResponseWriter) error
+}
+
+type DeleteEventCriterion200Response struct {
+}
+
+func (response DeleteEventCriterion200Response) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type DeleteEventCriterion400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion400ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion401ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion404ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion409ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion422ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion500ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion503ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriterion520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteEventCriterion520ApplicationProblemPlusJSONResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteEventCriteriondefaultResponse struct {
+	StatusCode int
+}
+
+func (response DeleteEventCriteriondefaultResponse) VisitDeleteEventCriterionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
 type UploadFileRequestObject struct {
 	FederationContextId FederationContextId `json:"federationContextId"`
 	Body                *multipart.Reader
@@ -3769,6 +8444,14 @@ type UploadFile200Response struct {
 
 func (response UploadFile200Response) VisitUploadFileResponse(w http.ResponseWriter) error {
 	w.WriteHeader(200)
+	return nil
+}
+
+type UploadFile202Response struct {
+}
+
+func (response UploadFile202Response) VisitUploadFileResponse(w http.ResponseWriter) error {
+	w.WriteHeader(202)
 	return nil
 }
 
@@ -3795,7 +8478,7 @@ func (response UploadFile401ApplicationProblemPlusJSONResponse) VisitUploadFileR
 }
 
 type UploadFile404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response UploadFile404ApplicationProblemPlusJSONResponse) VisitUploadFileResponse(w http.ResponseWriter) error {
@@ -3886,6 +8569,14 @@ func (response RemoveFile200Response) VisitRemoveFileResponse(w http.ResponseWri
 	return nil
 }
 
+type RemoveFile202Response struct {
+}
+
+func (response RemoveFile202Response) VisitRemoveFileResponse(w http.ResponseWriter) error {
+	w.WriteHeader(202)
+	return nil
+}
+
 type RemoveFile400ApplicationProblemPlusJSONResponse struct {
 	N400ApplicationProblemPlusJSONResponse
 }
@@ -3909,7 +8600,7 @@ func (response RemoveFile401ApplicationProblemPlusJSONResponse) VisitRemoveFileR
 }
 
 type RemoveFile404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response RemoveFile404ApplicationProblemPlusJSONResponse) VisitRemoveFileResponse(w http.ResponseWriter) error {
@@ -3993,34 +8684,34 @@ type ViewFileResponseObject interface {
 }
 
 type ViewFile200JSONResponse struct {
-	// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+	// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 	AppProviderId AppProviderId `json:"appProviderId"`
 
 	// Checksum MD5 checksum for VM and file-based images, sha256 digest for containers
 	Checksum *string `json:"checksum,omitempty"`
 
 	// FileDescription Brief description about the image file.
-	FileDescription *string `json:"fileDescription,omitempty"`
+	FileDescription *FileDescription `json:"fileDescription,omitempty"`
 
 	// FileId A globally unique identifier associated with the image file. Originating OP generates this identifier when file is uploaded over NBI.
 	FileId FileId `json:"fileId"`
 
-	// FileName Name of the image file.
+	// FileName Name of the image file.   App provides specifies this name when image is uploaded on originating OP over NBI.
 	FileName         FileName            `json:"fileName"`
 	FileRepoLocation *ObjectRepoLocation `json:"fileRepoLocation,omitempty"`
 
 	// FileType Indicate if the file is Container image or VM image (QCOW2, OVA)
 	FileType VirtImageType `json:"fileType"`
 
-	// FileVersionInfo File version information
-	FileVersionInfo string `json:"fileVersionInfo"`
+	// FileVersionInfo File version information.
+	FileVersionInfo FileVersionInfo `json:"fileVersionInfo"`
 
 	// ImgInsSetArch CPU Instruction Set Architecture (ISA) E.g., Intel, Arm etc.
 	ImgInsSetArch CPUArchType `json:"imgInsSetArch"`
 	ImgOSType     OSType      `json:"imgOSType"`
 
-	// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal. OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
-	RepoType *UploadFileMultipartBodyRepoType `json:"repoType,omitempty"`
+	// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal.  OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
+	RepoType *RepoType `json:"repoType,omitempty"`
 }
 
 func (response ViewFile200JSONResponse) VisitViewFileResponse(w http.ResponseWriter) error {
@@ -4053,7 +8744,7 @@ func (response ViewFile401ApplicationProblemPlusJSONResponse) VisitViewFileRespo
 }
 
 type ViewFile404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response ViewFile404ApplicationProblemPlusJSONResponse) VisitViewFileResponse(w http.ResponseWriter) error {
@@ -4127,6 +8818,122 @@ func (response ViewFiledefaultResponse) VisitViewFileResponse(w http.ResponseWri
 	return nil
 }
 
+type GetFederationHealthRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+}
+
+type GetFederationHealthResponseObject interface {
+	VisitGetFederationHealthResponse(w http.ResponseWriter) error
+}
+
+type GetFederationHealth200JSONResponse struct {
+	FederationHealthStatus FederationHealthInfo `json:"federationHealthStatus"`
+}
+
+func (response GetFederationHealth200JSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth400ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth401ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth404ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth409ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth422ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth500ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth503ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealth520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetFederationHealth520ApplicationProblemPlusJSONResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFederationHealthdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetFederationHealthdefaultResponse) VisitGetFederationHealthResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
 type ViewISVResPoolRequestObject struct {
 	FederationContextId FederationContextId `json:"federationContextId"`
 	ZoneId              ZoneIdentifier      `json:"zoneId"`
@@ -4150,7 +8957,7 @@ type ViewISVResPool200JSONResponse []struct {
 		// Count Total number of flavours reserved
 		Count int32 `json:"count"`
 
-		// FlavourId An identifier to refer to a specific combination of compute resources.
+		// FlavourId An identifier to refer to a specific combination of compute resources
 		FlavourId FlavourId `json:"flavourId"`
 	} `json:"reservedFlavours"`
 
@@ -4188,7 +8995,7 @@ func (response ViewISVResPool401ApplicationProblemPlusJSONResponse) VisitViewISV
 }
 
 type ViewISVResPool404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response ViewISVResPool404ApplicationProblemPlusJSONResponse) VisitViewISVResPoolResponse(w http.ResponseWriter) error {
@@ -4273,12 +9080,19 @@ type CreateResourcePoolsResponseObject interface {
 	VisitCreateResourcePoolsResponse(w http.ResponseWriter) error
 }
 
-type CreateResourcePools200Response struct {
+type CreateResourcePools200JSONResponse struct {
+	// PoolId OP defined Identifier for the pool reserved for the ISV. It should be unique with an OP.
+	PoolId PoolId `json:"poolId"`
+
+	// PoolName ISV defined name of the resource pool.
+	PoolName PoolName `json:"poolName"`
 }
 
-func (response CreateResourcePools200Response) VisitCreateResourcePoolsResponse(w http.ResponseWriter) error {
+func (response CreateResourcePools200JSONResponse) VisitCreateResourcePoolsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type CreateResourcePools400ApplicationProblemPlusJSONResponse struct {
@@ -4304,7 +9118,7 @@ func (response CreateResourcePools401ApplicationProblemPlusJSONResponse) VisitCr
 }
 
 type CreateResourcePools404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response CreateResourcePools404ApplicationProblemPlusJSONResponse) VisitCreateResourcePoolsResponse(w http.ResponseWriter) error {
@@ -4537,7 +9351,7 @@ func (response UpdateISVResPool401ApplicationProblemPlusJSONResponse) VisitUpdat
 }
 
 type UpdateISVResPool404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response UpdateISVResPool404ApplicationProblemPlusJSONResponse) VisitUpdateISVResPoolResponse(w http.ResponseWriter) error {
@@ -4611,6 +9425,1548 @@ func (response UpdateISVResPooldefaultResponse) VisitUpdateISVResPoolResponse(w 
 	return nil
 }
 
+type SubscribeMonitoringInfoRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Params              SubscribeMonitoringInfoParams
+	Body                *SubscribeMonitoringInfoJSONRequestBody
+}
+
+type SubscribeMonitoringInfoResponseObject interface {
+	VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error
+}
+
+type SubscribeMonitoringInfo200JSONResponse ResourceSubscriptionInfo
+
+func (response SubscribeMonitoringInfo200JSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo400ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo401ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo404ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo409ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo422ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo500ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo503ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfo520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response SubscribeMonitoringInfo520ApplicationProblemPlusJSONResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubscribeMonitoringInfodefaultResponse struct {
+	StatusCode int
+}
+
+func (response SubscribeMonitoringInfodefaultResponse) VisitSubscribeMonitoringInfoResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type CreateNetworkCapsEventSubscriptionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Body                *CreateNetworkCapsEventSubscriptionJSONRequestBody
+}
+
+type CreateNetworkCapsEventSubscriptionResponseObject interface {
+	VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type CreateNetworkCapsEventSubscription200ResponseHeaders struct {
+	AcceptEncoding  string
+	ContentEncoding string
+	Location        string
+}
+
+type CreateNetworkCapsEventSubscription200JSONResponse struct {
+	Body    PeriodicNotifConfig
+	Headers CreateNetworkCapsEventSubscription200ResponseHeaders
+}
+
+func (response CreateNetworkCapsEventSubscription200JSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Encoding", fmt.Sprint(response.Headers.AcceptEncoding))
+	w.Header().Set("Content-Encoding", fmt.Sprint(response.Headers.ContentEncoding))
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateNetworkCapsEventSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription400ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription401ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription404ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription409ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription422ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription500ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription503ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapsEventSubscription520ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapsEventSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateNetworkCapsEventSubscriptiondefaultResponse) VisitCreateNetworkCapsEventSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type DeleteNwEventNotifSubscriptionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	NwEventSubsId       EventSubscriptionIdentifier `json:"nw-event-subs-id"`
+}
+
+type DeleteNwEventNotifSubscriptionResponseObject interface {
+	VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type DeleteNwEventNotifSubscription200Response struct {
+}
+
+func (response DeleteNwEventNotifSubscription200Response) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type DeleteNwEventNotifSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription400ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription401ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription404ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription409ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription422ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription500ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription503ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNwEventNotifSubscription520ApplicationProblemPlusJSONResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNwEventNotifSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response DeleteNwEventNotifSubscriptiondefaultResponse) VisitDeleteNwEventNotifSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type CreateNetworkCapEventRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	NwEventSubsId       EventSubscriptionIdentifier `json:"nw-event-subs-id"`
+	Params              CreateNetworkCapEventParams
+	Body                *CreateNetworkCapEventJSONRequestBody
+}
+
+type CreateNetworkCapEventResponseObject interface {
+	VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error
+}
+
+type CreateNetworkCapEvent200JSONResponse struct {
+	NetworkCapSubsInfo NetworkCapSubsInfo `json:"networkCapSubsInfo"`
+
+	// TxnIdentifier A API transaction identifier generated by the Partner OP for each API request
+	TxnIdentifier TxnIdentifier `json:"txnIdentifier"`
+}
+
+func (response CreateNetworkCapEvent200JSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent400ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent401ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent404ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent409ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent422ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent500ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent503ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEvent520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateNetworkCapEvent520ApplicationProblemPlusJSONResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateNetworkCapEventdefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateNetworkCapEventdefaultResponse) VisitCreateNetworkCapEventResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type DeleteNetworkCapSubscriptionRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	NwEventSubsId       EventSubscriptionIdentifier `json:"nw-event-subs-id"`
+	Params              DeleteNetworkCapSubscriptionParams
+}
+
+type DeleteNetworkCapSubscriptionResponseObject interface {
+	VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error
+}
+
+type DeleteNetworkCapSubscription200Response struct {
+}
+
+func (response DeleteNetworkCapSubscription200Response) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type DeleteNetworkCapSubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription400ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription401ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription404ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription409ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription422ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription500ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription503ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteNetworkCapSubscription520ApplicationProblemPlusJSONResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteNetworkCapSubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response DeleteNetworkCapSubscriptiondefaultResponse) VisitDeleteNetworkCapSubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetNetworkCapsSubscribedListRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	NwEventSubsId       EventSubscriptionIdentifier `json:"nw-event-subs-id"`
+	Params              GetNetworkCapsSubscribedListParams
+}
+
+type GetNetworkCapsSubscribedListResponseObject interface {
+	VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error
+}
+
+type GetNetworkCapsSubscribedList200JSONResponse struct {
+	SubscribedNwCaps *[]NetworkCapSubsInfo `json:"subscribedNwCaps,omitempty"`
+}
+
+func (response GetNetworkCapsSubscribedList200JSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList400ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList401ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList404ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList409ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList422ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList500ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList503ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedList520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetNetworkCapsSubscribedList520ApplicationProblemPlusJSONResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetNetworkCapsSubscribedListdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetNetworkCapsSubscribedListdefaultResponse) VisitGetNetworkCapsSubscribedListResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type CreateOperationPolicySubscriptionRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+}
+
+type CreateOperationPolicySubscriptionResponseObject interface {
+	VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error
+}
+
+type CreateOperationPolicySubscription200ResponseHeaders struct {
+	AcceptEncoding  string
+	ContentEncoding string
+	Location        string
+}
+
+type CreateOperationPolicySubscription200JSONResponse struct {
+	Body struct {
+		OpslPolicySubscriptionId *string `json:"opslPolicySubscriptionId,omitempty"`
+	}
+	Headers CreateOperationPolicySubscription200ResponseHeaders
+}
+
+func (response CreateOperationPolicySubscription200JSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Encoding", fmt.Sprint(response.Headers.AcceptEncoding))
+	w.Header().Set("Content-Encoding", fmt.Sprint(response.Headers.ContentEncoding))
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateOperationPolicySubscription400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription400ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription401ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription404ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription409ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription422ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription500ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription503ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscription520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response CreateOperationPolicySubscription520ApplicationProblemPlusJSONResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateOperationPolicySubscriptiondefaultResponse struct {
+	StatusCode int
+}
+
+func (response CreateOperationPolicySubscriptiondefaultResponse) VisitCreateOperationPolicySubscriptionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RemoveOperationPoliciesRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	OpsPolicySubsId     EventSubscriptionIdentifier `json:"ops-policy-subs-id"`
+	Body                *RemoveOperationPoliciesJSONRequestBody
+}
+
+type RemoveOperationPoliciesResponseObject interface {
+	VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error
+}
+
+type RemoveOperationPolicies200JSONResponse AssocOpsPolicies
+
+func (response RemoveOperationPolicies200JSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies400ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies401ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies404ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies409ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies422ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies500ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies503ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPolicies520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RemoveOperationPolicies520ApplicationProblemPlusJSONResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RemoveOperationPoliciesdefaultResponse struct {
+	StatusCode int
+}
+
+func (response RemoveOperationPoliciesdefaultResponse) VisitRemoveOperationPoliciesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RegisterOperationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	OpsPolicySubsId     EventSubscriptionIdentifier `json:"ops-policy-subs-id"`
+	Body                *RegisterOperationPolicyJSONRequestBody
+}
+
+type RegisterOperationPolicyResponseObject interface {
+	VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error
+}
+
+type RegisterOperationPolicy200JSONResponse struct {
+	// OpsConcretePolicy Application policy id and policy parameter value limits registered by the Originating OP
+	OpsConcretePolicy OpsConcretePolicy `json:"opsConcretePolicy"`
+	PolicyId          string            `json:"policyId"`
+}
+
+func (response RegisterOperationPolicy200JSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy400ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy401ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy404ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy409ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy422ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy500ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy503ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RegisterOperationPolicy520ApplicationProblemPlusJSONResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterOperationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response RegisterOperationPolicydefaultResponse) VisitRegisterOperationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RetrieveOpsPolicyTemplatesRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	OpsPolicySubsId     EventSubscriptionIdentifier `json:"ops-policy-subs-id"`
+	Params              RetrieveOpsPolicyTemplatesParams
+}
+
+type RetrieveOpsPolicyTemplatesResponseObject interface {
+	VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error
+}
+
+type RetrieveOpsPolicyTemplates200JSONResponse struct {
+	// OpsPolicyTemplateList List of Operation policy templates from the Partner OP
+	OpsPolicyTemplateList *OpsPolicyTemplateList `json:"opsPolicyTemplateList,omitempty"`
+}
+
+func (response RetrieveOpsPolicyTemplates200JSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates400ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates401ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates404ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates409ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates422ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates500ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates503ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplates520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOpsPolicyTemplates520ApplicationProblemPlusJSONResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOpsPolicyTemplatesdefaultResponse struct {
+	StatusCode int
+}
+
+func (response RetrieveOpsPolicyTemplatesdefaultResponse) VisitRetrieveOpsPolicyTemplatesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RetrieveOperationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	OpsPolicySubsId     EventSubscriptionIdentifier `json:"ops-policy-subs-id"`
+	Params              RetrieveOperationPolicyParams
+}
+
+type RetrieveOperationPolicyResponseObject interface {
+	VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error
+}
+
+type RetrieveOperationPolicy200JSONResponse AssocOpsPolicies
+
+func (response RetrieveOperationPolicy200JSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy400ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy401ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy404ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy409ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy422ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy500ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy503ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RetrieveOperationPolicy520ApplicationProblemPlusJSONResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetrieveOperationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response RetrieveOperationPolicydefaultResponse) VisitRetrieveOperationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type ModifyOperationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	OpsPolicySubsId     EventSubscriptionIdentifier `json:"ops-policy-subs-id"`
+	Body                *ModifyOperationPolicyJSONRequestBody
+}
+
+type ModifyOperationPolicyResponseObject interface {
+	VisitModifyOperationPolicyResponse(w http.ResponseWriter) error
+}
+
+type ModifyOperationPolicy200Response struct {
+}
+
+func (response ModifyOperationPolicy200Response) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type ModifyOperationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy400ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy401ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy404ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy409ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy422ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy500ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy503ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response ModifyOperationPolicy520ApplicationProblemPlusJSONResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ModifyOperationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response ModifyOperationPolicydefaultResponse) VisitModifyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type ApplyOperationPolicyRequestObject struct {
+	FederationContextId FederationContextId         `json:"federationContextId"`
+	OpsPolicySubsId     EventSubscriptionIdentifier `json:"ops-policy-subs-id"`
+	Body                *ApplyOperationPolicyJSONRequestBody
+}
+
+type ApplyOperationPolicyResponseObject interface {
+	VisitApplyOperationPolicyResponse(w http.ResponseWriter) error
+}
+
+type ApplyOperationPolicy200JSONResponse AssocOpsPolicies
+
+func (response ApplyOperationPolicy200JSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy400ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy401ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy404ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy409ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy422ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy500ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy503ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicy520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response ApplyOperationPolicy520ApplicationProblemPlusJSONResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ApplyOperationPolicydefaultResponse struct {
+	StatusCode int
+}
+
+func (response ApplyOperationPolicydefaultResponse) VisitApplyOperationPolicyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
 type DeleteFederationDetailsRequestObject struct {
 	FederationContextId FederationContextId `json:"federationContextId"`
 }
@@ -4650,7 +11006,7 @@ func (response DeleteFederationDetails401ApplicationProblemPlusJSONResponse) Vis
 }
 
 type DeleteFederationDetails404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response DeleteFederationDetails404ApplicationProblemPlusJSONResponse) VisitDeleteFederationDetailsResponse(w http.ResponseWriter) error {
@@ -4736,9 +11092,12 @@ type GetFederationDetails200JSONResponse struct {
 	// AllowedFixedNetworkIds List of network identifier associated with the fixed line network of the operator platform.
 	AllowedFixedNetworkIds       *FixedNetworkIds  `json:"allowedFixedNetworkIds,omitempty"`
 	AllowedMobileNetworkIds      *MobileNetworkIds `json:"allowedMobileNetworkIds,omitempty"`
-	EdgeDiscoveryServiceEndPoint ServiceEndpoint   `json:"edgeDiscoveryServiceEndPoint"`
-	LcmServiceEndPoint           ServiceEndpoint   `json:"lcmServiceEndPoint"`
+	EdgeDiscoveryServiceEndPoint *ServiceEndpoint  `json:"edgeDiscoveryServiceEndPoint,omitempty"`
+	LcmServiceEndPoint           *ServiceEndpoint  `json:"lcmServiceEndPoint,omitempty"`
 	OfferedAvailabilityZones     *[]ZoneDetails    `json:"offeredAvailabilityZones,omitempty"`
+
+	// PlatformCaps Home routing - Operator platform is capable of routing edge application data traffic from its edges to user device in their home location. This is the case where user devices are served in their home region (requesting platform region, non-roaming) but the corresponding edge application are in operator platform edges. Anchoring - Operator platform is capable of routing edge application traffic for roaming user devices to edge application in user device home network. Service APIs - Capability to handle Service APIs (e.g., CAMARA APIs) from the Leading OP
+	PlatformCaps *PlatformCaps `json:"platformCaps,omitempty"`
 }
 
 func (response GetFederationDetails200JSONResponse) VisitGetFederationDetailsResponse(w http.ResponseWriter) error {
@@ -4771,7 +11130,7 @@ func (response GetFederationDetails401ApplicationProblemPlusJSONResponse) VisitG
 }
 
 type GetFederationDetails404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response GetFederationDetails404ApplicationProblemPlusJSONResponse) VisitGetFederationDetailsResponse(w http.ResponseWriter) error {
@@ -4858,8 +11217,8 @@ type UpdateFederation200JSONResponse struct {
 	// AllowedFixedNetworkIds List of network identifier associated with the fixed line network of the operator platform.
 	AllowedFixedNetworkIds       *FixedNetworkIds  `json:"allowedFixedNetworkIds,omitempty"`
 	AllowedMobileNetworkIds      *MobileNetworkIds `json:"allowedMobileNetworkIds,omitempty"`
-	EdgeDiscoveryServiceEndPoint ServiceEndpoint   `json:"edgeDiscoveryServiceEndPoint"`
-	LcmServiceEndPoint           ServiceEndpoint   `json:"lcmServiceEndPoint"`
+	EdgeDiscoveryServiceEndPoint *ServiceEndpoint  `json:"edgeDiscoveryServiceEndPoint,omitempty"`
+	LcmServiceEndPoint           *ServiceEndpoint  `json:"lcmServiceEndPoint,omitempty"`
 	OfferedAvailabilityZones     *[]ZoneDetails    `json:"offeredAvailabilityZones,omitempty"`
 }
 
@@ -4893,7 +11252,7 @@ func (response UpdateFederation401ApplicationProblemPlusJSONResponse) VisitUpdat
 }
 
 type UpdateFederation404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response UpdateFederation404ApplicationProblemPlusJSONResponse) VisitUpdateFederationResponse(w http.ResponseWriter) error {
@@ -4967,84 +11326,600 @@ func (response UpdateFederationdefaultResponse) VisitUpdateFederationResponse(w 
 	return nil
 }
 
-type AuthenticateDeviceRequestObject struct {
+type PartnerDetailsRequestObject struct {
 	FederationContextId FederationContextId `json:"federationContextId"`
-	DeviceId            DeviceId            `json:"deviceId"`
-	AuthToken           AuthorizationToken  `json:"authToken"`
+	Body                *PartnerDetailsJSONRequestBody
 }
 
-type AuthenticateDeviceResponseObject interface {
-	VisitAuthenticateDeviceResponse(w http.ResponseWriter) error
+type PartnerDetailsResponseObject interface {
+	VisitPartnerDetailsResponse(w http.ResponseWriter) error
 }
 
-type AuthenticateDevice200Response struct {
-}
+type PartnerDetails200JSONResponse FederationDetailResponseData
 
-func (response AuthenticateDevice200Response) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetails200JSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
 }
 
-type AuthenticateDevice401ApplicationProblemPlusJSONResponse struct {
+type PartnerDetails400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetails400ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetails401ApplicationProblemPlusJSONResponse struct {
 	N401ApplicationProblemPlusJSONResponse
 }
 
-func (response AuthenticateDevice401ApplicationProblemPlusJSONResponse) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetails401ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type AuthenticateDevice404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+type PartnerDetails404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
-func (response AuthenticateDevice404ApplicationProblemPlusJSONResponse) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetails404ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type AuthenticateDevice422ApplicationProblemPlusJSONResponse struct {
+type PartnerDetails409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetails409ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetails422ApplicationProblemPlusJSONResponse struct {
 	N422ApplicationProblemPlusJSONResponse
 }
 
-func (response AuthenticateDevice422ApplicationProblemPlusJSONResponse) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetails422ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type AuthenticateDevice500ApplicationProblemPlusJSONResponse struct {
+type PartnerDetails500ApplicationProblemPlusJSONResponse struct {
 	N500ApplicationProblemPlusJSONResponse
 }
 
-func (response AuthenticateDevice500ApplicationProblemPlusJSONResponse) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetails500ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type AuthenticateDevice503ApplicationProblemPlusJSONResponse struct {
+type PartnerDetails503ApplicationProblemPlusJSONResponse struct {
 	N503ApplicationProblemPlusJSONResponse
 }
 
-func (response AuthenticateDevice503ApplicationProblemPlusJSONResponse) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetails503ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(503)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type AuthenticateDevicedefaultResponse struct {
+type PartnerDetails520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response PartnerDetails520ApplicationProblemPlusJSONResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PartnerDetailsdefaultResponse struct {
 	StatusCode int
 }
 
-func (response AuthenticateDevicedefaultResponse) VisitAuthenticateDeviceResponse(w http.ResponseWriter) error {
+func (response PartnerDetailsdefaultResponse) VisitPartnerDetailsResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetServiceAPIsDetailsRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	ServiceType         ServiceType         `json:"serviceType"`
+}
+
+type GetServiceAPIsDetailsResponseObject interface {
+	VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error
+}
+
+type GetServiceAPIsDetails200JSONResponse struct {
+	// ApiRoutingInfo List of public IP addresses MNO manages for UEs to connect with public data networks
+	ApiRoutingInfo ServiceRoutingInfo `json:"apiRoutingInfo"`
+
+	// ServiceCaps List of Service API capability names an OP supports and offers to other OPs "quality_on_demand", "device_location" etc.
+	ServiceCaps ServiceAPINames `json:"serviceCaps"`
+
+	// ServiceType An identifier to refer to partner OP capabilities for application providers.
+	ServiceType *ServiceType `json:"serviceType,omitempty"`
+}
+
+func (response GetServiceAPIsDetails200JSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails400ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails401ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails404ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails409ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails422ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails500ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails503ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetails520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetServiceAPIsDetails520ApplicationProblemPlusJSONResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetServiceAPIsDetailsdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetServiceAPIsDetailsdefaultResponse) VisitGetServiceAPIsDetailsResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetPlatformCapabilitiesRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Params              GetPlatformCapabilitiesParams
+}
+
+type GetPlatformCapabilitiesResponseObject interface {
+	VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error
+}
+
+type GetPlatformCapabilities200JSONResponse struct {
+	DeviceConnStatusChangeCap *DeviceConnStatusChangeCap `json:"deviceConnStatusChangeCap,omitempty"`
+	DynamicQoSCap             *DynamicQoSCap             `json:"dynamicQoSCap,omitempty"`
+	LocationRetrievalCap      *LocationRetrievalCap      `json:"locationRetrievalCap,omitempty"`
+	UserPlaneMgmtEvtCap       *UserPlaneMgmtEvtCap       `json:"userPlaneMgmtEvtCap,omitempty"`
+	union                     json.RawMessage
+}
+
+func (response GetPlatformCapabilities200JSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.union)
+}
+
+type GetPlatformCapabilities400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities400ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities401ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities404ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities409ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities422ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities500ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities503ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilities520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetPlatformCapabilities520ApplicationProblemPlusJSONResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPlatformCapabilitiesdefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetPlatformCapabilitiesdefaultResponse) VisitGetPlatformCapabilitiesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type RenewFederationRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+}
+
+type RenewFederationResponseObject interface {
+	VisitRenewFederationResponse(w http.ResponseWriter) error
+}
+
+type RenewFederation200JSONResponse struct {
+	// FederationContextId This identifier shall be provided by the partner OP on successful verification and validation of the federation create request and is used by partner op to identify this newly created federation context. Originating OP shall provide this identifier in any subsequent request towards the partner op.
+	FederationContextId *FederationContextId `json:"FederationContextId,omitempty"`
+
+	// FederationExpiryDate Date and Time zone info format
+	FederationExpiryDate DateAndTimeZoneObject `json:"federationExpiryDate"`
+
+	// FederationRenewalDate Date and Time zone info format
+	FederationRenewalDate DateAndTimeZoneObject `json:"federationRenewalDate"`
+}
+
+func (response RenewFederation200JSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation400ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation401ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation404ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation409ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation422ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation500ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation503ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederation520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response RenewFederation520ApplicationProblemPlusJSONResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RenewFederationdefaultResponse struct {
+	StatusCode int
+}
+
+func (response RenewFederationdefaultResponse) VisitRenewFederationResponse(w http.ResponseWriter) error {
+	w.WriteHeader(response.StatusCode)
+	return nil
+}
+
+type GetZoneDataRequestObject struct {
+	FederationContextId FederationContextId `json:"federationContextId"`
+	Params              GetZoneDataParams
+}
+
+type GetZoneDataResponseObject interface {
+	VisitGetZoneDataResponse(w http.ResponseWriter) error
+}
+
+type GetZoneData200JSONResponse ZoneRegisteredData
+
+func (response GetZoneData200JSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData400ApplicationProblemPlusJSONResponse struct {
+	N400ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData400ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData401ApplicationProblemPlusJSONResponse struct {
+	N401ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData401ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData404ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData409ApplicationProblemPlusJSONResponse struct {
+	N409ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData409ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData422ApplicationProblemPlusJSONResponse struct {
+	N422ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData422ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData500ApplicationProblemPlusJSONResponse struct {
+	N500ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData500ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData503ApplicationProblemPlusJSONResponse struct {
+	N503ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData503ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneData520ApplicationProblemPlusJSONResponse struct {
+	N520ApplicationProblemPlusJSONResponse
+}
+
+func (response GetZoneData520ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(520)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetZoneDatadefaultResponse struct {
+	StatusCode int
+}
+
+func (response GetZoneDatadefaultResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
 	w.WriteHeader(response.StatusCode)
 	return nil
 }
@@ -5090,7 +11965,7 @@ func (response ZoneSubscribe401ApplicationProblemPlusJSONResponse) VisitZoneSubs
 }
 
 type ZoneSubscribe404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response ZoneSubscribe404ApplicationProblemPlusJSONResponse) VisitZoneSubscribeResponse(w http.ResponseWriter) error {
@@ -5204,7 +12079,7 @@ func (response ZoneUnsubscribe401ApplicationProblemPlusJSONResponse) VisitZoneUn
 }
 
 type ZoneUnsubscribe404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
 func (response ZoneUnsubscribe404ApplicationProblemPlusJSONResponse) VisitZoneUnsubscribeResponse(w http.ResponseWriter) error {
@@ -5278,123 +12153,129 @@ func (response ZoneUnsubscribedefaultResponse) VisitZoneUnsubscribeResponse(w ht
 	return nil
 }
 
-type GetZoneDataRequestObject struct {
+type GetZoneDetailsRequestObject struct {
 	FederationContextId FederationContextId `json:"federationContextId"`
 	ZoneId              ZoneIdentifier      `json:"zoneId"`
 }
 
-type GetZoneDataResponseObject interface {
-	VisitGetZoneDataResponse(w http.ResponseWriter) error
+type GetZoneDetailsResponseObject interface {
+	VisitGetZoneDetailsResponse(w http.ResponseWriter) error
 }
 
-type GetZoneData200JSONResponse ZoneRegisteredData
+type GetZoneDetails200JSONResponse ZoneRegisteredData
 
-func (response GetZoneData200JSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails200JSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData400ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails400ApplicationProblemPlusJSONResponse struct {
 	N400ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData400ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails400ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData401ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails401ApplicationProblemPlusJSONResponse struct {
 	N401ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData401ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails401ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData404ApplicationProblemPlusJSONResponse struct {
-	N404ApplicationProblemPlusJSONResponse
+type GetZoneDetails404ApplicationProblemPlusJSONResponse struct {
+	N404NotFoundApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData404ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails404ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData409ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails409ApplicationProblemPlusJSONResponse struct {
 	N409ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData409ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails409ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData422ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails422ApplicationProblemPlusJSONResponse struct {
 	N422ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData422ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails422ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData500ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails500ApplicationProblemPlusJSONResponse struct {
 	N500ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData500ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails500ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData503ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails503ApplicationProblemPlusJSONResponse struct {
 	N503ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData503ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails503ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(503)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneData520ApplicationProblemPlusJSONResponse struct {
+type GetZoneDetails520ApplicationProblemPlusJSONResponse struct {
 	N520ApplicationProblemPlusJSONResponse
 }
 
-func (response GetZoneData520ApplicationProblemPlusJSONResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetails520ApplicationProblemPlusJSONResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(520)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetZoneDatadefaultResponse struct {
+type GetZoneDetailsdefaultResponse struct {
 	StatusCode int
 }
 
-func (response GetZoneDatadefaultResponse) VisitGetZoneDataResponse(w http.ResponseWriter) error {
+func (response GetZoneDetailsdefaultResponse) VisitGetZoneDetailsResponse(w http.ResponseWriter) error {
 	w.WriteHeader(response.StatusCode)
 	return nil
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Retrieves the existing federationContextId with partner operator platform.
+	// (GET /fed-context-id)
+	GetFederationContextId(ctx context.Context, request GetFederationContextIdRequestObject) (GetFederationContextIdResponseObject, error)
+	// Retrieves REST APIs supported by an OP for federation services.
+	// (GET /federation-resources)
+	GetFederationAPIs(ctx context.Context, request GetFederationAPIsRequestObject) (GetFederationAPIsResponseObject, error)
 	// Creates one direction federation with partner operator platform.
 	// (POST /partner)
 	CreateFederation(ctx context.Context, request CreateFederationRequestObject) (CreateFederationResponseObject, error)
@@ -5414,11 +12295,68 @@ type StrictServerInterface interface {
 	// (POST /{federationCallbackId}/fileStatusCallbackLink)
 	FileStatusCallbackLink(ctx context.Context, request FileStatusCallbackLinkRequestObject) (FileStatusCallbackLinkResponseObject, error)
 
+	// (POST /{federationCallbackId}/partnerDetailsCallbackLink')
+	PartnerDetailsCallback(ctx context.Context, request PartnerDetailsCallbackRequestObject) (PartnerDetailsCallbackResponseObject, error)
+
 	// (POST /{federationCallbackId}/partnerStatusLink)
 	PartnerStatusLink(ctx context.Context, request PartnerStatusLinkRequestObject) (PartnerStatusLinkResponseObject, error)
 
 	// (POST /{federationCallbackId}/resourceReservationCallbackLink)
 	ResourceReservationCallbackLink(ctx context.Context, request ResourceReservationCallbackLinkRequestObject) (ResourceReservationCallbackLinkResponseObject, error)
+	// Originating OP uses this procedure to request enabling alarm reporting with Partner OP.
+	// (POST /{federationContextId}/alarms)
+	CreateAlarmReportingSubscription(ctx context.Context, request CreateAlarmReportingSubscriptionRequestObject) (CreateAlarmReportingSubscriptionResponseObject, error)
+	// Remove the Service API Session earlier created with Service API forwarding request.
+	// (DELETE /{federationContextId}/apiservice/connid/{connectID}/custid/{customerID})
+	RemoveServiceAPISession(ctx context.Context, request RemoveServiceAPISessionRequestObject) (RemoveServiceAPISessionResponseObject, error)
+	// Retrieve the Service API context information of an existing API session identified by connectID, customerID
+	// (GET /{federationContextId}/apiservice/connid/{connectID}/custid/{customerID})
+	GetServiceAPISessionInfo(ctx context.Context, request GetServiceAPISessionInfoRequestObject) (GetServiceAPISessionInfoResponseObject, error)
+	// Service API request forwarding to the Partner OP
+	// (POST /{federationContextId}/apiservice/{serviceAPINameVal})
+	APIForwarding(ctx context.Context, request APIForwardingRequestObject) (APIForwardingResponseObject, error)
+	// Originating OP uses this procedure to Subscribe for Application's policy capability at Partner OP.
+	// (POST /{federationContextId}/app-policies-subscription)
+	CreateApplicationPolicySubscription(ctx context.Context, request CreateApplicationPolicySubscriptionRequestObject) (CreateApplicationPolicySubscriptionResponseObject, error)
+	// Origination OP uses this procedure to retrieve application-level policies to federated applications at Partner OP.
+	// (GET /{federationContextId}/app-policies-subscription/{appl-policy-subs-id})
+	RetrieveApplicationPolicy(ctx context.Context, request RetrieveApplicationPolicyRequestObject) (RetrieveApplicationPolicyResponseObject, error)
+	// Modify application-level policy associated with federated applications with the partner OP
+	// (PATCH /{federationContextId}/app-policies-subscription/{appl-policy-subs-id})
+	ModifyApplicationPolicy(ctx context.Context, request ModifyApplicationPolicyRequestObject) (ModifyApplicationPolicyResponseObject, error)
+	// Origination OP uses this procedure to apply application-level policies to federated applications at Partner OP.
+	// (POST /{federationContextId}/app-policies-subscription/{appl-policy-subs-id})
+	ApplyApplicationPolicy(ctx context.Context, request ApplyApplicationPolicyRequestObject) (ApplyApplicationPolicyResponseObject, error)
+	// Remove applications from federated applications at Partner OP.
+	// (POST /{federationContextId}/app-policies-subscription/{appl-policy-subs-id}/app-policy-cancel)
+	RemoveApplicationPolicies(ctx context.Context, request RemoveApplicationPoliciesRequestObject) (RemoveApplicationPoliciesResponseObject, error)
+	// Originating OP uses this procedure to Subscribe for Application's Events Notifications.
+	// (POST /{federationContextId}/appl-event-notifications)
+	CreateApplicationEventSubscription(ctx context.Context, request CreateApplicationEventSubscriptionRequestObject) (CreateApplicationEventSubscriptionResponseObject, error)
+	// Remove existing application notification subscription with the partner OP
+	// (DELETE /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	DeleteApplNotifSubscription(ctx context.Context, request DeleteApplNotifSubscriptionRequestObject) (DeleteApplNotifSubscriptionResponseObject, error)
+	// Originating OP uses this procedure to retrieve subscription meta-information about application-level notifications.
+	// (GET /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	RetrieveApplSubsMetaInfo(ctx context.Context, request RetrieveApplSubsMetaInfoRequestObject) (RetrieveApplSubsMetaInfoResponseObject, error)
+	// Modify existing application events notification subscription with the partner OP
+	// (PATCH /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	ModifyApplEventNotifSubscription(ctx context.Context, request ModifyApplEventNotifSubscriptionRequestObject) (ModifyApplEventNotifSubscriptionResponseObject, error)
+	// Originating OP uses this procedure to add applications for reporting of application events by Partner OP.
+	// (POST /{federationContextId}/appl-event-notifications/{app-notif-subs-id})
+	SubscribeApplsEvtNotif(ctx context.Context, request SubscribeApplsEvtNotifRequestObject) (SubscribeApplsEvtNotifResponseObject, error)
+	// Remove applications from the reporting of application-level event notifications.
+	// (POST /{federationContextId}/appl-event-notifications/{app-notif-subs-id}/app-events)
+	RetrieveAppsEventsInfo(ctx context.Context, request RetrieveAppsEventsInfoRequestObject) (RetrieveAppsEventsInfoResponseObject, error)
+	// Remove applications from the reporting of application-level event notifications.
+	// (POST /{federationContextId}/appl-event-notifications/{app-notif-subs-id}/cancel)
+	RemoveAppsEventSubscription(ctx context.Context, request RemoveAppsEventSubscriptionRequestObject) (RemoveAppsEventSubscriptionResponseObject, error)
+	// Register an application-level policy with the partner OP
+	// (POST /{federationContextId}/appl-policies-subscription/{appl-policy-subs-id}/app-policy-registration)
+	RegisterApplicationPolicy(ctx context.Context, request RegisterApplicationPolicyRequestObject) (RegisterApplicationPolicyResponseObject, error)
+	// Originating OP uses this procedure to retrieve application policy templates from Partner OP.
+	// (GET /{federationContextId}/appl-policies-subscription/{appl-policy-subs-id}/app-policy-templates)
+	RetrieveAppPolicyTemplates(ctx context.Context, request RetrieveAppPolicyTemplatesRequestObject) (RetrieveAppPolicyTemplatesResponseObject, error)
 	// Instantiates an application on a partner OP zone.
 	// (POST /{federationContextId}/application/lcm)
 	InstallApp(ctx context.Context, request InstallAppRequestObject) (InstallAppResponseObject, error)
@@ -5434,7 +12372,7 @@ type StrictServerInterface interface {
 	// Submits an application details to a partner OP. Based on the details provided,  partner OP shall do bookkeeping, resource validation and other pre-deployment operations.
 	// (POST /{federationContextId}/application/onboarding)
 	OnboardApplication(ctx context.Context, request OnboardApplicationRequestObject) (OnboardApplicationResponseObject, error)
-	// Deboards the application from any zones, if any, and deletes the App.
+	// Deboards the application from all zones, if any, and deletes the App.
 	// (DELETE /{federationContextId}/application/onboarding/app/{appId})
 	DeleteApp(ctx context.Context, request DeleteAppRequestObject) (DeleteAppResponseObject, error)
 	// Retrieves application details from partner OP
@@ -5446,7 +12384,7 @@ type StrictServerInterface interface {
 	// Onboards an existing application to a new zone within partner OP.
 	// (POST /{federationContextId}/application/onboarding/app/{appId}/additionalZones)
 	OnboardExistingAppNewZones(ctx context.Context, request OnboardExistingAppNewZonesRequestObject) (OnboardExistingAppNewZonesResponseObject, error)
-	// Deboards an application from partner OP zones
+	// Deboards an application from specific partner OP zones
 	// (DELETE /{federationContextId}/application/onboarding/app/{appId}/zone/{zoneId})
 	DeboardApplication(ctx context.Context, request DeboardApplicationRequestObject) (DeboardApplicationResponseObject, error)
 	// Forbid/allow application instantiation on a partner zone
@@ -5464,6 +12402,27 @@ type StrictServerInterface interface {
 	// Edge discovery procedures towards partner OP over E/WBI. Originating OP request partner OP to provide a list of candidate zones where an application instance can be created. Partner OP applies a set of filtering criteria's to select candidate zones.
 	// (POST /{federationContextId}/edgenodesharing/edgeDiscovery)
 	GetCandidateZones(ctx context.Context, request GetCandidateZonesRequestObject) (GetCandidateZonesResponseObject, error)
+	// Originating OP uses this procedure to request enabling event reporting with Partner OP.
+	// (POST /{federationContextId}/events)
+	CreateEventSubscription(ctx context.Context, request CreateEventSubscriptionRequestObject) (CreateEventSubscriptionResponseObject, error)
+	// Remove existing alarm subscription with the partner OP
+	// (DELETE /{federationContextId}/events/{alarm_subs_id})
+	DeleteAlarmSubscription(ctx context.Context, request DeleteAlarmSubscriptionRequestObject) (DeleteAlarmSubscriptionResponseObject, error)
+	// Retrieves active alarms list with the partner OP.
+	// (GET /{federationContextId}/events/{alarm_subs_id})
+	GetAlarmsList(ctx context.Context, request GetAlarmsListRequestObject) (GetAlarmsListResponseObject, error)
+	// Remove existing event subscription with the partner OP
+	// (DELETE /{federationContextId}/events/{event_subs_id})
+	DeleteEventSubscription(ctx context.Context, request DeleteEventSubscriptionRequestObject) (DeleteEventSubscriptionResponseObject, error)
+	// Retrieves events list with the partner OP.
+	// (GET /{federationContextId}/events/{event_subs_id})
+	GetEventsList(ctx context.Context, request GetEventsListRequestObject) (GetEventsListResponseObject, error)
+	// Originating OP uses this procedure to create an event criterion at Partner OP.
+	// (POST /{federationContextId}/events/{event_subs_id})
+	CreateEventCriterion(ctx context.Context, request CreateEventCriterionRequestObject) (CreateEventCriterionResponseObject, error)
+	// Remove existing event criterion with the partner OP
+	// (DELETE /{federationContextId}/events/{event_subs_id}/event-id/{eventId})
+	DeleteEventCriterion(ctx context.Context, request DeleteEventCriterionRequestObject) (DeleteEventCriterionResponseObject, error)
 	// Uploads an image file. Originating OP uses this api to onboard an application image to partner OP.
 	// (POST /{federationContextId}/files)
 	UploadFile(ctx context.Context, request UploadFileRequestObject) (UploadFileResponseObject, error)
@@ -5473,10 +12432,13 @@ type StrictServerInterface interface {
 	// View an image file from partner OP.
 	// (GET /{federationContextId}/files/{fileId})
 	ViewFile(ctx context.Context, request ViewFileRequestObject) (ViewFileResponseObject, error)
+	// Retrieves health status of the federation context with the Partner OP.
+	// (GET /{federationContextId}/health)
+	GetFederationHealth(ctx context.Context, request GetFederationHealthRequestObject) (GetFederationHealthResponseObject, error)
 	// Retrieves the resource pool reserved by an ISV
 	// (GET /{federationContextId}/isv/resource/zone/{zoneId}/appProvider/{appProviderId})
 	ViewISVResPool(ctx context.Context, request ViewISVResPoolRequestObject) (ViewISVResPoolResponseObject, error)
-	// Reserves resources (compute, network and storage)  on a partner OP zone. ISVs registered with home OP reserves resources on a partner OP zone.
+	// Reserves resources (compute, network and storage)  on a partner OP zone.   ISVs registered with home OP reserves resources on a partner OP zone.
 	// (POST /{federationContextId}/isv/resource/zone/{zoneId}/appProvider/{appProviderId})
 	CreateResourcePools(ctx context.Context, request CreateResourcePoolsRequestObject) (CreateResourcePoolsResponseObject, error)
 	// Deletes the resource pool reserved by an ISV
@@ -5485,6 +12447,45 @@ type StrictServerInterface interface {
 	// Updates resources reserved for a pool by an ISV
 	// (PATCH /{federationContextId}/isv/resource/zone/{zoneId}/appProvider/{appProviderId}/pool/{poolId})
 	UpdateISVResPool(ctx context.Context, request UpdateISVResPoolRequestObject) (UpdateISVResPoolResponseObject, error)
+	// Originating OP subscribe for edge cloud resource monitoring info with partner OP.
+	// (POST /{federationContextId}/monioring-subscriptions)
+	SubscribeMonitoringInfo(ctx context.Context, request SubscribeMonitoringInfoRequestObject) (SubscribeMonitoringInfoResponseObject, error)
+	// Originating OP uses this procedure to request enabling network capabilities events reporting by the Partner OP.
+	// (POST /{federationContextId}/network-caps-events)
+	CreateNetworkCapsEventSubscription(ctx context.Context, request CreateNetworkCapsEventSubscriptionRequestObject) (CreateNetworkCapsEventSubscriptionResponseObject, error)
+	// Remove existing network events notification subscription with the partner OP
+	// (DELETE /{federationContextId}/network-events/{nw-event-subs-id})
+	DeleteNwEventNotifSubscription(ctx context.Context, request DeleteNwEventNotifSubscriptionRequestObject) (DeleteNwEventNotifSubscriptionResponseObject, error)
+	// Originating OP uses this procedure to add an intent to Partner OP to report network capability applied by Partner OP.
+	// (POST /{federationContextId}/network-events/{nw-event-subs-id})
+	CreateNetworkCapEvent(ctx context.Context, request CreateNetworkCapEventRequestObject) (CreateNetworkCapEventResponseObject, error)
+	// Remove existing network event notification with the partner OP
+	// (DELETE /{federationContextId}/network-events/{nw-event-subs-id}/nw-caps)
+	DeleteNetworkCapSubscription(ctx context.Context, request DeleteNetworkCapSubscriptionRequestObject) (DeleteNetworkCapSubscriptionResponseObject, error)
+	// Retrieves network capabilities subscribed list with the partner OP.
+	// (GET /{federationContextId}/network-events/{nw-event-subs-id}/nw-caps)
+	GetNetworkCapsSubscribedList(ctx context.Context, request GetNetworkCapsSubscribedListRequestObject) (GetNetworkCapsSubscribedListResponseObject, error)
+	// Originating OP uses this procedure to Subscribe for Operation's policy capability at Partner OP.
+	// (POST /{federationContextId}/ops-policies-subscription)
+	CreateOperationPolicySubscription(ctx context.Context, request CreateOperationPolicySubscriptionRequestObject) (CreateOperationPolicySubscriptionResponseObject, error)
+	// Remove applications from federated applications at Partner OP.
+	// (POST /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/ops-policy-cancel)
+	RemoveOperationPolicies(ctx context.Context, request RemoveOperationPoliciesRequestObject) (RemoveOperationPoliciesResponseObject, error)
+	// Register an operation-level policy with the partner OP
+	// (POST /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/ops-policy-registration)
+	RegisterOperationPolicy(ctx context.Context, request RegisterOperationPolicyRequestObject) (RegisterOperationPolicyResponseObject, error)
+	// Originating OP uses this procedure to retrieve operations policy templates from Partner OP.
+	// (GET /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/ops-policy-templates)
+	RetrieveOpsPolicyTemplates(ctx context.Context, request RetrieveOpsPolicyTemplatesRequestObject) (RetrieveOpsPolicyTemplatesResponseObject, error)
+	// Origination OP uses this procedure to retrieve application-level policies to federated applications at Partner OP.
+	// (GET /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/policy-association)
+	RetrieveOperationPolicy(ctx context.Context, request RetrieveOperationPolicyRequestObject) (RetrieveOperationPolicyResponseObject, error)
+	// Modify operation-level policy associated with federated applications with the Partner OP
+	// (PATCH /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/policy-association)
+	ModifyOperationPolicy(ctx context.Context, request ModifyOperationPolicyRequestObject) (ModifyOperationPolicyResponseObject, error)
+	// Origination OP uses this procedure to apply application-level policies to federated applications at Partner OP.
+	// (POST /{federationContextId}/ops-policies-subscription/{ops-policy-subs-id}/policy-association)
+	ApplyOperationPolicy(ctx context.Context, request ApplyOperationPolicyRequestObject) (ApplyOperationPolicyResponseObject, error)
 	// Remove existing federation with the partner OP
 	// (DELETE /{federationContextId}/partner)
 	DeleteFederationDetails(ctx context.Context, request DeleteFederationDetailsRequestObject) (DeleteFederationDetailsResponseObject, error)
@@ -5494,9 +12495,21 @@ type StrictServerInterface interface {
 	// API used by the Originating OP towards the partner OP, to update the parameters associated to the existing federation
 	// (PATCH /{federationContextId}/partner)
 	UpdateFederation(ctx context.Context, request UpdateFederationRequestObject) (UpdateFederationResponseObject, error)
-	// Validates the authenticity of a roaming user from home OP
-	// (GET /{federationContextId}/roaminguserauth/device/{deviceId}/token/{authToken})
-	AuthenticateDevice(ctx context.Context, request AuthenticateDeviceRequestObject) (AuthenticateDeviceResponseObject, error)
+	// Registers a callback to be called when there are updates on details about the federation context with the partner OP. The callback body shall provide info about the zones offered by the partner, partner OP network codes, information about edge discovery and LCM service etc.
+	// (POST /{federationContextId}/partner)
+	PartnerDetails(ctx context.Context, request PartnerDetailsRequestObject) (PartnerDetailsResponseObject, error)
+	// Retrieves the list of Service APIs and associated information that a partner OP supports
+	// (GET /{federationContextId}/partner/service/{serviceType})
+	GetServiceAPIsDetails(ctx context.Context, request GetServiceAPIsDetailsRequestObject) (GetServiceAPIsDetailsResponseObject, error)
+	// Retrieves details about OP capabilities of the federated partner.
+	// (GET /{federationContextId}/platform-caps)
+	GetPlatformCapabilities(ctx context.Context, request GetPlatformCapabilitiesRequestObject) (GetPlatformCapabilitiesResponseObject, error)
+	// API used by the Originating OP to renew the existing federation
+	// (POST /{federationContextId}/renew)
+	RenewFederation(ctx context.Context, request RenewFederationRequestObject) (RenewFederationResponseObject, error)
+	// Retrieves details about the computation and network resources that partner OP has reserved for this zone.
+	// (GET /{federationContextId}/zones)
+	GetZoneData(ctx context.Context, request GetZoneDataRequestObject) (GetZoneDataResponseObject, error)
 	// Originating OP informs partner OP that it is willing to access the specified zones and partner OP shall reserve compute and network resources for these zones.
 	// (POST /{federationContextId}/zones)
 	ZoneSubscribe(ctx context.Context, request ZoneSubscribeRequestObject) (ZoneSubscribeResponseObject, error)
@@ -5505,7 +12518,7 @@ type StrictServerInterface interface {
 	ZoneUnsubscribe(ctx context.Context, request ZoneUnsubscribeRequestObject) (ZoneUnsubscribeResponseObject, error)
 	// Retrieves details about the computation and network resources that partner OP has reserved for this zone.
 	// (GET /{federationContextId}/zones/{zoneId})
-	GetZoneData(ctx context.Context, request GetZoneDataRequestObject) (GetZoneDataResponseObject, error)
+	GetZoneDetails(ctx context.Context, request GetZoneDetailsRequestObject) (GetZoneDetailsResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -5518,6 +12531,52 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// GetFederationContextId operation middleware
+func (sh *strictHandler) GetFederationContextId(ctx echo.Context) error {
+	var request GetFederationContextIdRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFederationContextId(ctx.Request().Context(), request.(GetFederationContextIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFederationContextId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFederationContextIdResponseObject); ok {
+		return validResponse.VisitGetFederationContextIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetFederationAPIs operation middleware
+func (sh *strictHandler) GetFederationAPIs(ctx echo.Context) error {
+	var request GetFederationAPIsRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFederationAPIs(ctx.Request().Context(), request.(GetFederationAPIsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFederationAPIs")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFederationAPIsResponseObject); ok {
+		return validResponse.VisitGetFederationAPIsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }
 
 // CreateFederation operation middleware
@@ -5704,6 +12763,37 @@ func (sh *strictHandler) FileStatusCallbackLink(ctx echo.Context, federationCall
 	return nil
 }
 
+// PartnerDetailsCallback operation middleware
+func (sh *strictHandler) PartnerDetailsCallback(ctx echo.Context, federationCallbackId FederationCallbackId) error {
+	var request PartnerDetailsCallbackRequestObject
+
+	request.FederationCallbackId = federationCallbackId
+
+	var body PartnerDetailsCallbackJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PartnerDetailsCallback(ctx.Request().Context(), request.(PartnerDetailsCallbackRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PartnerDetailsCallback")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PartnerDetailsCallbackResponseObject); ok {
+		return validResponse.VisitPartnerDetailsCallbackResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // PartnerStatusLink operation middleware
 func (sh *strictHandler) PartnerStatusLink(ctx echo.Context, federationCallbackId FederationCallbackId) error {
 	var request PartnerStatusLinkRequestObject
@@ -5766,11 +12856,549 @@ func (sh *strictHandler) ResourceReservationCallbackLink(ctx echo.Context, feder
 	return nil
 }
 
+// CreateAlarmReportingSubscription operation middleware
+func (sh *strictHandler) CreateAlarmReportingSubscription(ctx echo.Context, federationContextId FederationContextId) error {
+	var request CreateAlarmReportingSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+
+	var body CreateAlarmReportingSubscriptionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAlarmReportingSubscription(ctx.Request().Context(), request.(CreateAlarmReportingSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAlarmReportingSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateAlarmReportingSubscriptionResponseObject); ok {
+		return validResponse.VisitCreateAlarmReportingSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RemoveServiceAPISession operation middleware
+func (sh *strictHandler) RemoveServiceAPISession(ctx echo.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID) error {
+	var request RemoveServiceAPISessionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ConnectID = connectID
+	request.CustomerID = customerID
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveServiceAPISession(ctx.Request().Context(), request.(RemoveServiceAPISessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveServiceAPISession")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RemoveServiceAPISessionResponseObject); ok {
+		return validResponse.VisitRemoveServiceAPISessionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetServiceAPISessionInfo operation middleware
+func (sh *strictHandler) GetServiceAPISessionInfo(ctx echo.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID) error {
+	var request GetServiceAPISessionInfoRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ConnectID = connectID
+	request.CustomerID = customerID
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetServiceAPISessionInfo(ctx.Request().Context(), request.(GetServiceAPISessionInfoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetServiceAPISessionInfo")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetServiceAPISessionInfoResponseObject); ok {
+		return validResponse.VisitGetServiceAPISessionInfoResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// APIForwarding operation middleware
+func (sh *strictHandler) APIForwarding(ctx echo.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal) error {
+	var request APIForwardingRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ServiceAPINameVal = serviceAPINameVal
+
+	var body APIForwardingJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.APIForwarding(ctx.Request().Context(), request.(APIForwardingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "APIForwarding")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(APIForwardingResponseObject); ok {
+		return validResponse.VisitAPIForwardingResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateApplicationPolicySubscription operation middleware
+func (sh *strictHandler) CreateApplicationPolicySubscription(ctx echo.Context, federationContextId FederationContextId) error {
+	var request CreateApplicationPolicySubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateApplicationPolicySubscription(ctx.Request().Context(), request.(CreateApplicationPolicySubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateApplicationPolicySubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateApplicationPolicySubscriptionResponseObject); ok {
+		return validResponse.VisitCreateApplicationPolicySubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetrieveApplicationPolicy operation middleware
+func (sh *strictHandler) RetrieveApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params RetrieveApplicationPolicyParams) error {
+	var request RetrieveApplicationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ApplPolicySubsId = applPolicySubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetrieveApplicationPolicy(ctx.Request().Context(), request.(RetrieveApplicationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetrieveApplicationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetrieveApplicationPolicyResponseObject); ok {
+		return validResponse.VisitRetrieveApplicationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ModifyApplicationPolicy operation middleware
+func (sh *strictHandler) ModifyApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error {
+	var request ModifyApplicationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ApplPolicySubsId = applPolicySubsId
+
+	var body ModifyApplicationPolicyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ModifyApplicationPolicy(ctx.Request().Context(), request.(ModifyApplicationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ModifyApplicationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(ModifyApplicationPolicyResponseObject); ok {
+		return validResponse.VisitModifyApplicationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ApplyApplicationPolicy operation middleware
+func (sh *strictHandler) ApplyApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error {
+	var request ApplyApplicationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ApplPolicySubsId = applPolicySubsId
+
+	var body ApplyApplicationPolicyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyApplicationPolicy(ctx.Request().Context(), request.(ApplyApplicationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyApplicationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(ApplyApplicationPolicyResponseObject); ok {
+		return validResponse.VisitApplyApplicationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RemoveApplicationPolicies operation middleware
+func (sh *strictHandler) RemoveApplicationPolicies(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error {
+	var request RemoveApplicationPoliciesRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ApplPolicySubsId = applPolicySubsId
+
+	var body RemoveApplicationPoliciesJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveApplicationPolicies(ctx.Request().Context(), request.(RemoveApplicationPoliciesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveApplicationPolicies")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RemoveApplicationPoliciesResponseObject); ok {
+		return validResponse.VisitRemoveApplicationPoliciesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateApplicationEventSubscription operation middleware
+func (sh *strictHandler) CreateApplicationEventSubscription(ctx echo.Context, federationContextId FederationContextId) error {
+	var request CreateApplicationEventSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+
+	var body CreateApplicationEventSubscriptionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateApplicationEventSubscription(ctx.Request().Context(), request.(CreateApplicationEventSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateApplicationEventSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateApplicationEventSubscriptionResponseObject); ok {
+		return validResponse.VisitCreateApplicationEventSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteApplNotifSubscription operation middleware
+func (sh *strictHandler) DeleteApplNotifSubscription(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error {
+	var request DeleteApplNotifSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AppNotifSubsId = appNotifSubsId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteApplNotifSubscription(ctx.Request().Context(), request.(DeleteApplNotifSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteApplNotifSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteApplNotifSubscriptionResponseObject); ok {
+		return validResponse.VisitDeleteApplNotifSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetrieveApplSubsMetaInfo operation middleware
+func (sh *strictHandler) RetrieveApplSubsMetaInfo(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params RetrieveApplSubsMetaInfoParams) error {
+	var request RetrieveApplSubsMetaInfoRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AppNotifSubsId = appNotifSubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetrieveApplSubsMetaInfo(ctx.Request().Context(), request.(RetrieveApplSubsMetaInfoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetrieveApplSubsMetaInfo")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetrieveApplSubsMetaInfoResponseObject); ok {
+		return validResponse.VisitRetrieveApplSubsMetaInfoResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ModifyApplEventNotifSubscription operation middleware
+func (sh *strictHandler) ModifyApplEventNotifSubscription(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error {
+	var request ModifyApplEventNotifSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AppNotifSubsId = appNotifSubsId
+
+	var body ModifyApplEventNotifSubscriptionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ModifyApplEventNotifSubscription(ctx.Request().Context(), request.(ModifyApplEventNotifSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ModifyApplEventNotifSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(ModifyApplEventNotifSubscriptionResponseObject); ok {
+		return validResponse.VisitModifyApplEventNotifSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// SubscribeApplsEvtNotif operation middleware
+func (sh *strictHandler) SubscribeApplsEvtNotif(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params SubscribeApplsEvtNotifParams) error {
+	var request SubscribeApplsEvtNotifRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AppNotifSubsId = appNotifSubsId
+	request.Params = params
+
+	var body SubscribeApplsEvtNotifJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.SubscribeApplsEvtNotif(ctx.Request().Context(), request.(SubscribeApplsEvtNotifRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SubscribeApplsEvtNotif")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(SubscribeApplsEvtNotifResponseObject); ok {
+		return validResponse.VisitSubscribeApplsEvtNotifResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetrieveAppsEventsInfo operation middleware
+func (sh *strictHandler) RetrieveAppsEventsInfo(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error {
+	var request RetrieveAppsEventsInfoRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AppNotifSubsId = appNotifSubsId
+
+	var body RetrieveAppsEventsInfoJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetrieveAppsEventsInfo(ctx.Request().Context(), request.(RetrieveAppsEventsInfoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetrieveAppsEventsInfo")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetrieveAppsEventsInfoResponseObject); ok {
+		return validResponse.VisitRetrieveAppsEventsInfoResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RemoveAppsEventSubscription operation middleware
+func (sh *strictHandler) RemoveAppsEventSubscription(ctx echo.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) error {
+	var request RemoveAppsEventSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AppNotifSubsId = appNotifSubsId
+
+	var body RemoveAppsEventSubscriptionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveAppsEventSubscription(ctx.Request().Context(), request.(RemoveAppsEventSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveAppsEventSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RemoveAppsEventSubscriptionResponseObject); ok {
+		return validResponse.VisitRemoveAppsEventSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RegisterApplicationPolicy operation middleware
+func (sh *strictHandler) RegisterApplicationPolicy(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier) error {
+	var request RegisterApplicationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ApplPolicySubsId = applPolicySubsId
+
+	var body RegisterApplicationPolicyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RegisterApplicationPolicy(ctx.Request().Context(), request.(RegisterApplicationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegisterApplicationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RegisterApplicationPolicyResponseObject); ok {
+		return validResponse.VisitRegisterApplicationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetrieveAppPolicyTemplates operation middleware
+func (sh *strictHandler) RetrieveAppPolicyTemplates(ctx echo.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params RetrieveAppPolicyTemplatesParams) error {
+	var request RetrieveAppPolicyTemplatesRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ApplPolicySubsId = applPolicySubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetrieveAppPolicyTemplates(ctx.Request().Context(), request.(RetrieveAppPolicyTemplatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetrieveAppPolicyTemplates")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetrieveAppPolicyTemplatesResponseObject); ok {
+		return validResponse.VisitRetrieveAppPolicyTemplatesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // InstallApp operation middleware
-func (sh *strictHandler) InstallApp(ctx echo.Context, federationContextId FederationContextId) error {
+func (sh *strictHandler) InstallApp(ctx echo.Context, federationContextId FederationContextId, params InstallAppParams) error {
 	var request InstallAppRequestObject
 
 	request.FederationContextId = federationContextId
+	request.Params = params
 
 	var body InstallAppJSONRequestBody
 	if err := ctx.Bind(&body); err != nil {
@@ -6200,6 +13828,202 @@ func (sh *strictHandler) GetCandidateZones(ctx echo.Context, federationContextId
 	return nil
 }
 
+// CreateEventSubscription operation middleware
+func (sh *strictHandler) CreateEventSubscription(ctx echo.Context, federationContextId FederationContextId) error {
+	var request CreateEventSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+
+	var body CreateEventSubscriptionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateEventSubscription(ctx.Request().Context(), request.(CreateEventSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateEventSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateEventSubscriptionResponseObject); ok {
+		return validResponse.VisitCreateEventSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteAlarmSubscription operation middleware
+func (sh *strictHandler) DeleteAlarmSubscription(ctx echo.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier) error {
+	var request DeleteAlarmSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AlarmSubsId = alarmSubsId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAlarmSubscription(ctx.Request().Context(), request.(DeleteAlarmSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAlarmSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteAlarmSubscriptionResponseObject); ok {
+		return validResponse.VisitDeleteAlarmSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetAlarmsList operation middleware
+func (sh *strictHandler) GetAlarmsList(ctx echo.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params GetAlarmsListParams) error {
+	var request GetAlarmsListRequestObject
+
+	request.FederationContextId = federationContextId
+	request.AlarmSubsId = alarmSubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAlarmsList(ctx.Request().Context(), request.(GetAlarmsListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAlarmsList")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetAlarmsListResponseObject); ok {
+		return validResponse.VisitGetAlarmsListResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteEventSubscription operation middleware
+func (sh *strictHandler) DeleteEventSubscription(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier) error {
+	var request DeleteEventSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.EventSubsId = eventSubsId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteEventSubscription(ctx.Request().Context(), request.(DeleteEventSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteEventSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteEventSubscriptionResponseObject); ok {
+		return validResponse.VisitDeleteEventSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetEventsList operation middleware
+func (sh *strictHandler) GetEventsList(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params GetEventsListParams) error {
+	var request GetEventsListRequestObject
+
+	request.FederationContextId = federationContextId
+	request.EventSubsId = eventSubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetEventsList(ctx.Request().Context(), request.(GetEventsListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetEventsList")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetEventsListResponseObject); ok {
+		return validResponse.VisitGetEventsListResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateEventCriterion operation middleware
+func (sh *strictHandler) CreateEventCriterion(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier) error {
+	var request CreateEventCriterionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.EventSubsId = eventSubsId
+
+	var body CreateEventCriterionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateEventCriterion(ctx.Request().Context(), request.(CreateEventCriterionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateEventCriterion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateEventCriterionResponseObject); ok {
+		return validResponse.VisitCreateEventCriterionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteEventCriterion operation middleware
+func (sh *strictHandler) DeleteEventCriterion(ctx echo.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier) error {
+	var request DeleteEventCriterionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.EventSubsId = eventSubsId
+	request.EventId = eventId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteEventCriterion(ctx.Request().Context(), request.(DeleteEventCriterionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteEventCriterion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteEventCriterionResponseObject); ok {
+		return validResponse.VisitDeleteEventCriterionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // UploadFile operation middleware
 func (sh *strictHandler) UploadFile(ctx echo.Context, federationContextId FederationContextId) error {
 	var request UploadFileRequestObject
@@ -6277,6 +14101,31 @@ func (sh *strictHandler) ViewFile(ctx echo.Context, federationContextId Federati
 		return err
 	} else if validResponse, ok := response.(ViewFileResponseObject); ok {
 		return validResponse.VisitViewFileResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetFederationHealth operation middleware
+func (sh *strictHandler) GetFederationHealth(ctx echo.Context, federationContextId FederationContextId) error {
+	var request GetFederationHealthRequestObject
+
+	request.FederationContextId = federationContextId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFederationHealth(ctx.Request().Context(), request.(GetFederationHealthRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFederationHealth")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFederationHealthResponseObject); ok {
+		return validResponse.VisitGetFederationHealthResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
@@ -6405,6 +14254,389 @@ func (sh *strictHandler) UpdateISVResPool(ctx echo.Context, federationContextId 
 	return nil
 }
 
+// SubscribeMonitoringInfo operation middleware
+func (sh *strictHandler) SubscribeMonitoringInfo(ctx echo.Context, federationContextId FederationContextId, params SubscribeMonitoringInfoParams) error {
+	var request SubscribeMonitoringInfoRequestObject
+
+	request.FederationContextId = federationContextId
+	request.Params = params
+
+	var body SubscribeMonitoringInfoJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.SubscribeMonitoringInfo(ctx.Request().Context(), request.(SubscribeMonitoringInfoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SubscribeMonitoringInfo")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(SubscribeMonitoringInfoResponseObject); ok {
+		return validResponse.VisitSubscribeMonitoringInfoResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateNetworkCapsEventSubscription operation middleware
+func (sh *strictHandler) CreateNetworkCapsEventSubscription(ctx echo.Context, federationContextId FederationContextId) error {
+	var request CreateNetworkCapsEventSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+
+	var body CreateNetworkCapsEventSubscriptionJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateNetworkCapsEventSubscription(ctx.Request().Context(), request.(CreateNetworkCapsEventSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateNetworkCapsEventSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateNetworkCapsEventSubscriptionResponseObject); ok {
+		return validResponse.VisitCreateNetworkCapsEventSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteNwEventNotifSubscription operation middleware
+func (sh *strictHandler) DeleteNwEventNotifSubscription(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier) error {
+	var request DeleteNwEventNotifSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.NwEventSubsId = nwEventSubsId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteNwEventNotifSubscription(ctx.Request().Context(), request.(DeleteNwEventNotifSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteNwEventNotifSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteNwEventNotifSubscriptionResponseObject); ok {
+		return validResponse.VisitDeleteNwEventNotifSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateNetworkCapEvent operation middleware
+func (sh *strictHandler) CreateNetworkCapEvent(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params CreateNetworkCapEventParams) error {
+	var request CreateNetworkCapEventRequestObject
+
+	request.FederationContextId = federationContextId
+	request.NwEventSubsId = nwEventSubsId
+	request.Params = params
+
+	var body CreateNetworkCapEventJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateNetworkCapEvent(ctx.Request().Context(), request.(CreateNetworkCapEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateNetworkCapEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateNetworkCapEventResponseObject); ok {
+		return validResponse.VisitCreateNetworkCapEventResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteNetworkCapSubscription operation middleware
+func (sh *strictHandler) DeleteNetworkCapSubscription(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params DeleteNetworkCapSubscriptionParams) error {
+	var request DeleteNetworkCapSubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+	request.NwEventSubsId = nwEventSubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteNetworkCapSubscription(ctx.Request().Context(), request.(DeleteNetworkCapSubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteNetworkCapSubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteNetworkCapSubscriptionResponseObject); ok {
+		return validResponse.VisitDeleteNetworkCapSubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetNetworkCapsSubscribedList operation middleware
+func (sh *strictHandler) GetNetworkCapsSubscribedList(ctx echo.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params GetNetworkCapsSubscribedListParams) error {
+	var request GetNetworkCapsSubscribedListRequestObject
+
+	request.FederationContextId = federationContextId
+	request.NwEventSubsId = nwEventSubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNetworkCapsSubscribedList(ctx.Request().Context(), request.(GetNetworkCapsSubscribedListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNetworkCapsSubscribedList")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetNetworkCapsSubscribedListResponseObject); ok {
+		return validResponse.VisitGetNetworkCapsSubscribedListResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateOperationPolicySubscription operation middleware
+func (sh *strictHandler) CreateOperationPolicySubscription(ctx echo.Context, federationContextId FederationContextId) error {
+	var request CreateOperationPolicySubscriptionRequestObject
+
+	request.FederationContextId = federationContextId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateOperationPolicySubscription(ctx.Request().Context(), request.(CreateOperationPolicySubscriptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateOperationPolicySubscription")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(CreateOperationPolicySubscriptionResponseObject); ok {
+		return validResponse.VisitCreateOperationPolicySubscriptionResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RemoveOperationPolicies operation middleware
+func (sh *strictHandler) RemoveOperationPolicies(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error {
+	var request RemoveOperationPoliciesRequestObject
+
+	request.FederationContextId = federationContextId
+	request.OpsPolicySubsId = opsPolicySubsId
+
+	var body RemoveOperationPoliciesJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveOperationPolicies(ctx.Request().Context(), request.(RemoveOperationPoliciesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveOperationPolicies")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RemoveOperationPoliciesResponseObject); ok {
+		return validResponse.VisitRemoveOperationPoliciesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RegisterOperationPolicy operation middleware
+func (sh *strictHandler) RegisterOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error {
+	var request RegisterOperationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.OpsPolicySubsId = opsPolicySubsId
+
+	var body RegisterOperationPolicyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RegisterOperationPolicy(ctx.Request().Context(), request.(RegisterOperationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegisterOperationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RegisterOperationPolicyResponseObject); ok {
+		return validResponse.VisitRegisterOperationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetrieveOpsPolicyTemplates operation middleware
+func (sh *strictHandler) RetrieveOpsPolicyTemplates(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params RetrieveOpsPolicyTemplatesParams) error {
+	var request RetrieveOpsPolicyTemplatesRequestObject
+
+	request.FederationContextId = federationContextId
+	request.OpsPolicySubsId = opsPolicySubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetrieveOpsPolicyTemplates(ctx.Request().Context(), request.(RetrieveOpsPolicyTemplatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetrieveOpsPolicyTemplates")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetrieveOpsPolicyTemplatesResponseObject); ok {
+		return validResponse.VisitRetrieveOpsPolicyTemplatesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RetrieveOperationPolicy operation middleware
+func (sh *strictHandler) RetrieveOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params RetrieveOperationPolicyParams) error {
+	var request RetrieveOperationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.OpsPolicySubsId = opsPolicySubsId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetrieveOperationPolicy(ctx.Request().Context(), request.(RetrieveOperationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetrieveOperationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RetrieveOperationPolicyResponseObject); ok {
+		return validResponse.VisitRetrieveOperationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ModifyOperationPolicy operation middleware
+func (sh *strictHandler) ModifyOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error {
+	var request ModifyOperationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.OpsPolicySubsId = opsPolicySubsId
+
+	var body ModifyOperationPolicyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ModifyOperationPolicy(ctx.Request().Context(), request.(ModifyOperationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ModifyOperationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(ModifyOperationPolicyResponseObject); ok {
+		return validResponse.VisitModifyOperationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ApplyOperationPolicy operation middleware
+func (sh *strictHandler) ApplyOperationPolicy(ctx echo.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier) error {
+	var request ApplyOperationPolicyRequestObject
+
+	request.FederationContextId = federationContextId
+	request.OpsPolicySubsId = opsPolicySubsId
+
+	var body ApplyOperationPolicyJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyOperationPolicy(ctx.Request().Context(), request.(ApplyOperationPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyOperationPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(ApplyOperationPolicyResponseObject); ok {
+		return validResponse.VisitApplyOperationPolicyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // DeleteFederationDetails operation middleware
 func (sh *strictHandler) DeleteFederationDetails(ctx echo.Context, federationContextId FederationContextId) error {
 	var request DeleteFederationDetailsRequestObject
@@ -6486,27 +14718,134 @@ func (sh *strictHandler) UpdateFederation(ctx echo.Context, federationContextId 
 	return nil
 }
 
-// AuthenticateDevice operation middleware
-func (sh *strictHandler) AuthenticateDevice(ctx echo.Context, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken) error {
-	var request AuthenticateDeviceRequestObject
+// PartnerDetails operation middleware
+func (sh *strictHandler) PartnerDetails(ctx echo.Context, federationContextId FederationContextId) error {
+	var request PartnerDetailsRequestObject
 
 	request.FederationContextId = federationContextId
-	request.DeviceId = deviceId
-	request.AuthToken = authToken
+
+	var body PartnerDetailsJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.AuthenticateDevice(ctx.Request().Context(), request.(AuthenticateDeviceRequestObject))
+		return sh.ssi.PartnerDetails(ctx.Request().Context(), request.(PartnerDetailsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "AuthenticateDevice")
+		handler = middleware(handler, "PartnerDetails")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(AuthenticateDeviceResponseObject); ok {
-		return validResponse.VisitAuthenticateDeviceResponse(ctx.Response())
+	} else if validResponse, ok := response.(PartnerDetailsResponseObject); ok {
+		return validResponse.VisitPartnerDetailsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetServiceAPIsDetails operation middleware
+func (sh *strictHandler) GetServiceAPIsDetails(ctx echo.Context, federationContextId FederationContextId, serviceType ServiceType) error {
+	var request GetServiceAPIsDetailsRequestObject
+
+	request.FederationContextId = federationContextId
+	request.ServiceType = serviceType
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetServiceAPIsDetails(ctx.Request().Context(), request.(GetServiceAPIsDetailsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetServiceAPIsDetails")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetServiceAPIsDetailsResponseObject); ok {
+		return validResponse.VisitGetServiceAPIsDetailsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetPlatformCapabilities operation middleware
+func (sh *strictHandler) GetPlatformCapabilities(ctx echo.Context, federationContextId FederationContextId, params GetPlatformCapabilitiesParams) error {
+	var request GetPlatformCapabilitiesRequestObject
+
+	request.FederationContextId = federationContextId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPlatformCapabilities(ctx.Request().Context(), request.(GetPlatformCapabilitiesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPlatformCapabilities")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetPlatformCapabilitiesResponseObject); ok {
+		return validResponse.VisitGetPlatformCapabilitiesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RenewFederation operation middleware
+func (sh *strictHandler) RenewFederation(ctx echo.Context, federationContextId FederationContextId) error {
+	var request RenewFederationRequestObject
+
+	request.FederationContextId = federationContextId
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RenewFederation(ctx.Request().Context(), request.(RenewFederationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RenewFederation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RenewFederationResponseObject); ok {
+		return validResponse.VisitRenewFederationResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetZoneData operation middleware
+func (sh *strictHandler) GetZoneData(ctx echo.Context, federationContextId FederationContextId, params GetZoneDataParams) error {
+	var request GetZoneDataRequestObject
+
+	request.FederationContextId = federationContextId
+	request.Params = params
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetZoneData(ctx.Request().Context(), request.(GetZoneDataRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetZoneData")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetZoneDataResponseObject); ok {
+		return validResponse.VisitGetZoneDataResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
@@ -6570,26 +14909,26 @@ func (sh *strictHandler) ZoneUnsubscribe(ctx echo.Context, federationContextId F
 	return nil
 }
 
-// GetZoneData operation middleware
-func (sh *strictHandler) GetZoneData(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier) error {
-	var request GetZoneDataRequestObject
+// GetZoneDetails operation middleware
+func (sh *strictHandler) GetZoneDetails(ctx echo.Context, federationContextId FederationContextId, zoneId ZoneIdentifier) error {
+	var request GetZoneDetailsRequestObject
 
 	request.FederationContextId = federationContextId
 	request.ZoneId = zoneId
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetZoneData(ctx.Request().Context(), request.(GetZoneDataRequestObject))
+		return sh.ssi.GetZoneDetails(ctx.Request().Context(), request.(GetZoneDetailsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetZoneData")
+		handler = middleware(handler, "GetZoneDetails")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return err
-	} else if validResponse, ok := response.(GetZoneDataResponseObject); ok {
-		return validResponse.VisitGetZoneDataResponse(ctx.Response())
+	} else if validResponse, ok := response.(GetZoneDetailsResponseObject); ok {
+		return validResponse.VisitGetZoneDetailsResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

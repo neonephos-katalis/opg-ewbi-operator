@@ -23,6 +23,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,18 +39,20 @@ import (
 
 	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/controller"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/options"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 	// +kubebuilder:scaffold:imports
 )
 
 const (
-	unableToCreateControllerMsg = "unable to create controller"
+	unableToCreateControllerMsg = ">>> [MAIN]Unable to create controller"
 )
 
 var (
 	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	setupLog = ctrl.Log.WithName(">>>>> [SETUP]")
 )
 
 func init() {
@@ -58,7 +61,6 @@ func init() {
 	utilruntime.Must(opgewbiv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
-
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
@@ -82,6 +84,13 @@ func main() {
 		"If set, the CA certificates verification is skipped for OPG Clients requests.")
 	opts := zap.Options{
 		Development: true,
+		EncoderConfigOptions: []zap.EncoderConfigOption{
+			func(c *zapcore.EncoderConfig) {
+				c.CallerKey = ""     // Nasconde il nome del file e la riga
+				c.StacktraceKey = "" // Nasconde lo stacktrace degli errori
+				c.TimeKey = ""       // Togli il commento se vuoi nascondere anche l'orario
+			},
+		},
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -97,7 +106,7 @@ func main() {
 	// - https://github.com/advisories/GHSA-qppj-fm5r-hxr3
 	// - https://github.com/advisories/GHSA-4374-p667-p6c8
 	disableHTTP2 := func(c *tls.Config) {
-		setupLog.Info("disabling http/2")
+		setupLog.Info(">>> [MAIN] Disabling http/2")
 		c.NextProtos = []string{"http/1.1"}
 	}
 
@@ -144,7 +153,7 @@ func main() {
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "7e554ad8.nby.one",
+		LeaderElectionID:       "7e554ad8.katalis.com",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -162,79 +171,140 @@ func main() {
 		}},
 	})
 
+	if err != nil {
+		setupLog.Error(err, ">>> [MAIN] Unable to start manager")
+		os.Exit(1)
+	}
+
 	opgClientOpts := []opg.OPGClientsMapOpt{}
 	if opgInsecureSkipVerify {
-		setupLog.Info("INSECURE: disabling CA cert verification in https requests to federation partners")
+		setupLog.Info(">>> [MAIN] INSECURE: disabling CA cert verification in https requests to federation partners")
 		opgClientOpts = append(opgClientOpts, opg.WithInsecureSkipVerify())
 	}
 	opgClients := opg.NewOPGClientsMap(opgClientOpts...)
-
-	if err != nil {
-		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
-	}
 
 	if err = (&controller.FederationReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.FederationReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.FederationReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Federation")
 		os.Exit(1)
 	}
-	if err = (&controller.FileReconciler{
+	if err = (&controller.ZoneReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ZoneReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ZoneReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, unableToCreateControllerMsg, "controller", "File")
+		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Zone")
+		os.Exit(1)
+	}
+	if err = (&controller.ImageReconciler{
+		Client:                 mgr.GetClient(),
+		Scheme:                 mgr.GetScheme(),
+		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ImageReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ImageReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Image")
 		os.Exit(1)
 	}
 	if err = (&controller.ArtefactReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ArtefactReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ArtefactReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Artefact")
 		os.Exit(1)
 	}
-	if err = (&controller.ApplicationReconciler{
+	if err = (&controller.ApplicationOnboardingReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ApplicationOnboardingReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ApplicationOnboardingReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, unableToCreateControllerMsg, "controller", "Application")
+		setupLog.Error(err, unableToCreateControllerMsg, "controller", "ApplicationOnboarding")
 		os.Exit(1)
 	}
-	if err = (&controller.ApplicationInstanceReconciler{
+	if err = (&controller.ApplicationDeploymentReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ApplicationDeploymentReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ApplicationDeploymentReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, unableToCreateControllerMsg, "controller", "ApplicationInstance")
-		os.Exit(1)
-	}
-	if err = (&controller.AvailabilityZoneReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, unableToCreateControllerMsg, "controller", "AvailabilityZone")
+		setupLog.Error(err, unableToCreateControllerMsg, "controller", "ApplicationDeployment")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
+		setupLog.Error(err, ">>> [MAIN] Unable to set up health check")
 		os.Exit(1)
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
+		setupLog.Error(err, ">>> [MAIN] Unable to set up ready check")
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager", "namespace", monitoredNamespace)
+	setupLog.Info("Starting manager", "namespace", monitoredNamespace)
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		setupLog.Error(err, ">>> [MAIN] Problem running manager")
 		os.Exit(1)
 	}
 }

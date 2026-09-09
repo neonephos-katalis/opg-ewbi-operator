@@ -91,6 +91,12 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetFederationContextId request
+	GetFederationContextId(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetFederationAPIs request
+	GetFederationAPIs(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateFederationWithBody request with any body
 	CreateFederationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -121,6 +127,11 @@ type ClientInterface interface {
 
 	FileStatusCallbackLink(ctx context.Context, federationCallbackId FederationCallbackId, body FileStatusCallbackLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PartnerDetailsCallbackWithBody request with any body
+	PartnerDetailsCallbackWithBody(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PartnerDetailsCallback(ctx context.Context, federationCallbackId FederationCallbackId, body PartnerDetailsCallbackJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PartnerStatusLinkWithBody request with any body
 	PartnerStatusLinkWithBody(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -131,10 +142,86 @@ type ClientInterface interface {
 
 	ResourceReservationCallbackLink(ctx context.Context, federationCallbackId FederationCallbackId, body ResourceReservationCallbackLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// InstallAppWithBody request with any body
-	InstallAppWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// CreateAlarmReportingSubscriptionWithBody request with any body
+	CreateAlarmReportingSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	InstallApp(ctx context.Context, federationContextId FederationContextId, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	CreateAlarmReportingSubscription(ctx context.Context, federationContextId FederationContextId, body CreateAlarmReportingSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveServiceAPISession request
+	RemoveServiceAPISession(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetServiceAPISessionInfo request
+	GetServiceAPISessionInfo(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// APIForwardingWithBody request with any body
+	APIForwardingWithBody(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	APIForwarding(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, body APIForwardingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateApplicationPolicySubscription request
+	CreateApplicationPolicySubscription(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetrieveApplicationPolicy request
+	RetrieveApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveApplicationPolicyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ModifyApplicationPolicyWithBody request with any body
+	ModifyApplicationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ModifyApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ModifyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyApplicationPolicyWithBody request with any body
+	ApplyApplicationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ApplyApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ApplyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveApplicationPoliciesWithBody request with any body
+	RemoveApplicationPoliciesWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RemoveApplicationPolicies(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RemoveApplicationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateApplicationEventSubscriptionWithBody request with any body
+	CreateApplicationEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateApplicationEventSubscription(ctx context.Context, federationContextId FederationContextId, body CreateApplicationEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteApplNotifSubscription request
+	DeleteApplNotifSubscription(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetrieveApplSubsMetaInfo request
+	RetrieveApplSubsMetaInfo(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *RetrieveApplSubsMetaInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ModifyApplEventNotifSubscriptionWithBody request with any body
+	ModifyApplEventNotifSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ModifyApplEventNotifSubscription(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body ModifyApplEventNotifSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SubscribeApplsEvtNotifWithBody request with any body
+	SubscribeApplsEvtNotifWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SubscribeApplsEvtNotif(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, body SubscribeApplsEvtNotifJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetrieveAppsEventsInfoWithBody request with any body
+	RetrieveAppsEventsInfoWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RetrieveAppsEventsInfo(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RetrieveAppsEventsInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveAppsEventSubscriptionWithBody request with any body
+	RemoveAppsEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RemoveAppsEventSubscription(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RemoveAppsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RegisterApplicationPolicyWithBody request with any body
+	RegisterApplicationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RegisterApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RegisterApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetrieveAppPolicyTemplates request
+	RetrieveAppPolicyTemplates(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveAppPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// InstallAppWithBody request with any body
+	InstallAppWithBody(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	InstallApp(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAllAppInstances request
 	GetAllAppInstances(ctx context.Context, federationContextId FederationContextId, appId AppIdentifier, appProviderId AppProviderId, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -188,6 +275,31 @@ type ClientInterface interface {
 
 	GetCandidateZones(ctx context.Context, federationContextId FederationContextId, body GetCandidateZonesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateEventSubscriptionWithBody request with any body
+	CreateEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateEventSubscription(ctx context.Context, federationContextId FederationContextId, body CreateEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAlarmSubscription request
+	DeleteAlarmSubscription(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAlarmsList request
+	GetAlarmsList(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params *GetAlarmsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteEventSubscription request
+	DeleteEventSubscription(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetEventsList request
+	GetEventsList(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params *GetEventsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateEventCriterionWithBody request with any body
+	CreateEventCriterionWithBody(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateEventCriterion(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, body CreateEventCriterionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteEventCriterion request
+	DeleteEventCriterion(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// UploadFileWithBody request with any body
 	UploadFileWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -196,6 +308,9 @@ type ClientInterface interface {
 
 	// ViewFile request
 	ViewFile(ctx context.Context, federationContextId FederationContextId, fileId FileId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetFederationHealth request
+	GetFederationHealth(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ViewISVResPool request
 	ViewISVResPool(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -213,6 +328,59 @@ type ClientInterface interface {
 
 	UpdateISVResPool(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId, poolId PoolId, body UpdateISVResPoolJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// SubscribeMonitoringInfoWithBody request with any body
+	SubscribeMonitoringInfoWithBody(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SubscribeMonitoringInfo(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, body SubscribeMonitoringInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateNetworkCapsEventSubscriptionWithBody request with any body
+	CreateNetworkCapsEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateNetworkCapsEventSubscription(ctx context.Context, federationContextId FederationContextId, body CreateNetworkCapsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNwEventNotifSubscription request
+	DeleteNwEventNotifSubscription(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateNetworkCapEventWithBody request with any body
+	CreateNetworkCapEventWithBody(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateNetworkCapEvent(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, body CreateNetworkCapEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNetworkCapSubscription request
+	DeleteNetworkCapSubscription(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *DeleteNetworkCapSubscriptionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNetworkCapsSubscribedList request
+	GetNetworkCapsSubscribedList(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *GetNetworkCapsSubscribedListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateOperationPolicySubscription request
+	CreateOperationPolicySubscription(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveOperationPoliciesWithBody request with any body
+	RemoveOperationPoliciesWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RemoveOperationPolicies(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RemoveOperationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RegisterOperationPolicyWithBody request with any body
+	RegisterOperationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RegisterOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RegisterOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetrieveOpsPolicyTemplates request
+	RetrieveOpsPolicyTemplates(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOpsPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetrieveOperationPolicy request
+	RetrieveOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOperationPolicyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ModifyOperationPolicyWithBody request with any body
+	ModifyOperationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ModifyOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ModifyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyOperationPolicyWithBody request with any body
+	ApplyOperationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ApplyOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ApplyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteFederationDetails request
 	DeleteFederationDetails(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -224,8 +392,22 @@ type ClientInterface interface {
 
 	UpdateFederation(ctx context.Context, federationContextId FederationContextId, body UpdateFederationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AuthenticateDevice request
-	AuthenticateDevice(ctx context.Context, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PartnerDetailsWithBody request with any body
+	PartnerDetailsWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PartnerDetails(ctx context.Context, federationContextId FederationContextId, body PartnerDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetServiceAPIsDetails request
+	GetServiceAPIsDetails(ctx context.Context, federationContextId FederationContextId, serviceType ServiceType, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPlatformCapabilities request
+	GetPlatformCapabilities(ctx context.Context, federationContextId FederationContextId, params *GetPlatformCapabilitiesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RenewFederation request
+	RenewFederation(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetZoneData request
+	GetZoneData(ctx context.Context, federationContextId FederationContextId, params *GetZoneDataParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ZoneSubscribeWithBody request with any body
 	ZoneSubscribeWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -235,8 +417,32 @@ type ClientInterface interface {
 	// ZoneUnsubscribe request
 	ZoneUnsubscribe(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetZoneData request
-	GetZoneData(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetZoneDetails request
+	GetZoneDetails(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetFederationContextId(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFederationContextIdRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetFederationAPIs(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFederationAPIsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) CreateFederationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -383,6 +589,30 @@ func (c *Client) FileStatusCallbackLink(ctx context.Context, federationCallbackI
 	return c.Client.Do(req)
 }
 
+func (c *Client) PartnerDetailsCallbackWithBody(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPartnerDetailsCallbackRequestWithBody(c.Server, federationCallbackId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PartnerDetailsCallback(ctx context.Context, federationCallbackId FederationCallbackId, body PartnerDetailsCallbackJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPartnerDetailsCallbackRequest(c.Server, federationCallbackId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PartnerStatusLinkWithBody(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPartnerStatusLinkRequestWithBody(c.Server, federationCallbackId, contentType, body)
 	if err != nil {
@@ -431,8 +661,8 @@ func (c *Client) ResourceReservationCallbackLink(ctx context.Context, federation
 	return c.Client.Do(req)
 }
 
-func (c *Client) InstallAppWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewInstallAppRequestWithBody(c.Server, federationContextId, contentType, body)
+func (c *Client) CreateAlarmReportingSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAlarmReportingSubscriptionRequestWithBody(c.Server, federationContextId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -443,8 +673,356 @@ func (c *Client) InstallAppWithBody(ctx context.Context, federationContextId Fed
 	return c.Client.Do(req)
 }
 
-func (c *Client) InstallApp(ctx context.Context, federationContextId FederationContextId, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewInstallAppRequest(c.Server, federationContextId, body)
+func (c *Client) CreateAlarmReportingSubscription(ctx context.Context, federationContextId FederationContextId, body CreateAlarmReportingSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAlarmReportingSubscriptionRequest(c.Server, federationContextId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveServiceAPISession(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveServiceAPISessionRequest(c.Server, federationContextId, connectID, customerID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetServiceAPISessionInfo(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetServiceAPISessionInfoRequest(c.Server, federationContextId, connectID, customerID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) APIForwardingWithBody(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAPIForwardingRequestWithBody(c.Server, federationContextId, serviceAPINameVal, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) APIForwarding(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, body APIForwardingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAPIForwardingRequest(c.Server, federationContextId, serviceAPINameVal, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateApplicationPolicySubscription(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApplicationPolicySubscriptionRequest(c.Server, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveApplicationPolicyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveApplicationPolicyRequest(c.Server, federationContextId, applPolicySubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ModifyApplicationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewModifyApplicationPolicyRequestWithBody(c.Server, federationContextId, applPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ModifyApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ModifyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewModifyApplicationPolicyRequest(c.Server, federationContextId, applPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ApplyApplicationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyApplicationPolicyRequestWithBody(c.Server, federationContextId, applPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ApplyApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ApplyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyApplicationPolicyRequest(c.Server, federationContextId, applPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveApplicationPoliciesWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveApplicationPoliciesRequestWithBody(c.Server, federationContextId, applPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveApplicationPolicies(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RemoveApplicationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveApplicationPoliciesRequest(c.Server, federationContextId, applPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateApplicationEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApplicationEventSubscriptionRequestWithBody(c.Server, federationContextId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateApplicationEventSubscription(ctx context.Context, federationContextId FederationContextId, body CreateApplicationEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateApplicationEventSubscriptionRequest(c.Server, federationContextId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteApplNotifSubscription(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApplNotifSubscriptionRequest(c.Server, federationContextId, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveApplSubsMetaInfo(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *RetrieveApplSubsMetaInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveApplSubsMetaInfoRequest(c.Server, federationContextId, appNotifSubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ModifyApplEventNotifSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewModifyApplEventNotifSubscriptionRequestWithBody(c.Server, federationContextId, appNotifSubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ModifyApplEventNotifSubscription(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body ModifyApplEventNotifSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewModifyApplEventNotifSubscriptionRequest(c.Server, federationContextId, appNotifSubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubscribeApplsEvtNotifWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubscribeApplsEvtNotifRequestWithBody(c.Server, federationContextId, appNotifSubsId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubscribeApplsEvtNotif(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, body SubscribeApplsEvtNotifJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubscribeApplsEvtNotifRequest(c.Server, federationContextId, appNotifSubsId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveAppsEventsInfoWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveAppsEventsInfoRequestWithBody(c.Server, federationContextId, appNotifSubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveAppsEventsInfo(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RetrieveAppsEventsInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveAppsEventsInfoRequest(c.Server, federationContextId, appNotifSubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveAppsEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveAppsEventSubscriptionRequestWithBody(c.Server, federationContextId, appNotifSubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveAppsEventSubscription(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RemoveAppsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveAppsEventSubscriptionRequest(c.Server, federationContextId, appNotifSubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegisterApplicationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegisterApplicationPolicyRequestWithBody(c.Server, federationContextId, applPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegisterApplicationPolicy(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RegisterApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegisterApplicationPolicyRequest(c.Server, federationContextId, applPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveAppPolicyTemplates(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveAppPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveAppPolicyTemplatesRequest(c.Server, federationContextId, applPolicySubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) InstallAppWithBody(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInstallAppRequestWithBody(c.Server, federationContextId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) InstallApp(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInstallAppRequest(c.Server, federationContextId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -683,6 +1261,114 @@ func (c *Client) GetCandidateZones(ctx context.Context, federationContextId Fede
 	return c.Client.Do(req)
 }
 
+func (c *Client) CreateEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEventSubscriptionRequestWithBody(c.Server, federationContextId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEventSubscription(ctx context.Context, federationContextId FederationContextId, body CreateEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEventSubscriptionRequest(c.Server, federationContextId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAlarmSubscription(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAlarmSubscriptionRequest(c.Server, federationContextId, alarmSubsId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAlarmsList(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params *GetAlarmsListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAlarmsListRequest(c.Server, federationContextId, alarmSubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteEventSubscription(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteEventSubscriptionRequest(c.Server, federationContextId, eventSubsId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetEventsList(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params *GetEventsListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEventsListRequest(c.Server, federationContextId, eventSubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEventCriterionWithBody(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEventCriterionRequestWithBody(c.Server, federationContextId, eventSubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEventCriterion(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, body CreateEventCriterionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEventCriterionRequest(c.Server, federationContextId, eventSubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteEventCriterion(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteEventCriterionRequest(c.Server, federationContextId, eventSubsId, eventId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) UploadFileWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUploadFileRequestWithBody(c.Server, federationContextId, contentType, body)
 	if err != nil {
@@ -709,6 +1395,18 @@ func (c *Client) RemoveFile(ctx context.Context, federationContextId FederationC
 
 func (c *Client) ViewFile(ctx context.Context, federationContextId FederationContextId, fileId FileId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewViewFileRequest(c.Server, federationContextId, fileId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetFederationHealth(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFederationHealthRequest(c.Server, federationContextId)
 	if err != nil {
 		return nil, err
 	}
@@ -791,6 +1489,246 @@ func (c *Client) UpdateISVResPool(ctx context.Context, federationContextId Feder
 	return c.Client.Do(req)
 }
 
+func (c *Client) SubscribeMonitoringInfoWithBody(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubscribeMonitoringInfoRequestWithBody(c.Server, federationContextId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubscribeMonitoringInfo(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, body SubscribeMonitoringInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubscribeMonitoringInfoRequest(c.Server, federationContextId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateNetworkCapsEventSubscriptionWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateNetworkCapsEventSubscriptionRequestWithBody(c.Server, federationContextId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateNetworkCapsEventSubscription(ctx context.Context, federationContextId FederationContextId, body CreateNetworkCapsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateNetworkCapsEventSubscriptionRequest(c.Server, federationContextId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNwEventNotifSubscription(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNwEventNotifSubscriptionRequest(c.Server, federationContextId, nwEventSubsId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateNetworkCapEventWithBody(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateNetworkCapEventRequestWithBody(c.Server, federationContextId, nwEventSubsId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateNetworkCapEvent(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, body CreateNetworkCapEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateNetworkCapEventRequest(c.Server, federationContextId, nwEventSubsId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNetworkCapSubscription(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *DeleteNetworkCapSubscriptionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNetworkCapSubscriptionRequest(c.Server, federationContextId, nwEventSubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNetworkCapsSubscribedList(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *GetNetworkCapsSubscribedListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNetworkCapsSubscribedListRequest(c.Server, federationContextId, nwEventSubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateOperationPolicySubscription(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateOperationPolicySubscriptionRequest(c.Server, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveOperationPoliciesWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveOperationPoliciesRequestWithBody(c.Server, federationContextId, opsPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveOperationPolicies(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RemoveOperationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveOperationPoliciesRequest(c.Server, federationContextId, opsPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegisterOperationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegisterOperationPolicyRequestWithBody(c.Server, federationContextId, opsPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegisterOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RegisterOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegisterOperationPolicyRequest(c.Server, federationContextId, opsPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveOpsPolicyTemplates(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOpsPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveOpsPolicyTemplatesRequest(c.Server, federationContextId, opsPolicySubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetrieveOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOperationPolicyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetrieveOperationPolicyRequest(c.Server, federationContextId, opsPolicySubsId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ModifyOperationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewModifyOperationPolicyRequestWithBody(c.Server, federationContextId, opsPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ModifyOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ModifyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewModifyOperationPolicyRequest(c.Server, federationContextId, opsPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ApplyOperationPolicyWithBody(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyOperationPolicyRequestWithBody(c.Server, federationContextId, opsPolicySubsId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ApplyOperationPolicy(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ApplyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyOperationPolicyRequest(c.Server, federationContextId, opsPolicySubsId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DeleteFederationDetails(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteFederationDetailsRequest(c.Server, federationContextId)
 	if err != nil {
@@ -839,8 +1777,68 @@ func (c *Client) UpdateFederation(ctx context.Context, federationContextId Feder
 	return c.Client.Do(req)
 }
 
-func (c *Client) AuthenticateDevice(ctx context.Context, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAuthenticateDeviceRequest(c.Server, federationContextId, deviceId, authToken)
+func (c *Client) PartnerDetailsWithBody(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPartnerDetailsRequestWithBody(c.Server, federationContextId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PartnerDetails(ctx context.Context, federationContextId FederationContextId, body PartnerDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPartnerDetailsRequest(c.Server, federationContextId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetServiceAPIsDetails(ctx context.Context, federationContextId FederationContextId, serviceType ServiceType, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetServiceAPIsDetailsRequest(c.Server, federationContextId, serviceType)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetPlatformCapabilities(ctx context.Context, federationContextId FederationContextId, params *GetPlatformCapabilitiesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPlatformCapabilitiesRequest(c.Server, federationContextId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RenewFederation(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRenewFederationRequest(c.Server, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetZoneData(ctx context.Context, federationContextId FederationContextId, params *GetZoneDataParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetZoneDataRequest(c.Server, federationContextId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -887,8 +1885,8 @@ func (c *Client) ZoneUnsubscribe(ctx context.Context, federationContextId Federa
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetZoneData(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetZoneDataRequest(c.Server, federationContextId, zoneId)
+func (c *Client) GetZoneDetails(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetZoneDetailsRequest(c.Server, federationContextId, zoneId)
 	if err != nil {
 		return nil, err
 	}
@@ -897,6 +1895,60 @@ func (c *Client) GetZoneData(ctx context.Context, federationContextId Federation
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetFederationContextIdRequest generates requests for GetFederationContextId
+func NewGetFederationContextIdRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/fed-context-id")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetFederationAPIsRequest generates requests for GetFederationAPIs
+func NewGetFederationAPIsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/federation-resources")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewCreateFederationRequest calls the generic CreateFederation builder with application/json body
@@ -1174,6 +2226,53 @@ func NewFileStatusCallbackLinkRequestWithBody(server string, federationCallbackI
 	return req, nil
 }
 
+// NewPartnerDetailsCallbackRequest calls the generic PartnerDetailsCallback builder with application/json body
+func NewPartnerDetailsCallbackRequest(server string, federationCallbackId FederationCallbackId, body PartnerDetailsCallbackJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPartnerDetailsCallbackRequestWithBody(server, federationCallbackId, "application/json", bodyReader)
+}
+
+// NewPartnerDetailsCallbackRequestWithBody generates requests for PartnerDetailsCallback with any type of body
+func NewPartnerDetailsCallbackRequestWithBody(server string, federationCallbackId FederationCallbackId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationCallbackId", runtime.ParamLocationPath, federationCallbackId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/partnerDetailsCallbackLink'", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPartnerStatusLinkRequest calls the generic PartnerStatusLink builder with application/json body
 func NewPartnerStatusLinkRequest(server string, federationCallbackId FederationCallbackId, body PartnerStatusLinkJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -1268,19 +2367,984 @@ func NewResourceReservationCallbackLinkRequestWithBody(server string, federation
 	return req, nil
 }
 
-// NewInstallAppRequest calls the generic InstallApp builder with application/json body
-func NewInstallAppRequest(server string, federationContextId FederationContextId, body InstallAppJSONRequestBody) (*http.Request, error) {
+// NewCreateAlarmReportingSubscriptionRequest calls the generic CreateAlarmReportingSubscription builder with application/json body
+func NewCreateAlarmReportingSubscriptionRequest(server string, federationContextId FederationContextId, body CreateAlarmReportingSubscriptionJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewInstallAppRequestWithBody(server, federationContextId, "application/json", bodyReader)
+	return NewCreateAlarmReportingSubscriptionRequestWithBody(server, federationContextId, "application/json", bodyReader)
+}
+
+// NewCreateAlarmReportingSubscriptionRequestWithBody generates requests for CreateAlarmReportingSubscription with any type of body
+func NewCreateAlarmReportingSubscriptionRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/alarms", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRemoveServiceAPISessionRequest generates requests for RemoveServiceAPISession
+func NewRemoveServiceAPISessionRequest(server string, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "connectID", runtime.ParamLocationPath, connectID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "customerID", runtime.ParamLocationPath, customerID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/apiservice/connid/%s/custid/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetServiceAPISessionInfoRequest generates requests for GetServiceAPISessionInfo
+func NewGetServiceAPISessionInfoRequest(server string, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "connectID", runtime.ParamLocationPath, connectID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "customerID", runtime.ParamLocationPath, customerID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/apiservice/connid/%s/custid/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAPIForwardingRequest calls the generic APIForwarding builder with application/json body
+func NewAPIForwardingRequest(server string, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, body APIForwardingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAPIForwardingRequestWithBody(server, federationContextId, serviceAPINameVal, "application/json", bodyReader)
+}
+
+// NewAPIForwardingRequestWithBody generates requests for APIForwarding with any type of body
+func NewAPIForwardingRequestWithBody(server string, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "serviceAPINameVal", runtime.ParamLocationPath, serviceAPINameVal)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/apiservice/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateApplicationPolicySubscriptionRequest generates requests for CreateApplicationPolicySubscription
+func NewCreateApplicationPolicySubscriptionRequest(server string, federationContextId FederationContextId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/app-policies-subscription", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRetrieveApplicationPolicyRequest generates requests for RetrieveApplicationPolicy
+func NewRetrieveApplicationPolicyRequest(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveApplicationPolicyParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "appl-policy-subs-id", runtime.ParamLocationPath, applPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/app-policies-subscription/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PolicySearchType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "policy-search-type", runtime.ParamLocationQuery, *params.PolicySearchType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PolicySearchValue != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "policy-search-value", runtime.ParamLocationQuery, *params.PolicySearchValue); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewModifyApplicationPolicyRequest calls the generic ModifyApplicationPolicy builder with application/json body
+func NewModifyApplicationPolicyRequest(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ModifyApplicationPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewModifyApplicationPolicyRequestWithBody(server, federationContextId, applPolicySubsId, "application/json", bodyReader)
+}
+
+// NewModifyApplicationPolicyRequestWithBody generates requests for ModifyApplicationPolicy with any type of body
+func NewModifyApplicationPolicyRequestWithBody(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "appl-policy-subs-id", runtime.ParamLocationPath, applPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/app-policies-subscription/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewApplyApplicationPolicyRequest calls the generic ApplyApplicationPolicy builder with application/json body
+func NewApplyApplicationPolicyRequest(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ApplyApplicationPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewApplyApplicationPolicyRequestWithBody(server, federationContextId, applPolicySubsId, "application/json", bodyReader)
+}
+
+// NewApplyApplicationPolicyRequestWithBody generates requests for ApplyApplicationPolicy with any type of body
+func NewApplyApplicationPolicyRequestWithBody(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "appl-policy-subs-id", runtime.ParamLocationPath, applPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/app-policies-subscription/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRemoveApplicationPoliciesRequest calls the generic RemoveApplicationPolicies builder with application/json body
+func NewRemoveApplicationPoliciesRequest(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RemoveApplicationPoliciesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveApplicationPoliciesRequestWithBody(server, federationContextId, applPolicySubsId, "application/json", bodyReader)
+}
+
+// NewRemoveApplicationPoliciesRequestWithBody generates requests for RemoveApplicationPolicies with any type of body
+func NewRemoveApplicationPoliciesRequestWithBody(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "appl-policy-subs-id", runtime.ParamLocationPath, applPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/app-policies-subscription/%s/app-policy-cancel", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateApplicationEventSubscriptionRequest calls the generic CreateApplicationEventSubscription builder with application/json body
+func NewCreateApplicationEventSubscriptionRequest(server string, federationContextId FederationContextId, body CreateApplicationEventSubscriptionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateApplicationEventSubscriptionRequestWithBody(server, federationContextId, "application/json", bodyReader)
+}
+
+// NewCreateApplicationEventSubscriptionRequestWithBody generates requests for CreateApplicationEventSubscription with any type of body
+func NewCreateApplicationEventSubscriptionRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteApplNotifSubscriptionRequest generates requests for DeleteApplNotifSubscription
+func NewDeleteApplNotifSubscriptionRequest(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app-notif-subs-id", runtime.ParamLocationPath, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRetrieveApplSubsMetaInfoRequest generates requests for RetrieveApplSubsMetaInfo
+func NewRetrieveApplSubsMetaInfoRequest(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *RetrieveApplSubsMetaInfoParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app-notif-subs-id", runtime.ParamLocationPath, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "info-type", runtime.ParamLocationQuery, params.InfoType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewModifyApplEventNotifSubscriptionRequest calls the generic ModifyApplEventNotifSubscription builder with application/json body
+func NewModifyApplEventNotifSubscriptionRequest(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body ModifyApplEventNotifSubscriptionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewModifyApplEventNotifSubscriptionRequestWithBody(server, federationContextId, appNotifSubsId, "application/json", bodyReader)
+}
+
+// NewModifyApplEventNotifSubscriptionRequestWithBody generates requests for ModifyApplEventNotifSubscription with any type of body
+func NewModifyApplEventNotifSubscriptionRequestWithBody(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app-notif-subs-id", runtime.ParamLocationPath, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewSubscribeApplsEvtNotifRequest calls the generic SubscribeApplsEvtNotif builder with application/json body
+func NewSubscribeApplsEvtNotifRequest(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, body SubscribeApplsEvtNotifJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSubscribeApplsEvtNotifRequestWithBody(server, federationContextId, appNotifSubsId, params, "application/json", bodyReader)
+}
+
+// NewSubscribeApplsEvtNotifRequestWithBody generates requests for SubscribeApplsEvtNotif with any type of body
+func NewSubscribeApplsEvtNotifRequestWithBody(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app-notif-subs-id", runtime.ParamLocationPath, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewRetrieveAppsEventsInfoRequest calls the generic RetrieveAppsEventsInfo builder with application/json body
+func NewRetrieveAppsEventsInfoRequest(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RetrieveAppsEventsInfoJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRetrieveAppsEventsInfoRequestWithBody(server, federationContextId, appNotifSubsId, "application/json", bodyReader)
+}
+
+// NewRetrieveAppsEventsInfoRequestWithBody generates requests for RetrieveAppsEventsInfo with any type of body
+func NewRetrieveAppsEventsInfoRequestWithBody(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app-notif-subs-id", runtime.ParamLocationPath, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications/%s/app-events", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRemoveAppsEventSubscriptionRequest calls the generic RemoveAppsEventSubscription builder with application/json body
+func NewRemoveAppsEventSubscriptionRequest(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RemoveAppsEventSubscriptionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveAppsEventSubscriptionRequestWithBody(server, federationContextId, appNotifSubsId, "application/json", bodyReader)
+}
+
+// NewRemoveAppsEventSubscriptionRequestWithBody generates requests for RemoveAppsEventSubscription with any type of body
+func NewRemoveAppsEventSubscriptionRequestWithBody(server string, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app-notif-subs-id", runtime.ParamLocationPath, appNotifSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-event-notifications/%s/cancel", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRegisterApplicationPolicyRequest calls the generic RegisterApplicationPolicy builder with application/json body
+func NewRegisterApplicationPolicyRequest(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RegisterApplicationPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRegisterApplicationPolicyRequestWithBody(server, federationContextId, applPolicySubsId, "application/json", bodyReader)
+}
+
+// NewRegisterApplicationPolicyRequestWithBody generates requests for RegisterApplicationPolicy with any type of body
+func NewRegisterApplicationPolicyRequestWithBody(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "appl-policy-subs-id", runtime.ParamLocationPath, applPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-policies-subscription/%s/app-policy-registration", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRetrieveAppPolicyTemplatesRequest generates requests for RetrieveAppPolicyTemplates
+func NewRetrieveAppPolicyTemplatesRequest(server string, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveAppPolicyTemplatesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "appl-policy-subs-id", runtime.ParamLocationPath, applPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/appl-policies-subscription/%s/app-policy-templates", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ApplPolicyType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "appl-policy-type", runtime.ParamLocationQuery, *params.ApplPolicyType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewInstallAppRequest calls the generic InstallApp builder with application/json body
+func NewInstallAppRequest(server string, federationContextId FederationContextId, params *InstallAppParams, body InstallAppJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewInstallAppRequestWithBody(server, federationContextId, params, "application/json", bodyReader)
 }
 
 // NewInstallAppRequestWithBody generates requests for InstallApp with any type of body
-func NewInstallAppRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
+func NewInstallAppRequestWithBody(server string, federationContextId FederationContextId, params *InstallAppParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1311,6 +3375,19 @@ func NewInstallAppRequestWithBody(server string, federationContextId FederationC
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
 
 	return req, nil
 }
@@ -1977,6 +4054,363 @@ func NewGetCandidateZonesRequestWithBody(server string, federationContextId Fede
 	return req, nil
 }
 
+// NewCreateEventSubscriptionRequest calls the generic CreateEventSubscription builder with application/json body
+func NewCreateEventSubscriptionRequest(server string, federationContextId FederationContextId, body CreateEventSubscriptionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateEventSubscriptionRequestWithBody(server, federationContextId, "application/json", bodyReader)
+}
+
+// NewCreateEventSubscriptionRequestWithBody generates requests for CreateEventSubscription with any type of body
+func NewCreateEventSubscriptionRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAlarmSubscriptionRequest generates requests for DeleteAlarmSubscription
+func NewDeleteAlarmSubscriptionRequest(server string, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "alarm_subs_id", runtime.ParamLocationPath, alarmSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAlarmsListRequest generates requests for GetAlarmsList
+func NewGetAlarmsListRequest(server string, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params *GetAlarmsListParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "alarm_subs_id", runtime.ParamLocationPath, alarmSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.AlarmType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "alarm_type", runtime.ParamLocationQuery, *params.AlarmType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteEventSubscriptionRequest generates requests for DeleteEventSubscription
+func NewDeleteEventSubscriptionRequest(server string, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "event_subs_id", runtime.ParamLocationPath, eventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetEventsListRequest generates requests for GetEventsList
+func NewGetEventsListRequest(server string, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params *GetEventsListParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "event_subs_id", runtime.ParamLocationPath, eventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.EventType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "event_type", runtime.ParamLocationQuery, *params.EventType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateEventCriterionRequest calls the generic CreateEventCriterion builder with application/json body
+func NewCreateEventCriterionRequest(server string, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, body CreateEventCriterionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateEventCriterionRequestWithBody(server, federationContextId, eventSubsId, "application/json", bodyReader)
+}
+
+// NewCreateEventCriterionRequestWithBody generates requests for CreateEventCriterion with any type of body
+func NewCreateEventCriterionRequestWithBody(server string, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "event_subs_id", runtime.ParamLocationPath, eventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteEventCriterionRequest generates requests for DeleteEventCriterion
+func NewDeleteEventCriterionRequest(server string, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "event_subs_id", runtime.ParamLocationPath, eventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "eventId", runtime.ParamLocationPath, eventId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/events/%s/event-id/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewUploadFileRequestWithBody generates requests for UploadFile with any type of body
 func NewUploadFileRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
@@ -2078,6 +4512,40 @@ func NewViewFileRequest(server string, federationContextId FederationContextId, 
 	}
 
 	operationPath := fmt.Sprintf("/%s/files/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetFederationHealthRequest generates requests for GetFederationHealth
+func NewGetFederationHealthRequest(server string, federationContextId FederationContextId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/health", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2327,6 +4795,741 @@ func NewUpdateISVResPoolRequestWithBody(server string, federationContextId Feder
 	return req, nil
 }
 
+// NewSubscribeMonitoringInfoRequest calls the generic SubscribeMonitoringInfo builder with application/json body
+func NewSubscribeMonitoringInfoRequest(server string, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, body SubscribeMonitoringInfoJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSubscribeMonitoringInfoRequestWithBody(server, federationContextId, params, "application/json", bodyReader)
+}
+
+// NewSubscribeMonitoringInfoRequestWithBody generates requests for SubscribeMonitoringInfo with any type of body
+func NewSubscribeMonitoringInfoRequestWithBody(server string, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/monioring-subscriptions", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "monType", runtime.ParamLocationQuery, params.MonType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateNetworkCapsEventSubscriptionRequest calls the generic CreateNetworkCapsEventSubscription builder with application/json body
+func NewCreateNetworkCapsEventSubscriptionRequest(server string, federationContextId FederationContextId, body CreateNetworkCapsEventSubscriptionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateNetworkCapsEventSubscriptionRequestWithBody(server, federationContextId, "application/json", bodyReader)
+}
+
+// NewCreateNetworkCapsEventSubscriptionRequestWithBody generates requests for CreateNetworkCapsEventSubscription with any type of body
+func NewCreateNetworkCapsEventSubscriptionRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/network-caps-events", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNwEventNotifSubscriptionRequest generates requests for DeleteNwEventNotifSubscription
+func NewDeleteNwEventNotifSubscriptionRequest(server string, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "nw-event-subs-id", runtime.ParamLocationPath, nwEventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/network-events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateNetworkCapEventRequest calls the generic CreateNetworkCapEvent builder with application/json body
+func NewCreateNetworkCapEventRequest(server string, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, body CreateNetworkCapEventJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateNetworkCapEventRequestWithBody(server, federationContextId, nwEventSubsId, params, "application/json", bodyReader)
+}
+
+// NewCreateNetworkCapEventRequestWithBody generates requests for CreateNetworkCapEvent with any type of body
+func NewCreateNetworkCapEventRequestWithBody(server string, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "nw-event-subs-id", runtime.ParamLocationPath, nwEventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/network-events/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "nw-cap-id", runtime.ParamLocationQuery, params.NwCapId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNetworkCapSubscriptionRequest generates requests for DeleteNetworkCapSubscription
+func NewDeleteNetworkCapSubscriptionRequest(server string, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *DeleteNetworkCapSubscriptionParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "nw-event-subs-id", runtime.ParamLocationPath, nwEventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/network-events/%s/nw-caps", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "nw-event-id", runtime.ParamLocationQuery, params.NwEventId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNetworkCapsSubscribedListRequest generates requests for GetNetworkCapsSubscribedList
+func NewGetNetworkCapsSubscribedListRequest(server string, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *GetNetworkCapsSubscribedListParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "nw-event-subs-id", runtime.ParamLocationPath, nwEventSubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/network-events/%s/nw-caps", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "nw-event-type", runtime.ParamLocationQuery, params.NwEventType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateOperationPolicySubscriptionRequest generates requests for CreateOperationPolicySubscription
+func NewCreateOperationPolicySubscriptionRequest(server string, federationContextId FederationContextId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRemoveOperationPoliciesRequest calls the generic RemoveOperationPolicies builder with application/json body
+func NewRemoveOperationPoliciesRequest(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RemoveOperationPoliciesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveOperationPoliciesRequestWithBody(server, federationContextId, opsPolicySubsId, "application/json", bodyReader)
+}
+
+// NewRemoveOperationPoliciesRequestWithBody generates requests for RemoveOperationPolicies with any type of body
+func NewRemoveOperationPoliciesRequestWithBody(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ops-policy-subs-id", runtime.ParamLocationPath, opsPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription/%s/ops-policy-cancel", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRegisterOperationPolicyRequest calls the generic RegisterOperationPolicy builder with application/json body
+func NewRegisterOperationPolicyRequest(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RegisterOperationPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRegisterOperationPolicyRequestWithBody(server, federationContextId, opsPolicySubsId, "application/json", bodyReader)
+}
+
+// NewRegisterOperationPolicyRequestWithBody generates requests for RegisterOperationPolicy with any type of body
+func NewRegisterOperationPolicyRequestWithBody(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ops-policy-subs-id", runtime.ParamLocationPath, opsPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription/%s/ops-policy-registration", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRetrieveOpsPolicyTemplatesRequest generates requests for RetrieveOpsPolicyTemplates
+func NewRetrieveOpsPolicyTemplatesRequest(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOpsPolicyTemplatesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ops-policy-subs-id", runtime.ParamLocationPath, opsPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription/%s/ops-policy-templates", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.OpsPolicyType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "ops-policy-type", runtime.ParamLocationQuery, *params.OpsPolicyType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRetrieveOperationPolicyRequest generates requests for RetrieveOperationPolicy
+func NewRetrieveOperationPolicyRequest(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOperationPolicyParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ops-policy-subs-id", runtime.ParamLocationPath, opsPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription/%s/policy-association", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PolicySearchType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "policy-search-type", runtime.ParamLocationQuery, *params.PolicySearchType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PolicySearchValue != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "policy-search-value", runtime.ParamLocationQuery, *params.PolicySearchValue); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewModifyOperationPolicyRequest calls the generic ModifyOperationPolicy builder with application/json body
+func NewModifyOperationPolicyRequest(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ModifyOperationPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewModifyOperationPolicyRequestWithBody(server, federationContextId, opsPolicySubsId, "application/json", bodyReader)
+}
+
+// NewModifyOperationPolicyRequestWithBody generates requests for ModifyOperationPolicy with any type of body
+func NewModifyOperationPolicyRequestWithBody(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ops-policy-subs-id", runtime.ParamLocationPath, opsPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription/%s/policy-association", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewApplyOperationPolicyRequest calls the generic ApplyOperationPolicy builder with application/json body
+func NewApplyOperationPolicyRequest(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ApplyOperationPolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewApplyOperationPolicyRequestWithBody(server, federationContextId, opsPolicySubsId, "application/json", bodyReader)
+}
+
+// NewApplyOperationPolicyRequestWithBody generates requests for ApplyOperationPolicy with any type of body
+func NewApplyOperationPolicyRequestWithBody(server string, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ops-policy-subs-id", runtime.ParamLocationPath, opsPolicySubsId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/ops-policies-subscription/%s/policy-association", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewDeleteFederationDetailsRequest generates requests for DeleteFederationDetails
 func NewDeleteFederationDetailsRequest(server string, federationContextId FederationContextId) (*http.Request, error) {
 	var err error
@@ -2442,8 +5645,55 @@ func NewUpdateFederationRequestWithBody(server string, federationContextId Feder
 	return req, nil
 }
 
-// NewAuthenticateDeviceRequest generates requests for AuthenticateDevice
-func NewAuthenticateDeviceRequest(server string, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken) (*http.Request, error) {
+// NewPartnerDetailsRequest calls the generic PartnerDetails builder with application/json body
+func NewPartnerDetailsRequest(server string, federationContextId FederationContextId, body PartnerDetailsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPartnerDetailsRequestWithBody(server, federationContextId, "application/json", bodyReader)
+}
+
+// NewPartnerDetailsRequestWithBody generates requests for PartnerDetails with any type of body
+func NewPartnerDetailsRequestWithBody(server string, federationContextId FederationContextId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/partner", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetServiceAPIsDetailsRequest generates requests for GetServiceAPIsDetails
+func NewGetServiceAPIsDetailsRequest(server string, federationContextId FederationContextId, serviceType ServiceType) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2455,14 +5705,7 @@ func NewAuthenticateDeviceRequest(server string, federationContextId FederationC
 
 	var pathParam1 string
 
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deviceId", runtime.ParamLocationPath, deviceId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam2 string
-
-	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "authToken", runtime.ParamLocationPath, authToken)
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "serviceType", runtime.ParamLocationPath, serviceType)
 	if err != nil {
 		return nil, err
 	}
@@ -2472,7 +5715,7 @@ func NewAuthenticateDeviceRequest(server string, federationContextId FederationC
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/%s/roaminguserauth/device/%s/token/%s", pathParam0, pathParam1, pathParam2)
+	operationPath := fmt.Sprintf("/%s/partner/service/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2480,6 +5723,152 @@ func NewAuthenticateDeviceRequest(server string, federationContextId FederationC
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPlatformCapabilitiesRequest generates requests for GetPlatformCapabilities
+func NewGetPlatformCapabilitiesRequest(server string, federationContextId FederationContextId, params *GetPlatformCapabilitiesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/platform-caps", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.CapType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "capType", runtime.ParamLocationQuery, *params.CapType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRenewFederationRequest generates requests for RenewFederation
+func NewRenewFederationRequest(server string, federationContextId FederationContextId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/renew", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetZoneDataRequest generates requests for GetZoneData
+func NewGetZoneDataRequest(server string, federationContextId FederationContextId, params *GetZoneDataParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "federationContextId", runtime.ParamLocationPath, federationContextId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/zones", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ZoneId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "zoneId", runtime.ParamLocationQuery, *params.ZoneId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -2578,8 +5967,8 @@ func NewZoneUnsubscribeRequest(server string, federationContextId FederationCont
 	return req, nil
 }
 
-// NewGetZoneDataRequest generates requests for GetZoneData
-func NewGetZoneDataRequest(server string, federationContextId FederationContextId, zoneId ZoneIdentifier) (*http.Request, error) {
+// NewGetZoneDetailsRequest generates requests for GetZoneDetails
+func NewGetZoneDetailsRequest(server string, federationContextId FederationContextId, zoneId ZoneIdentifier) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2662,6 +6051,12 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetFederationContextIdWithResponse request
+	GetFederationContextIdWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFederationContextIdResponse, error)
+
+	// GetFederationAPIsWithResponse request
+	GetFederationAPIsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFederationAPIsResponse, error)
+
 	// CreateFederationWithBodyWithResponse request with any body
 	CreateFederationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateFederationResponse, error)
 
@@ -2692,6 +6087,11 @@ type ClientWithResponsesInterface interface {
 
 	FileStatusCallbackLinkWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, body FileStatusCallbackLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*FileStatusCallbackLinkResponse, error)
 
+	// PartnerDetailsCallbackWithBodyWithResponse request with any body
+	PartnerDetailsCallbackWithBodyWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PartnerDetailsCallbackResponse, error)
+
+	PartnerDetailsCallbackWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, body PartnerDetailsCallbackJSONRequestBody, reqEditors ...RequestEditorFn) (*PartnerDetailsCallbackResponse, error)
+
 	// PartnerStatusLinkWithBodyWithResponse request with any body
 	PartnerStatusLinkWithBodyWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PartnerStatusLinkResponse, error)
 
@@ -2702,10 +6102,86 @@ type ClientWithResponsesInterface interface {
 
 	ResourceReservationCallbackLinkWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, body ResourceReservationCallbackLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*ResourceReservationCallbackLinkResponse, error)
 
-	// InstallAppWithBodyWithResponse request with any body
-	InstallAppWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallAppResponse, error)
+	// CreateAlarmReportingSubscriptionWithBodyWithResponse request with any body
+	CreateAlarmReportingSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAlarmReportingSubscriptionResponse, error)
 
-	InstallAppWithResponse(ctx context.Context, federationContextId FederationContextId, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*InstallAppResponse, error)
+	CreateAlarmReportingSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateAlarmReportingSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAlarmReportingSubscriptionResponse, error)
+
+	// RemoveServiceAPISessionWithResponse request
+	RemoveServiceAPISessionWithResponse(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*RemoveServiceAPISessionResponse, error)
+
+	// GetServiceAPISessionInfoWithResponse request
+	GetServiceAPISessionInfoWithResponse(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*GetServiceAPISessionInfoResponse, error)
+
+	// APIForwardingWithBodyWithResponse request with any body
+	APIForwardingWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*APIForwardingResponse, error)
+
+	APIForwardingWithResponse(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, body APIForwardingJSONRequestBody, reqEditors ...RequestEditorFn) (*APIForwardingResponse, error)
+
+	// CreateApplicationPolicySubscriptionWithResponse request
+	CreateApplicationPolicySubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*CreateApplicationPolicySubscriptionResponse, error)
+
+	// RetrieveApplicationPolicyWithResponse request
+	RetrieveApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveApplicationPolicyParams, reqEditors ...RequestEditorFn) (*RetrieveApplicationPolicyResponse, error)
+
+	// ModifyApplicationPolicyWithBodyWithResponse request with any body
+	ModifyApplicationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ModifyApplicationPolicyResponse, error)
+
+	ModifyApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ModifyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ModifyApplicationPolicyResponse, error)
+
+	// ApplyApplicationPolicyWithBodyWithResponse request with any body
+	ApplyApplicationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyApplicationPolicyResponse, error)
+
+	ApplyApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ApplyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyApplicationPolicyResponse, error)
+
+	// RemoveApplicationPoliciesWithBodyWithResponse request with any body
+	RemoveApplicationPoliciesWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveApplicationPoliciesResponse, error)
+
+	RemoveApplicationPoliciesWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RemoveApplicationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveApplicationPoliciesResponse, error)
+
+	// CreateApplicationEventSubscriptionWithBodyWithResponse request with any body
+	CreateApplicationEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApplicationEventSubscriptionResponse, error)
+
+	CreateApplicationEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateApplicationEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateApplicationEventSubscriptionResponse, error)
+
+	// DeleteApplNotifSubscriptionWithResponse request
+	DeleteApplNotifSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteApplNotifSubscriptionResponse, error)
+
+	// RetrieveApplSubsMetaInfoWithResponse request
+	RetrieveApplSubsMetaInfoWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *RetrieveApplSubsMetaInfoParams, reqEditors ...RequestEditorFn) (*RetrieveApplSubsMetaInfoResponse, error)
+
+	// ModifyApplEventNotifSubscriptionWithBodyWithResponse request with any body
+	ModifyApplEventNotifSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ModifyApplEventNotifSubscriptionResponse, error)
+
+	ModifyApplEventNotifSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body ModifyApplEventNotifSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*ModifyApplEventNotifSubscriptionResponse, error)
+
+	// SubscribeApplsEvtNotifWithBodyWithResponse request with any body
+	SubscribeApplsEvtNotifWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubscribeApplsEvtNotifResponse, error)
+
+	SubscribeApplsEvtNotifWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, body SubscribeApplsEvtNotifJSONRequestBody, reqEditors ...RequestEditorFn) (*SubscribeApplsEvtNotifResponse, error)
+
+	// RetrieveAppsEventsInfoWithBodyWithResponse request with any body
+	RetrieveAppsEventsInfoWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RetrieveAppsEventsInfoResponse, error)
+
+	RetrieveAppsEventsInfoWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RetrieveAppsEventsInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*RetrieveAppsEventsInfoResponse, error)
+
+	// RemoveAppsEventSubscriptionWithBodyWithResponse request with any body
+	RemoveAppsEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveAppsEventSubscriptionResponse, error)
+
+	RemoveAppsEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RemoveAppsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveAppsEventSubscriptionResponse, error)
+
+	// RegisterApplicationPolicyWithBodyWithResponse request with any body
+	RegisterApplicationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterApplicationPolicyResponse, error)
+
+	RegisterApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RegisterApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*RegisterApplicationPolicyResponse, error)
+
+	// RetrieveAppPolicyTemplatesWithResponse request
+	RetrieveAppPolicyTemplatesWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveAppPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*RetrieveAppPolicyTemplatesResponse, error)
+
+	// InstallAppWithBodyWithResponse request with any body
+	InstallAppWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallAppResponse, error)
+
+	InstallAppWithResponse(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*InstallAppResponse, error)
 
 	// GetAllAppInstancesWithResponse request
 	GetAllAppInstancesWithResponse(ctx context.Context, federationContextId FederationContextId, appId AppIdentifier, appProviderId AppProviderId, reqEditors ...RequestEditorFn) (*GetAllAppInstancesResponse, error)
@@ -2759,6 +6235,31 @@ type ClientWithResponsesInterface interface {
 
 	GetCandidateZonesWithResponse(ctx context.Context, federationContextId FederationContextId, body GetCandidateZonesJSONRequestBody, reqEditors ...RequestEditorFn) (*GetCandidateZonesResponse, error)
 
+	// CreateEventSubscriptionWithBodyWithResponse request with any body
+	CreateEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEventSubscriptionResponse, error)
+
+	CreateEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEventSubscriptionResponse, error)
+
+	// DeleteAlarmSubscriptionWithResponse request
+	DeleteAlarmSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteAlarmSubscriptionResponse, error)
+
+	// GetAlarmsListWithResponse request
+	GetAlarmsListWithResponse(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params *GetAlarmsListParams, reqEditors ...RequestEditorFn) (*GetAlarmsListResponse, error)
+
+	// DeleteEventSubscriptionWithResponse request
+	DeleteEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteEventSubscriptionResponse, error)
+
+	// GetEventsListWithResponse request
+	GetEventsListWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params *GetEventsListParams, reqEditors ...RequestEditorFn) (*GetEventsListResponse, error)
+
+	// CreateEventCriterionWithBodyWithResponse request with any body
+	CreateEventCriterionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEventCriterionResponse, error)
+
+	CreateEventCriterionWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, body CreateEventCriterionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEventCriterionResponse, error)
+
+	// DeleteEventCriterionWithResponse request
+	DeleteEventCriterionWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier, reqEditors ...RequestEditorFn) (*DeleteEventCriterionResponse, error)
+
 	// UploadFileWithBodyWithResponse request with any body
 	UploadFileWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadFileResponse, error)
 
@@ -2767,6 +6268,9 @@ type ClientWithResponsesInterface interface {
 
 	// ViewFileWithResponse request
 	ViewFileWithResponse(ctx context.Context, federationContextId FederationContextId, fileId FileId, reqEditors ...RequestEditorFn) (*ViewFileResponse, error)
+
+	// GetFederationHealthWithResponse request
+	GetFederationHealthWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*GetFederationHealthResponse, error)
 
 	// ViewISVResPoolWithResponse request
 	ViewISVResPoolWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId, reqEditors ...RequestEditorFn) (*ViewISVResPoolResponse, error)
@@ -2784,6 +6288,59 @@ type ClientWithResponsesInterface interface {
 
 	UpdateISVResPoolWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, appProviderId AppProviderId, poolId PoolId, body UpdateISVResPoolJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateISVResPoolResponse, error)
 
+	// SubscribeMonitoringInfoWithBodyWithResponse request with any body
+	SubscribeMonitoringInfoWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubscribeMonitoringInfoResponse, error)
+
+	SubscribeMonitoringInfoWithResponse(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, body SubscribeMonitoringInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*SubscribeMonitoringInfoResponse, error)
+
+	// CreateNetworkCapsEventSubscriptionWithBodyWithResponse request with any body
+	CreateNetworkCapsEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateNetworkCapsEventSubscriptionResponse, error)
+
+	CreateNetworkCapsEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateNetworkCapsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateNetworkCapsEventSubscriptionResponse, error)
+
+	// DeleteNwEventNotifSubscriptionWithResponse request
+	DeleteNwEventNotifSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteNwEventNotifSubscriptionResponse, error)
+
+	// CreateNetworkCapEventWithBodyWithResponse request with any body
+	CreateNetworkCapEventWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateNetworkCapEventResponse, error)
+
+	CreateNetworkCapEventWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, body CreateNetworkCapEventJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateNetworkCapEventResponse, error)
+
+	// DeleteNetworkCapSubscriptionWithResponse request
+	DeleteNetworkCapSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *DeleteNetworkCapSubscriptionParams, reqEditors ...RequestEditorFn) (*DeleteNetworkCapSubscriptionResponse, error)
+
+	// GetNetworkCapsSubscribedListWithResponse request
+	GetNetworkCapsSubscribedListWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *GetNetworkCapsSubscribedListParams, reqEditors ...RequestEditorFn) (*GetNetworkCapsSubscribedListResponse, error)
+
+	// CreateOperationPolicySubscriptionWithResponse request
+	CreateOperationPolicySubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*CreateOperationPolicySubscriptionResponse, error)
+
+	// RemoveOperationPoliciesWithBodyWithResponse request with any body
+	RemoveOperationPoliciesWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveOperationPoliciesResponse, error)
+
+	RemoveOperationPoliciesWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RemoveOperationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveOperationPoliciesResponse, error)
+
+	// RegisterOperationPolicyWithBodyWithResponse request with any body
+	RegisterOperationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterOperationPolicyResponse, error)
+
+	RegisterOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RegisterOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*RegisterOperationPolicyResponse, error)
+
+	// RetrieveOpsPolicyTemplatesWithResponse request
+	RetrieveOpsPolicyTemplatesWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOpsPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*RetrieveOpsPolicyTemplatesResponse, error)
+
+	// RetrieveOperationPolicyWithResponse request
+	RetrieveOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOperationPolicyParams, reqEditors ...RequestEditorFn) (*RetrieveOperationPolicyResponse, error)
+
+	// ModifyOperationPolicyWithBodyWithResponse request with any body
+	ModifyOperationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ModifyOperationPolicyResponse, error)
+
+	ModifyOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ModifyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ModifyOperationPolicyResponse, error)
+
+	// ApplyOperationPolicyWithBodyWithResponse request with any body
+	ApplyOperationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyOperationPolicyResponse, error)
+
+	ApplyOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ApplyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyOperationPolicyResponse, error)
+
 	// DeleteFederationDetailsWithResponse request
 	DeleteFederationDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*DeleteFederationDetailsResponse, error)
 
@@ -2795,8 +6352,22 @@ type ClientWithResponsesInterface interface {
 
 	UpdateFederationWithResponse(ctx context.Context, federationContextId FederationContextId, body UpdateFederationJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateFederationResponse, error)
 
-	// AuthenticateDeviceWithResponse request
-	AuthenticateDeviceWithResponse(ctx context.Context, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken, reqEditors ...RequestEditorFn) (*AuthenticateDeviceResponse, error)
+	// PartnerDetailsWithBodyWithResponse request with any body
+	PartnerDetailsWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PartnerDetailsResponse, error)
+
+	PartnerDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, body PartnerDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*PartnerDetailsResponse, error)
+
+	// GetServiceAPIsDetailsWithResponse request
+	GetServiceAPIsDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, serviceType ServiceType, reqEditors ...RequestEditorFn) (*GetServiceAPIsDetailsResponse, error)
+
+	// GetPlatformCapabilitiesWithResponse request
+	GetPlatformCapabilitiesWithResponse(ctx context.Context, federationContextId FederationContextId, params *GetPlatformCapabilitiesParams, reqEditors ...RequestEditorFn) (*GetPlatformCapabilitiesResponse, error)
+
+	// RenewFederationWithResponse request
+	RenewFederationWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*RenewFederationResponse, error)
+
+	// GetZoneDataWithResponse request
+	GetZoneDataWithResponse(ctx context.Context, federationContextId FederationContextId, params *GetZoneDataParams, reqEditors ...RequestEditorFn) (*GetZoneDataResponse, error)
 
 	// ZoneSubscribeWithBodyWithResponse request with any body
 	ZoneSubscribeWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ZoneSubscribeResponse, error)
@@ -2806,17 +6377,82 @@ type ClientWithResponsesInterface interface {
 	// ZoneUnsubscribeWithResponse request
 	ZoneUnsubscribeWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*ZoneUnsubscribeResponse, error)
 
-	// GetZoneDataWithResponse request
-	GetZoneDataWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*GetZoneDataResponse, error)
+	// GetZoneDetailsWithResponse request
+	GetZoneDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*GetZoneDetailsResponse, error)
+}
+
+type GetFederationContextIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// FederationContextId This identifier shall be provided by the partner OP on successful verification and validation of the federation create request and is used by partner op to identify this newly created federation context. Originating OP shall provide this identifier in any subsequent request towards the partner op.
+		FederationContextId *FederationContextId `json:"FederationContextId,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFederationContextIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFederationContextIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetFederationAPIsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		FederationSupportedAPIs FederationSupportedAPIs `json:"federationSupportedAPIs"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFederationAPIsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFederationAPIsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type CreateFederationResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	JSON200                   *FederationResponseData
-	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON400 *N400BadRequest
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -2985,6 +6621,35 @@ func (r FileStatusCallbackLinkResponse) StatusCode() int {
 	return 0
 }
 
+type PartnerDetailsCallbackResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r PartnerDetailsCallbackResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PartnerDetailsCallbackResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PartnerStatusLinkResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -3043,12 +6708,580 @@ func (r ResourceReservationCallbackLinkResponse) StatusCode() int {
 	return 0
 }
 
-type InstallAppResponse struct {
+type CreateAlarmReportingSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SubscriptionIdentifier
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAlarmReportingSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAlarmReportingSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveServiceAPISessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// ConnectID An identifier generated by the Partner OP to represent the end user identity in the Service API request.
+		ConnectID      ConnectID      `json:"connectID"`
+		ExpiryDuration ExpiryInterval `json:"expiryDuration"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveServiceAPISessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveServiceAPISessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetServiceAPISessionInfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		ServiceAPIRespBody *ServiceAPIContent `json:"ServiceAPIRespBody,omitempty"`
+
+		// ConnectID An identifier generated by the Partner OP to represent the end user identity in the Service API request.
+		ConnectID      ConnectID      `json:"connectID"`
+		ExpiryDuration ExpiryInterval `json:"expiryDuration"`
+	}
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+}
+
+// Status returns HTTPResponse.Status
+func (r GetServiceAPISessionInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetServiceAPISessionInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type APIForwardingResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ServiceAPIResponse
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+}
+
+// Status returns HTTPResponse.Status
+func (r APIForwardingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r APIForwardingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateApplicationPolicySubscriptionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		ApplPolicySubscriptionId *string `json:"applPolicySubscriptionId,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateApplicationPolicySubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateApplicationPolicySubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetrieveApplicationPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AssocApplPolicies
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RetrieveApplicationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetrieveApplicationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ModifyApplicationPolicyResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r ModifyApplicationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ModifyApplicationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ApplyApplicationPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AssocApplPolicies
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r ApplyApplicationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ApplyApplicationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveApplicationPoliciesResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AssocApplPolicies
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveApplicationPoliciesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveApplicationPoliciesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateApplicationEventSubscriptionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		AppEventSubsId              *string              `json:"appEventSubsId,omitempty"`
+		ApplEventSubscriptionConfig *PeriodicNotifConfig `json:"applEventSubscriptionConfig,omitempty"`
+
+		// NumEvtsPerNotif The number of applications events that the Partner OP should include in a notification
+		NumEvtsPerNotif *int `json:"numEvtsPerNotif,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateApplicationEventSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateApplicationEventSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteApplNotifSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteApplNotifSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteApplNotifSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetrieveApplSubsMetaInfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		union json.RawMessage
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RetrieveApplSubsMetaInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetrieveApplSubsMetaInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ModifyApplEventNotifSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r ModifyApplEventNotifSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ModifyApplEventNotifSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SubscribeApplsEvtNotifResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		AddAppsForNotif *AddAppsForNotif `json:"addAppsForNotif,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r SubscribeApplsEvtNotifResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SubscribeApplsEvtNotifResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetrieveAppsEventsInfoResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AggrApplEventsList
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RetrieveAppsEventsInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetrieveAppsEventsInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveAppsEventSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *RemoveAppsForNotif
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveAppsEventSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveAppsEventSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RegisterApplicationPolicyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		PolicyId string `json:"policyId"`
+
+		// PplConcretePolicy Application policy id and policy parameter value limits registered by the Originating OP
+		PplConcretePolicy ApplConcretePolicy `json:"pplConcretePolicy"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RegisterApplicationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RegisterApplicationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetrieveAppPolicyTemplatesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// ApplPolicyTemplateList List of Application policy templates from the Partner OP
+		ApplPolicyTemplateList *ApplPolicyTemplateList `json:"applPolicyTemplateList,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RetrieveAppPolicyTemplatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetrieveAppPolicyTemplatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type InstallAppResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *struct {
+		// AppInstIdentifier Unique identifier generated by the partner OP to identify an instance of the application on a specific zone.
+		AppInstIdentifier InstanceIdentifier `json:"appInstIdentifier"`
+
+		// ZoneId Human readable name of the zone.
+		ZoneId ZoneIdentifier `json:"zoneId"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3089,7 +7322,7 @@ type GetAllAppInstancesResponse struct {
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3118,7 +7351,7 @@ type RemoveAppResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3146,15 +7379,20 @@ type GetAppInstanceDetailsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// AccessPointInfo Information about the IP and Port exposed by the OP. Application clients shall use these access points to reach this application instance.
-		AccessPointInfo *AccessPointInfo `json:"accessPointInfo,omitempty"`
+		// AccesspointInfo Information about the IP and Port exposed by the OP. Application clients shall use these access points to reach this application instance
+		AccesspointInfo *[]struct {
+			AccessPoints ServiceEndpoint `json:"accessPoints"`
+
+			// InterfaceId This is the interface identifier that app provider defines when application is onboarded.
+			InterfaceId string `json:"interfaceId"`
+		} `json:"accesspointInfo,omitempty"`
 
 		// AppInstanceState Running status of the application instance.
 		AppInstanceState *InstanceState `json:"appInstanceState,omitempty"`
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3183,7 +7421,7 @@ type OnboardApplicationResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3212,7 +7450,7 @@ type DeleteAppResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3240,11 +7478,17 @@ type ViewApplicationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// AppComponentSpecs An application may consist of more than one component. Each component is associated with a descriptor and may exposes its services externally or internally. App providers are required to provide details about all these components, their associated descriptors and their DNS names.
+		// AppComponentSpecs An application may consist of more than one component. Each component is associated with a descriptor and may exposes its services externally or internally.  App providers are required to provide details about all these components, their associated descriptors and their DNS names.
 		AppComponentSpecs AppComponentSpecs `json:"appComponentSpecs"`
 
-		// AppDeploymentZones Details about partner OP zones where the application should be made available. This field when specified will instruct the OP to restrict application instantiation only on the listed zones.
-		AppDeploymentZones []ZoneIdentifier `json:"appDeploymentZones"`
+		// AppDeploymentZones Details about partner OP zones where the application should be made available;  This field when specified will instruct the OP to restrict application instantiation only on the listed zones.
+		AppDeploymentZones []struct {
+			// CountryCode ISO 3166-1 Alpha-2 code for the country of Partner operator
+			CountryCode CountryCode `json:"countryCode"`
+
+			// ZoneInfo Human readable name of the zone.
+			ZoneInfo ZoneIdentifier `json:"zoneInfo"`
+		} `json:"appDeploymentZones"`
 
 		// AppId Identifier used to refer to an application.
 		AppId AppIdentifier `json:"appId"`
@@ -3252,15 +7496,18 @@ type ViewApplicationResponse struct {
 		// AppMetaData Application metadata details
 		AppMetaData AppMetaData `json:"appMetaData"`
 
-		// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+		// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 		AppProviderId AppProviderId `json:"appProviderId"`
 
 		// AppQoSProfile Parameters corresponding to the performance constraints, tenancy details etc.
 		AppQoSProfile AppQoSProfile `json:"appQoSProfile"`
+
+		// OnboardStatusInfo Defines change in application status. This change could be related to application itself or an application instance status
+		OnboardStatusInfo OnboardStatusInfo `json:"onboardStatusInfo"`
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3289,7 +7536,7 @@ type UpdateApplicationResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3318,7 +7565,7 @@ type OnboardExistingAppNewZonesResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3347,7 +7594,7 @@ type DeboardApplicationResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3376,7 +7623,7 @@ type LockUnlockApplicationZoneResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3405,7 +7652,7 @@ type UploadArtefactResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3434,7 +7681,7 @@ type RemoveArtefactResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3462,20 +7709,20 @@ type GetArtefactResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+		// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 		AppProviderId AppProviderId `json:"appProviderId"`
 
 		// ArtefactDescription Brief description of the artefact by the application provider
-		ArtefactDescription *string `json:"artefactDescription,omitempty"`
+		ArtefactDescription *ArtefactDescription `json:"artefactDescription,omitempty"`
 
-		// ArtefactDescriptorType Type of descriptor present in the artefact. App provider can either define either a Helm chart or a Terraform script or container spec.
-		ArtefactDescriptorType UploadArtefactMultipartBodyArtefactDescriptorType `json:"artefactDescriptorType"`
+		// ArtefactDescriptorType Type of descriptor present in the artefact.  App provider can either define either a Helm chart or a Terraform script or container spec.
+		ArtefactDescriptorType ArtefactDescriptorType `json:"artefactDescriptorType"`
 
 		// ArtefactFileFormat Artefacts like Helm charts or Terraform scripts may need compressed format.
-		ArtefactFileFormat *UploadArtefactMultipartBodyArtefactFileFormat `json:"artefactFileFormat,omitempty"`
+		ArtefactFileFormat *ArtefactFileFormat `json:"artefactFileFormat,omitempty"`
 
 		// ArtefactFileName Name of the file.
-		ArtefactFileName *string `json:"artefactFileName,omitempty"`
+		ArtefactFileName *ArtefactFileName `json:"artefactFileName,omitempty"`
 
 		// ArtefactId A globally unique identifier associated with the artefact. Originating OP generates this identifier when artefact is submitted over NBI.
 		ArtefactId ArtefactId `json:"artefactId"`
@@ -3485,18 +7732,15 @@ type GetArtefactResponse struct {
 		ArtefactRepoLocation *ObjectRepoLocation `json:"artefactRepoLocation,omitempty"`
 
 		// ArtefactVersionInfo Artefact version information
-		ArtefactVersionInfo string               `json:"artefactVersionInfo"`
-		ArtefactVirtType    UploadArtefactMultipartBodyArtefactVirtType `json:"artefactVirtType"`
+		ArtefactVersionInfo ArtefactVersionInfo `json:"artefactVersionInfo"`
+		ArtefactVirtType    ArtefactVirtType    `json:"artefactVirtType"`
 
-		// ComponentSpec Details about compute, networking and storage requirements for each component of the application. App provider should define all information needed to instantiate the component. If artefact is being defined at component level this section should have information just about the component. In case the artefact is being defined at application level the section should provide details about all the components.
-		ComponentSpec *[]ComponentSpec `json:"componentSpec,omitempty"`
-
-		// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal. OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
-		RepoType *UploadArtefactMultipartBodyRepoType `json:"repoType,omitempty"`
+		// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal.  OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
+		RepoType *RepoType `json:"repoType,omitempty"`
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3523,10 +7767,10 @@ func (r GetArtefactResponse) StatusCode() int {
 type GetCandidateZonesResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
-	JSON200                   *DiscoveredEdgeNodes
+	JSON200                   *NodeDiscoveryResponse
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
 }
@@ -3547,12 +7791,228 @@ func (r GetCandidateZonesResponse) StatusCode() int {
 	return 0
 }
 
+type CreateEventSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *EventSubscriptionInfo
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateEventSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateEventSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAlarmSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAlarmSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAlarmSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAlarmsListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// ActiveAlarmsList List of active alarms
+		ActiveAlarmsList *ActiveAlarmsList `json:"activeAlarmsList,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAlarmsListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAlarmsListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteEventSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteEventSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteEventSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetEventsListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// EventCriterionList List of event criterion
+		EventCriterionList *EventTypeList `json:"eventCriterionList,omitempty"`
+
+		// EventIdList List of events detected
+		EventIdList *EventsList `json:"eventIdList,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetEventsListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetEventsListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateEventCriterionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *EventInfo
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateEventCriterionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateEventCriterionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteEventCriterionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteEventCriterionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteEventCriterionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type UploadFileResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3581,7 +8041,7 @@ type RemoveFileResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3609,38 +8069,38 @@ type ViewFileResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+		// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 		AppProviderId AppProviderId `json:"appProviderId"`
 
 		// Checksum MD5 checksum for VM and file-based images, sha256 digest for containers
 		Checksum *string `json:"checksum,omitempty"`
 
 		// FileDescription Brief description about the image file.
-		FileDescription *string `json:"fileDescription,omitempty"`
+		FileDescription *FileDescription `json:"fileDescription,omitempty"`
 
 		// FileId A globally unique identifier associated with the image file. Originating OP generates this identifier when file is uploaded over NBI.
 		FileId FileId `json:"fileId"`
 
-		// FileName Name of the image file.
+		// FileName Name of the image file.   App provides specifies this name when image is uploaded on originating OP over NBI.
 		FileName         FileName            `json:"fileName"`
 		FileRepoLocation *ObjectRepoLocation `json:"fileRepoLocation,omitempty"`
 
 		// FileType Indicate if the file is Container image or VM image (QCOW2, OVA)
 		FileType VirtImageType `json:"fileType"`
 
-		// FileVersionInfo File version information
-		FileVersionInfo string `json:"fileVersionInfo"`
+		// FileVersionInfo File version information.
+		FileVersionInfo FileVersionInfo `json:"fileVersionInfo"`
 
 		// ImgInsSetArch CPU Instruction Set Architecture (ISA) E.g., Intel, Arm etc.
 		ImgInsSetArch CPUArchType `json:"imgInsSetArch"`
 		ImgOSType     OSType      `json:"imgOSType"`
 
-		// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal. OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
-		RepoType *UploadArtefactMultipartBodyRepoType `json:"repoType,omitempty"`
+		// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal.  OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
+		RepoType *RepoType `json:"repoType,omitempty"`
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3664,6 +8124,38 @@ func (r ViewFileResponse) StatusCode() int {
 	return 0
 }
 
+type GetFederationHealthResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		FederationHealthStatus FederationHealthInfo `json:"federationHealthStatus"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFederationHealthResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFederationHealthResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ViewISVResPoolResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3680,7 +8172,7 @@ type ViewISVResPoolResponse struct {
 			// Count Total number of flavours reserved
 			Count int32 `json:"count"`
 
-			// FlavourId An identifier to refer to a specific combination of compute resources.
+			// FlavourId An identifier to refer to a specific combination of compute resources
 			FlavourId FlavourId `json:"flavourId"`
 		} `json:"reservedFlavours"`
 
@@ -3689,7 +8181,7 @@ type ViewISVResPoolResponse struct {
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3714,11 +8206,18 @@ func (r ViewISVResPoolResponse) StatusCode() int {
 }
 
 type CreateResourcePoolsResponse struct {
-	Body                      []byte
-	HTTPResponse              *http.Response
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// PoolId OP defined Identifier for the pool reserved for the ISV. It should be unique with an OP.
+		PoolId PoolId `json:"poolId"`
+
+		// PoolName ISV defined name of the resource pool.
+		PoolName PoolName `json:"poolName"`
+	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3776,7 +8275,7 @@ type UpdateISVResPoolResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3800,12 +8299,415 @@ func (r UpdateISVResPoolResponse) StatusCode() int {
 	return 0
 }
 
+type SubscribeMonitoringInfoResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ResourceSubscriptionInfo
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r SubscribeMonitoringInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SubscribeMonitoringInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateNetworkCapsEventSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *PeriodicNotifConfig
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateNetworkCapsEventSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateNetworkCapsEventSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNwEventNotifSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNwEventNotifSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNwEventNotifSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateNetworkCapEventResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		NetworkCapSubsInfo NetworkCapSubsInfo `json:"networkCapSubsInfo"`
+
+		// TxnIdentifier A API transaction identifier generated by the Partner OP for each API request
+		TxnIdentifier TxnIdentifier `json:"txnIdentifier"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateNetworkCapEventResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateNetworkCapEventResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteNetworkCapSubscriptionResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNetworkCapSubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNetworkCapSubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetNetworkCapsSubscribedListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		SubscribedNwCaps *[]NetworkCapSubsInfo `json:"subscribedNwCaps,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNetworkCapsSubscribedListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNetworkCapsSubscribedListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateOperationPolicySubscriptionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		OpslPolicySubscriptionId *string `json:"opslPolicySubscriptionId,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateOperationPolicySubscriptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateOperationPolicySubscriptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveOperationPoliciesResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AssocOpsPolicies
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveOperationPoliciesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveOperationPoliciesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RegisterOperationPolicyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// OpsConcretePolicy Application policy id and policy parameter value limits registered by the Originating OP
+		OpsConcretePolicy OpsConcretePolicy `json:"opsConcretePolicy"`
+		PolicyId          string            `json:"policyId"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RegisterOperationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RegisterOperationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetrieveOpsPolicyTemplatesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// OpsPolicyTemplateList List of Operation policy templates from the Partner OP
+		OpsPolicyTemplateList *OpsPolicyTemplateList `json:"opsPolicyTemplateList,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RetrieveOpsPolicyTemplatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetrieveOpsPolicyTemplatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetrieveOperationPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AssocOpsPolicies
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RetrieveOperationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetrieveOperationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ModifyOperationPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r ModifyOperationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ModifyOperationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ApplyOperationPolicyResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AssocOpsPolicies
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r ApplyOperationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ApplyOperationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DeleteFederationDetailsResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3836,13 +8738,16 @@ type GetFederationDetailsResponse struct {
 		// AllowedFixedNetworkIds List of network identifier associated with the fixed line network of the operator platform.
 		AllowedFixedNetworkIds       *FixedNetworkIds  `json:"allowedFixedNetworkIds,omitempty"`
 		AllowedMobileNetworkIds      *MobileNetworkIds `json:"allowedMobileNetworkIds,omitempty"`
-		EdgeDiscoveryServiceEndPoint ServiceEndpoint   `json:"edgeDiscoveryServiceEndPoint"`
-		LcmServiceEndPoint           ServiceEndpoint   `json:"lcmServiceEndPoint"`
+		EdgeDiscoveryServiceEndPoint *ServiceEndpoint  `json:"edgeDiscoveryServiceEndPoint,omitempty"`
+		LcmServiceEndPoint           *ServiceEndpoint  `json:"lcmServiceEndPoint,omitempty"`
 		OfferedAvailabilityZones     *[]ZoneDetails    `json:"offeredAvailabilityZones,omitempty"`
+
+		// PlatformCaps Home routing - Operator platform is capable of routing edge application data traffic from its edges to user device in their home location. This is the case where user devices are served in their home region (requesting platform region, non-roaming) but the corresponding edge application are in operator platform edges. Anchoring - Operator platform is capable of routing edge application traffic for roaming user devices to edge application in user device home network. Service APIs - Capability to handle Service APIs (e.g., CAMARA APIs) from the Leading OP
+		PlatformCaps *PlatformCaps `json:"platformCaps,omitempty"`
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3873,13 +8778,13 @@ type UpdateFederationResponse struct {
 		// AllowedFixedNetworkIds List of network identifier associated with the fixed line network of the operator platform.
 		AllowedFixedNetworkIds       *FixedNetworkIds  `json:"allowedFixedNetworkIds,omitempty"`
 		AllowedMobileNetworkIds      *MobileNetworkIds `json:"allowedMobileNetworkIds,omitempty"`
-		EdgeDiscoveryServiceEndPoint ServiceEndpoint   `json:"edgeDiscoveryServiceEndPoint"`
-		LcmServiceEndPoint           ServiceEndpoint   `json:"lcmServiceEndPoint"`
+		EdgeDiscoveryServiceEndPoint *ServiceEndpoint  `json:"edgeDiscoveryServiceEndPoint,omitempty"`
+		LcmServiceEndPoint           *ServiceEndpoint  `json:"lcmServiceEndPoint,omitempty"`
 		OfferedAvailabilityZones     *[]ZoneDetails    `json:"offeredAvailabilityZones,omitempty"`
 	}
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3903,18 +8808,22 @@ func (r UpdateFederationResponse) StatusCode() int {
 	return 0
 }
 
-type AuthenticateDeviceResponse struct {
+type PartnerDetailsResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
+	JSON200                   *FederationDetailResponseData
+	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
 	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
 }
 
 // Status returns HTTPResponse.Status
-func (r AuthenticateDeviceResponse) Status() string {
+func (r PartnerDetailsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3922,7 +8831,151 @@ func (r AuthenticateDeviceResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r AuthenticateDeviceResponse) StatusCode() int {
+func (r PartnerDetailsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetServiceAPIsDetailsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// ApiRoutingInfo List of public IP addresses MNO manages for UEs to connect with public data networks
+		ApiRoutingInfo ServiceRoutingInfo `json:"apiRoutingInfo"`
+
+		// ServiceCaps List of Service API capability names an OP supports and offers to other OPs "quality_on_demand", "device_location" etc.
+		ServiceCaps ServiceAPINames `json:"serviceCaps"`
+
+		// ServiceType An identifier to refer to partner OP capabilities for application providers.
+		ServiceType *ServiceType `json:"serviceType,omitempty"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetServiceAPIsDetailsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetServiceAPIsDetailsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPlatformCapabilitiesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		DeviceConnStatusChangeCap *DeviceConnStatusChangeCap `json:"deviceConnStatusChangeCap,omitempty"`
+		DynamicQoSCap             *DynamicQoSCap             `json:"dynamicQoSCap,omitempty"`
+		LocationRetrievalCap      *LocationRetrievalCap      `json:"locationRetrievalCap,omitempty"`
+		UserPlaneMgmtEvtCap       *UserPlaneMgmtEvtCap       `json:"userPlaneMgmtEvtCap,omitempty"`
+		union                     json.RawMessage
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPlatformCapabilitiesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPlatformCapabilitiesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RenewFederationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// FederationContextId This identifier shall be provided by the partner OP on successful verification and validation of the federation create request and is used by partner op to identify this newly created federation context. Originating OP shall provide this identifier in any subsequent request towards the partner op.
+		FederationContextId *FederationContextId `json:"FederationContextId,omitempty"`
+
+		// FederationExpiryDate Date and Time zone info format
+		FederationExpiryDate DateAndTimeZoneObject `json:"federationExpiryDate"`
+
+		// FederationRenewalDate Date and Time zone info format
+		FederationRenewalDate DateAndTimeZoneObject `json:"federationRenewalDate"`
+	}
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r RenewFederationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RenewFederationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetZoneDataResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ZoneRegisteredData
+	ApplicationproblemJSON400 *N400
+	ApplicationproblemJSON401 *N401
+	ApplicationproblemJSON404 *N404NotFound
+	ApplicationproblemJSON409 *N409
+	ApplicationproblemJSON422 *N422
+	ApplicationproblemJSON500 *N500
+	ApplicationproblemJSON503 *N503
+	ApplicationproblemJSON520 *N520
+}
+
+// Status returns HTTPResponse.Status
+func (r GetZoneDataResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetZoneDataResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3935,7 +8988,7 @@ type ZoneSubscribeResponse struct {
 	JSON200                   *ZoneRegistrationResponseData
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3964,7 +9017,7 @@ type ZoneUnsubscribeResponse struct {
 	HTTPResponse              *http.Response
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -3988,13 +9041,13 @@ func (r ZoneUnsubscribeResponse) StatusCode() int {
 	return 0
 }
 
-type GetZoneDataResponse struct {
+type GetZoneDetailsResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
 	JSON200                   *ZoneRegisteredData
 	ApplicationproblemJSON400 *N400
 	ApplicationproblemJSON401 *N401
-	ApplicationproblemJSON404 *N404
+	ApplicationproblemJSON404 *N404NotFound
 	ApplicationproblemJSON409 *N409
 	ApplicationproblemJSON422 *N422
 	ApplicationproblemJSON500 *N500
@@ -4003,7 +9056,7 @@ type GetZoneDataResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetZoneDataResponse) Status() string {
+func (r GetZoneDetailsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4011,11 +9064,29 @@ func (r GetZoneDataResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetZoneDataResponse) StatusCode() int {
+func (r GetZoneDetailsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
+}
+
+// GetFederationContextIdWithResponse request returning *GetFederationContextIdResponse
+func (c *ClientWithResponses) GetFederationContextIdWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFederationContextIdResponse, error) {
+	rsp, err := c.GetFederationContextId(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFederationContextIdResponse(rsp)
+}
+
+// GetFederationAPIsWithResponse request returning *GetFederationAPIsResponse
+func (c *ClientWithResponses) GetFederationAPIsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFederationAPIsResponse, error) {
+	rsp, err := c.GetFederationAPIs(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFederationAPIsResponse(rsp)
 }
 
 // CreateFederationWithBodyWithResponse request with arbitrary body returning *CreateFederationResponse
@@ -4120,6 +9191,23 @@ func (c *ClientWithResponses) FileStatusCallbackLinkWithResponse(ctx context.Con
 	return ParseFileStatusCallbackLinkResponse(rsp)
 }
 
+// PartnerDetailsCallbackWithBodyWithResponse request with arbitrary body returning *PartnerDetailsCallbackResponse
+func (c *ClientWithResponses) PartnerDetailsCallbackWithBodyWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PartnerDetailsCallbackResponse, error) {
+	rsp, err := c.PartnerDetailsCallbackWithBody(ctx, federationCallbackId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePartnerDetailsCallbackResponse(rsp)
+}
+
+func (c *ClientWithResponses) PartnerDetailsCallbackWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, body PartnerDetailsCallbackJSONRequestBody, reqEditors ...RequestEditorFn) (*PartnerDetailsCallbackResponse, error) {
+	rsp, err := c.PartnerDetailsCallback(ctx, federationCallbackId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePartnerDetailsCallbackResponse(rsp)
+}
+
 // PartnerStatusLinkWithBodyWithResponse request with arbitrary body returning *PartnerStatusLinkResponse
 func (c *ClientWithResponses) PartnerStatusLinkWithBodyWithResponse(ctx context.Context, federationCallbackId FederationCallbackId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PartnerStatusLinkResponse, error) {
 	rsp, err := c.PartnerStatusLinkWithBody(ctx, federationCallbackId, contentType, body, reqEditors...)
@@ -4154,17 +9242,267 @@ func (c *ClientWithResponses) ResourceReservationCallbackLinkWithResponse(ctx co
 	return ParseResourceReservationCallbackLinkResponse(rsp)
 }
 
+// CreateAlarmReportingSubscriptionWithBodyWithResponse request with arbitrary body returning *CreateAlarmReportingSubscriptionResponse
+func (c *ClientWithResponses) CreateAlarmReportingSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAlarmReportingSubscriptionResponse, error) {
+	rsp, err := c.CreateAlarmReportingSubscriptionWithBody(ctx, federationContextId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAlarmReportingSubscriptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAlarmReportingSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateAlarmReportingSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAlarmReportingSubscriptionResponse, error) {
+	rsp, err := c.CreateAlarmReportingSubscription(ctx, federationContextId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAlarmReportingSubscriptionResponse(rsp)
+}
+
+// RemoveServiceAPISessionWithResponse request returning *RemoveServiceAPISessionResponse
+func (c *ClientWithResponses) RemoveServiceAPISessionWithResponse(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*RemoveServiceAPISessionResponse, error) {
+	rsp, err := c.RemoveServiceAPISession(ctx, federationContextId, connectID, customerID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveServiceAPISessionResponse(rsp)
+}
+
+// GetServiceAPISessionInfoWithResponse request returning *GetServiceAPISessionInfoResponse
+func (c *ClientWithResponses) GetServiceAPISessionInfoWithResponse(ctx context.Context, federationContextId FederationContextId, connectID ConnectID, customerID CustomerID, reqEditors ...RequestEditorFn) (*GetServiceAPISessionInfoResponse, error) {
+	rsp, err := c.GetServiceAPISessionInfo(ctx, federationContextId, connectID, customerID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetServiceAPISessionInfoResponse(rsp)
+}
+
+// APIForwardingWithBodyWithResponse request with arbitrary body returning *APIForwardingResponse
+func (c *ClientWithResponses) APIForwardingWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*APIForwardingResponse, error) {
+	rsp, err := c.APIForwardingWithBody(ctx, federationContextId, serviceAPINameVal, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAPIForwardingResponse(rsp)
+}
+
+func (c *ClientWithResponses) APIForwardingWithResponse(ctx context.Context, federationContextId FederationContextId, serviceAPINameVal ServiceAPINameVal, body APIForwardingJSONRequestBody, reqEditors ...RequestEditorFn) (*APIForwardingResponse, error) {
+	rsp, err := c.APIForwarding(ctx, federationContextId, serviceAPINameVal, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAPIForwardingResponse(rsp)
+}
+
+// CreateApplicationPolicySubscriptionWithResponse request returning *CreateApplicationPolicySubscriptionResponse
+func (c *ClientWithResponses) CreateApplicationPolicySubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*CreateApplicationPolicySubscriptionResponse, error) {
+	rsp, err := c.CreateApplicationPolicySubscription(ctx, federationContextId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateApplicationPolicySubscriptionResponse(rsp)
+}
+
+// RetrieveApplicationPolicyWithResponse request returning *RetrieveApplicationPolicyResponse
+func (c *ClientWithResponses) RetrieveApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveApplicationPolicyParams, reqEditors ...RequestEditorFn) (*RetrieveApplicationPolicyResponse, error) {
+	rsp, err := c.RetrieveApplicationPolicy(ctx, federationContextId, applPolicySubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveApplicationPolicyResponse(rsp)
+}
+
+// ModifyApplicationPolicyWithBodyWithResponse request with arbitrary body returning *ModifyApplicationPolicyResponse
+func (c *ClientWithResponses) ModifyApplicationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ModifyApplicationPolicyResponse, error) {
+	rsp, err := c.ModifyApplicationPolicyWithBody(ctx, federationContextId, applPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseModifyApplicationPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) ModifyApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ModifyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ModifyApplicationPolicyResponse, error) {
+	rsp, err := c.ModifyApplicationPolicy(ctx, federationContextId, applPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseModifyApplicationPolicyResponse(rsp)
+}
+
+// ApplyApplicationPolicyWithBodyWithResponse request with arbitrary body returning *ApplyApplicationPolicyResponse
+func (c *ClientWithResponses) ApplyApplicationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyApplicationPolicyResponse, error) {
+	rsp, err := c.ApplyApplicationPolicyWithBody(ctx, federationContextId, applPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyApplicationPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) ApplyApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body ApplyApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyApplicationPolicyResponse, error) {
+	rsp, err := c.ApplyApplicationPolicy(ctx, federationContextId, applPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyApplicationPolicyResponse(rsp)
+}
+
+// RemoveApplicationPoliciesWithBodyWithResponse request with arbitrary body returning *RemoveApplicationPoliciesResponse
+func (c *ClientWithResponses) RemoveApplicationPoliciesWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveApplicationPoliciesResponse, error) {
+	rsp, err := c.RemoveApplicationPoliciesWithBody(ctx, federationContextId, applPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveApplicationPoliciesResponse(rsp)
+}
+
+func (c *ClientWithResponses) RemoveApplicationPoliciesWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RemoveApplicationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveApplicationPoliciesResponse, error) {
+	rsp, err := c.RemoveApplicationPolicies(ctx, federationContextId, applPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveApplicationPoliciesResponse(rsp)
+}
+
+// CreateApplicationEventSubscriptionWithBodyWithResponse request with arbitrary body returning *CreateApplicationEventSubscriptionResponse
+func (c *ClientWithResponses) CreateApplicationEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApplicationEventSubscriptionResponse, error) {
+	rsp, err := c.CreateApplicationEventSubscriptionWithBody(ctx, federationContextId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateApplicationEventSubscriptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateApplicationEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateApplicationEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateApplicationEventSubscriptionResponse, error) {
+	rsp, err := c.CreateApplicationEventSubscription(ctx, federationContextId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateApplicationEventSubscriptionResponse(rsp)
+}
+
+// DeleteApplNotifSubscriptionWithResponse request returning *DeleteApplNotifSubscriptionResponse
+func (c *ClientWithResponses) DeleteApplNotifSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteApplNotifSubscriptionResponse, error) {
+	rsp, err := c.DeleteApplNotifSubscription(ctx, federationContextId, appNotifSubsId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteApplNotifSubscriptionResponse(rsp)
+}
+
+// RetrieveApplSubsMetaInfoWithResponse request returning *RetrieveApplSubsMetaInfoResponse
+func (c *ClientWithResponses) RetrieveApplSubsMetaInfoWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *RetrieveApplSubsMetaInfoParams, reqEditors ...RequestEditorFn) (*RetrieveApplSubsMetaInfoResponse, error) {
+	rsp, err := c.RetrieveApplSubsMetaInfo(ctx, federationContextId, appNotifSubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveApplSubsMetaInfoResponse(rsp)
+}
+
+// ModifyApplEventNotifSubscriptionWithBodyWithResponse request with arbitrary body returning *ModifyApplEventNotifSubscriptionResponse
+func (c *ClientWithResponses) ModifyApplEventNotifSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ModifyApplEventNotifSubscriptionResponse, error) {
+	rsp, err := c.ModifyApplEventNotifSubscriptionWithBody(ctx, federationContextId, appNotifSubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseModifyApplEventNotifSubscriptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) ModifyApplEventNotifSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body ModifyApplEventNotifSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*ModifyApplEventNotifSubscriptionResponse, error) {
+	rsp, err := c.ModifyApplEventNotifSubscription(ctx, federationContextId, appNotifSubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseModifyApplEventNotifSubscriptionResponse(rsp)
+}
+
+// SubscribeApplsEvtNotifWithBodyWithResponse request with arbitrary body returning *SubscribeApplsEvtNotifResponse
+func (c *ClientWithResponses) SubscribeApplsEvtNotifWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubscribeApplsEvtNotifResponse, error) {
+	rsp, err := c.SubscribeApplsEvtNotifWithBody(ctx, federationContextId, appNotifSubsId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubscribeApplsEvtNotifResponse(rsp)
+}
+
+func (c *ClientWithResponses) SubscribeApplsEvtNotifWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, params *SubscribeApplsEvtNotifParams, body SubscribeApplsEvtNotifJSONRequestBody, reqEditors ...RequestEditorFn) (*SubscribeApplsEvtNotifResponse, error) {
+	rsp, err := c.SubscribeApplsEvtNotif(ctx, federationContextId, appNotifSubsId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubscribeApplsEvtNotifResponse(rsp)
+}
+
+// RetrieveAppsEventsInfoWithBodyWithResponse request with arbitrary body returning *RetrieveAppsEventsInfoResponse
+func (c *ClientWithResponses) RetrieveAppsEventsInfoWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RetrieveAppsEventsInfoResponse, error) {
+	rsp, err := c.RetrieveAppsEventsInfoWithBody(ctx, federationContextId, appNotifSubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveAppsEventsInfoResponse(rsp)
+}
+
+func (c *ClientWithResponses) RetrieveAppsEventsInfoWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RetrieveAppsEventsInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*RetrieveAppsEventsInfoResponse, error) {
+	rsp, err := c.RetrieveAppsEventsInfo(ctx, federationContextId, appNotifSubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveAppsEventsInfoResponse(rsp)
+}
+
+// RemoveAppsEventSubscriptionWithBodyWithResponse request with arbitrary body returning *RemoveAppsEventSubscriptionResponse
+func (c *ClientWithResponses) RemoveAppsEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveAppsEventSubscriptionResponse, error) {
+	rsp, err := c.RemoveAppsEventSubscriptionWithBody(ctx, federationContextId, appNotifSubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveAppsEventSubscriptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) RemoveAppsEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, appNotifSubsId EventSubscriptionIdentifier, body RemoveAppsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveAppsEventSubscriptionResponse, error) {
+	rsp, err := c.RemoveAppsEventSubscription(ctx, federationContextId, appNotifSubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveAppsEventSubscriptionResponse(rsp)
+}
+
+// RegisterApplicationPolicyWithBodyWithResponse request with arbitrary body returning *RegisterApplicationPolicyResponse
+func (c *ClientWithResponses) RegisterApplicationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterApplicationPolicyResponse, error) {
+	rsp, err := c.RegisterApplicationPolicyWithBody(ctx, federationContextId, applPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegisterApplicationPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) RegisterApplicationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, body RegisterApplicationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*RegisterApplicationPolicyResponse, error) {
+	rsp, err := c.RegisterApplicationPolicy(ctx, federationContextId, applPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegisterApplicationPolicyResponse(rsp)
+}
+
+// RetrieveAppPolicyTemplatesWithResponse request returning *RetrieveAppPolicyTemplatesResponse
+func (c *ClientWithResponses) RetrieveAppPolicyTemplatesWithResponse(ctx context.Context, federationContextId FederationContextId, applPolicySubsId EventSubscriptionIdentifier, params *RetrieveAppPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*RetrieveAppPolicyTemplatesResponse, error) {
+	rsp, err := c.RetrieveAppPolicyTemplates(ctx, federationContextId, applPolicySubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveAppPolicyTemplatesResponse(rsp)
+}
+
 // InstallAppWithBodyWithResponse request with arbitrary body returning *InstallAppResponse
-func (c *ClientWithResponses) InstallAppWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallAppResponse, error) {
-	rsp, err := c.InstallAppWithBody(ctx, federationContextId, contentType, body, reqEditors...)
+func (c *ClientWithResponses) InstallAppWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallAppResponse, error) {
+	rsp, err := c.InstallAppWithBody(ctx, federationContextId, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseInstallAppResponse(rsp)
 }
 
-func (c *ClientWithResponses) InstallAppWithResponse(ctx context.Context, federationContextId FederationContextId, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*InstallAppResponse, error) {
-	rsp, err := c.InstallApp(ctx, federationContextId, body, reqEditors...)
+func (c *ClientWithResponses) InstallAppWithResponse(ctx context.Context, federationContextId FederationContextId, params *InstallAppParams, body InstallAppJSONRequestBody, reqEditors ...RequestEditorFn) (*InstallAppResponse, error) {
+	rsp, err := c.InstallApp(ctx, federationContextId, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -4337,6 +9675,85 @@ func (c *ClientWithResponses) GetCandidateZonesWithResponse(ctx context.Context,
 	return ParseGetCandidateZonesResponse(rsp)
 }
 
+// CreateEventSubscriptionWithBodyWithResponse request with arbitrary body returning *CreateEventSubscriptionResponse
+func (c *ClientWithResponses) CreateEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEventSubscriptionResponse, error) {
+	rsp, err := c.CreateEventSubscriptionWithBody(ctx, federationContextId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEventSubscriptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEventSubscriptionResponse, error) {
+	rsp, err := c.CreateEventSubscription(ctx, federationContextId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEventSubscriptionResponse(rsp)
+}
+
+// DeleteAlarmSubscriptionWithResponse request returning *DeleteAlarmSubscriptionResponse
+func (c *ClientWithResponses) DeleteAlarmSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteAlarmSubscriptionResponse, error) {
+	rsp, err := c.DeleteAlarmSubscription(ctx, federationContextId, alarmSubsId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAlarmSubscriptionResponse(rsp)
+}
+
+// GetAlarmsListWithResponse request returning *GetAlarmsListResponse
+func (c *ClientWithResponses) GetAlarmsListWithResponse(ctx context.Context, federationContextId FederationContextId, alarmSubsId SubscriptionIdentifier, params *GetAlarmsListParams, reqEditors ...RequestEditorFn) (*GetAlarmsListResponse, error) {
+	rsp, err := c.GetAlarmsList(ctx, federationContextId, alarmSubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAlarmsListResponse(rsp)
+}
+
+// DeleteEventSubscriptionWithResponse request returning *DeleteEventSubscriptionResponse
+func (c *ClientWithResponses) DeleteEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteEventSubscriptionResponse, error) {
+	rsp, err := c.DeleteEventSubscription(ctx, federationContextId, eventSubsId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteEventSubscriptionResponse(rsp)
+}
+
+// GetEventsListWithResponse request returning *GetEventsListResponse
+func (c *ClientWithResponses) GetEventsListWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, params *GetEventsListParams, reqEditors ...RequestEditorFn) (*GetEventsListResponse, error) {
+	rsp, err := c.GetEventsList(ctx, federationContextId, eventSubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetEventsListResponse(rsp)
+}
+
+// CreateEventCriterionWithBodyWithResponse request with arbitrary body returning *CreateEventCriterionResponse
+func (c *ClientWithResponses) CreateEventCriterionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEventCriterionResponse, error) {
+	rsp, err := c.CreateEventCriterionWithBody(ctx, federationContextId, eventSubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEventCriterionResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateEventCriterionWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, body CreateEventCriterionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEventCriterionResponse, error) {
+	rsp, err := c.CreateEventCriterion(ctx, federationContextId, eventSubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEventCriterionResponse(rsp)
+}
+
+// DeleteEventCriterionWithResponse request returning *DeleteEventCriterionResponse
+func (c *ClientWithResponses) DeleteEventCriterionWithResponse(ctx context.Context, federationContextId FederationContextId, eventSubsId EventSubscriptionIdentifier, eventId EventIdentifier, reqEditors ...RequestEditorFn) (*DeleteEventCriterionResponse, error) {
+	rsp, err := c.DeleteEventCriterion(ctx, federationContextId, eventSubsId, eventId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteEventCriterionResponse(rsp)
+}
+
 // UploadFileWithBodyWithResponse request with arbitrary body returning *UploadFileResponse
 func (c *ClientWithResponses) UploadFileWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadFileResponse, error) {
 	rsp, err := c.UploadFileWithBody(ctx, federationContextId, contentType, body, reqEditors...)
@@ -4362,6 +9779,15 @@ func (c *ClientWithResponses) ViewFileWithResponse(ctx context.Context, federati
 		return nil, err
 	}
 	return ParseViewFileResponse(rsp)
+}
+
+// GetFederationHealthWithResponse request returning *GetFederationHealthResponse
+func (c *ClientWithResponses) GetFederationHealthWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*GetFederationHealthResponse, error) {
+	rsp, err := c.GetFederationHealth(ctx, federationContextId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFederationHealthResponse(rsp)
 }
 
 // ViewISVResPoolWithResponse request returning *ViewISVResPoolResponse
@@ -4416,6 +9842,179 @@ func (c *ClientWithResponses) UpdateISVResPoolWithResponse(ctx context.Context, 
 	return ParseUpdateISVResPoolResponse(rsp)
 }
 
+// SubscribeMonitoringInfoWithBodyWithResponse request with arbitrary body returning *SubscribeMonitoringInfoResponse
+func (c *ClientWithResponses) SubscribeMonitoringInfoWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubscribeMonitoringInfoResponse, error) {
+	rsp, err := c.SubscribeMonitoringInfoWithBody(ctx, federationContextId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubscribeMonitoringInfoResponse(rsp)
+}
+
+func (c *ClientWithResponses) SubscribeMonitoringInfoWithResponse(ctx context.Context, federationContextId FederationContextId, params *SubscribeMonitoringInfoParams, body SubscribeMonitoringInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*SubscribeMonitoringInfoResponse, error) {
+	rsp, err := c.SubscribeMonitoringInfo(ctx, federationContextId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubscribeMonitoringInfoResponse(rsp)
+}
+
+// CreateNetworkCapsEventSubscriptionWithBodyWithResponse request with arbitrary body returning *CreateNetworkCapsEventSubscriptionResponse
+func (c *ClientWithResponses) CreateNetworkCapsEventSubscriptionWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateNetworkCapsEventSubscriptionResponse, error) {
+	rsp, err := c.CreateNetworkCapsEventSubscriptionWithBody(ctx, federationContextId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateNetworkCapsEventSubscriptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateNetworkCapsEventSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, body CreateNetworkCapsEventSubscriptionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateNetworkCapsEventSubscriptionResponse, error) {
+	rsp, err := c.CreateNetworkCapsEventSubscription(ctx, federationContextId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateNetworkCapsEventSubscriptionResponse(rsp)
+}
+
+// DeleteNwEventNotifSubscriptionWithResponse request returning *DeleteNwEventNotifSubscriptionResponse
+func (c *ClientWithResponses) DeleteNwEventNotifSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, reqEditors ...RequestEditorFn) (*DeleteNwEventNotifSubscriptionResponse, error) {
+	rsp, err := c.DeleteNwEventNotifSubscription(ctx, federationContextId, nwEventSubsId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNwEventNotifSubscriptionResponse(rsp)
+}
+
+// CreateNetworkCapEventWithBodyWithResponse request with arbitrary body returning *CreateNetworkCapEventResponse
+func (c *ClientWithResponses) CreateNetworkCapEventWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateNetworkCapEventResponse, error) {
+	rsp, err := c.CreateNetworkCapEventWithBody(ctx, federationContextId, nwEventSubsId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateNetworkCapEventResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateNetworkCapEventWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *CreateNetworkCapEventParams, body CreateNetworkCapEventJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateNetworkCapEventResponse, error) {
+	rsp, err := c.CreateNetworkCapEvent(ctx, federationContextId, nwEventSubsId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateNetworkCapEventResponse(rsp)
+}
+
+// DeleteNetworkCapSubscriptionWithResponse request returning *DeleteNetworkCapSubscriptionResponse
+func (c *ClientWithResponses) DeleteNetworkCapSubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *DeleteNetworkCapSubscriptionParams, reqEditors ...RequestEditorFn) (*DeleteNetworkCapSubscriptionResponse, error) {
+	rsp, err := c.DeleteNetworkCapSubscription(ctx, federationContextId, nwEventSubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNetworkCapSubscriptionResponse(rsp)
+}
+
+// GetNetworkCapsSubscribedListWithResponse request returning *GetNetworkCapsSubscribedListResponse
+func (c *ClientWithResponses) GetNetworkCapsSubscribedListWithResponse(ctx context.Context, federationContextId FederationContextId, nwEventSubsId EventSubscriptionIdentifier, params *GetNetworkCapsSubscribedListParams, reqEditors ...RequestEditorFn) (*GetNetworkCapsSubscribedListResponse, error) {
+	rsp, err := c.GetNetworkCapsSubscribedList(ctx, federationContextId, nwEventSubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNetworkCapsSubscribedListResponse(rsp)
+}
+
+// CreateOperationPolicySubscriptionWithResponse request returning *CreateOperationPolicySubscriptionResponse
+func (c *ClientWithResponses) CreateOperationPolicySubscriptionWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*CreateOperationPolicySubscriptionResponse, error) {
+	rsp, err := c.CreateOperationPolicySubscription(ctx, federationContextId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateOperationPolicySubscriptionResponse(rsp)
+}
+
+// RemoveOperationPoliciesWithBodyWithResponse request with arbitrary body returning *RemoveOperationPoliciesResponse
+func (c *ClientWithResponses) RemoveOperationPoliciesWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveOperationPoliciesResponse, error) {
+	rsp, err := c.RemoveOperationPoliciesWithBody(ctx, federationContextId, opsPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveOperationPoliciesResponse(rsp)
+}
+
+func (c *ClientWithResponses) RemoveOperationPoliciesWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RemoveOperationPoliciesJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveOperationPoliciesResponse, error) {
+	rsp, err := c.RemoveOperationPolicies(ctx, federationContextId, opsPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveOperationPoliciesResponse(rsp)
+}
+
+// RegisterOperationPolicyWithBodyWithResponse request with arbitrary body returning *RegisterOperationPolicyResponse
+func (c *ClientWithResponses) RegisterOperationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterOperationPolicyResponse, error) {
+	rsp, err := c.RegisterOperationPolicyWithBody(ctx, federationContextId, opsPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegisterOperationPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) RegisterOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body RegisterOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*RegisterOperationPolicyResponse, error) {
+	rsp, err := c.RegisterOperationPolicy(ctx, federationContextId, opsPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegisterOperationPolicyResponse(rsp)
+}
+
+// RetrieveOpsPolicyTemplatesWithResponse request returning *RetrieveOpsPolicyTemplatesResponse
+func (c *ClientWithResponses) RetrieveOpsPolicyTemplatesWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOpsPolicyTemplatesParams, reqEditors ...RequestEditorFn) (*RetrieveOpsPolicyTemplatesResponse, error) {
+	rsp, err := c.RetrieveOpsPolicyTemplates(ctx, federationContextId, opsPolicySubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveOpsPolicyTemplatesResponse(rsp)
+}
+
+// RetrieveOperationPolicyWithResponse request returning *RetrieveOperationPolicyResponse
+func (c *ClientWithResponses) RetrieveOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, params *RetrieveOperationPolicyParams, reqEditors ...RequestEditorFn) (*RetrieveOperationPolicyResponse, error) {
+	rsp, err := c.RetrieveOperationPolicy(ctx, federationContextId, opsPolicySubsId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetrieveOperationPolicyResponse(rsp)
+}
+
+// ModifyOperationPolicyWithBodyWithResponse request with arbitrary body returning *ModifyOperationPolicyResponse
+func (c *ClientWithResponses) ModifyOperationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ModifyOperationPolicyResponse, error) {
+	rsp, err := c.ModifyOperationPolicyWithBody(ctx, federationContextId, opsPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseModifyOperationPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) ModifyOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ModifyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ModifyOperationPolicyResponse, error) {
+	rsp, err := c.ModifyOperationPolicy(ctx, federationContextId, opsPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseModifyOperationPolicyResponse(rsp)
+}
+
+// ApplyOperationPolicyWithBodyWithResponse request with arbitrary body returning *ApplyOperationPolicyResponse
+func (c *ClientWithResponses) ApplyOperationPolicyWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyOperationPolicyResponse, error) {
+	rsp, err := c.ApplyOperationPolicyWithBody(ctx, federationContextId, opsPolicySubsId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyOperationPolicyResponse(rsp)
+}
+
+func (c *ClientWithResponses) ApplyOperationPolicyWithResponse(ctx context.Context, federationContextId FederationContextId, opsPolicySubsId EventSubscriptionIdentifier, body ApplyOperationPolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyOperationPolicyResponse, error) {
+	rsp, err := c.ApplyOperationPolicy(ctx, federationContextId, opsPolicySubsId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyOperationPolicyResponse(rsp)
+}
+
 // DeleteFederationDetailsWithResponse request returning *DeleteFederationDetailsResponse
 func (c *ClientWithResponses) DeleteFederationDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*DeleteFederationDetailsResponse, error) {
 	rsp, err := c.DeleteFederationDetails(ctx, federationContextId, reqEditors...)
@@ -4451,13 +10050,57 @@ func (c *ClientWithResponses) UpdateFederationWithResponse(ctx context.Context, 
 	return ParseUpdateFederationResponse(rsp)
 }
 
-// AuthenticateDeviceWithResponse request returning *AuthenticateDeviceResponse
-func (c *ClientWithResponses) AuthenticateDeviceWithResponse(ctx context.Context, federationContextId FederationContextId, deviceId DeviceId, authToken AuthorizationToken, reqEditors ...RequestEditorFn) (*AuthenticateDeviceResponse, error) {
-	rsp, err := c.AuthenticateDevice(ctx, federationContextId, deviceId, authToken, reqEditors...)
+// PartnerDetailsWithBodyWithResponse request with arbitrary body returning *PartnerDetailsResponse
+func (c *ClientWithResponses) PartnerDetailsWithBodyWithResponse(ctx context.Context, federationContextId FederationContextId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PartnerDetailsResponse, error) {
+	rsp, err := c.PartnerDetailsWithBody(ctx, federationContextId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseAuthenticateDeviceResponse(rsp)
+	return ParsePartnerDetailsResponse(rsp)
+}
+
+func (c *ClientWithResponses) PartnerDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, body PartnerDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*PartnerDetailsResponse, error) {
+	rsp, err := c.PartnerDetails(ctx, federationContextId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePartnerDetailsResponse(rsp)
+}
+
+// GetServiceAPIsDetailsWithResponse request returning *GetServiceAPIsDetailsResponse
+func (c *ClientWithResponses) GetServiceAPIsDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, serviceType ServiceType, reqEditors ...RequestEditorFn) (*GetServiceAPIsDetailsResponse, error) {
+	rsp, err := c.GetServiceAPIsDetails(ctx, federationContextId, serviceType, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetServiceAPIsDetailsResponse(rsp)
+}
+
+// GetPlatformCapabilitiesWithResponse request returning *GetPlatformCapabilitiesResponse
+func (c *ClientWithResponses) GetPlatformCapabilitiesWithResponse(ctx context.Context, federationContextId FederationContextId, params *GetPlatformCapabilitiesParams, reqEditors ...RequestEditorFn) (*GetPlatformCapabilitiesResponse, error) {
+	rsp, err := c.GetPlatformCapabilities(ctx, federationContextId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPlatformCapabilitiesResponse(rsp)
+}
+
+// RenewFederationWithResponse request returning *RenewFederationResponse
+func (c *ClientWithResponses) RenewFederationWithResponse(ctx context.Context, federationContextId FederationContextId, reqEditors ...RequestEditorFn) (*RenewFederationResponse, error) {
+	rsp, err := c.RenewFederation(ctx, federationContextId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRenewFederationResponse(rsp)
+}
+
+// GetZoneDataWithResponse request returning *GetZoneDataResponse
+func (c *ClientWithResponses) GetZoneDataWithResponse(ctx context.Context, federationContextId FederationContextId, params *GetZoneDataParams, reqEditors ...RequestEditorFn) (*GetZoneDataResponse, error) {
+	rsp, err := c.GetZoneData(ctx, federationContextId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetZoneDataResponse(rsp)
 }
 
 // ZoneSubscribeWithBodyWithResponse request with arbitrary body returning *ZoneSubscribeResponse
@@ -4486,13 +10129,182 @@ func (c *ClientWithResponses) ZoneUnsubscribeWithResponse(ctx context.Context, f
 	return ParseZoneUnsubscribeResponse(rsp)
 }
 
-// GetZoneDataWithResponse request returning *GetZoneDataResponse
-func (c *ClientWithResponses) GetZoneDataWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*GetZoneDataResponse, error) {
-	rsp, err := c.GetZoneData(ctx, federationContextId, zoneId, reqEditors...)
+// GetZoneDetailsWithResponse request returning *GetZoneDetailsResponse
+func (c *ClientWithResponses) GetZoneDetailsWithResponse(ctx context.Context, federationContextId FederationContextId, zoneId ZoneIdentifier, reqEditors ...RequestEditorFn) (*GetZoneDetailsResponse, error) {
+	rsp, err := c.GetZoneDetails(ctx, federationContextId, zoneId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetZoneDataResponse(rsp)
+	return ParseGetZoneDetailsResponse(rsp)
+}
+
+// ParseGetFederationContextIdResponse parses an HTTP response from a GetFederationContextIdWithResponse call
+func ParseGetFederationContextIdResponse(rsp *http.Response) (*GetFederationContextIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFederationContextIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// FederationContextId This identifier shall be provided by the partner OP on successful verification and validation of the federation create request and is used by partner op to identify this newly created federation context. Originating OP shall provide this identifier in any subsequent request towards the partner op.
+			FederationContextId *FederationContextId `json:"FederationContextId,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFederationAPIsResponse parses an HTTP response from a GetFederationAPIsWithResponse call
+func ParseGetFederationAPIsResponse(rsp *http.Response) (*GetFederationAPIsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFederationAPIsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			FederationSupportedAPIs FederationSupportedAPIs `json:"federationSupportedAPIs"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseCreateFederationResponse parses an HTTP response from a CreateFederationWithResponse call
@@ -4517,7 +10329,7 @@ func ParseCreateFederationResponse(rsp *http.Response) (*CreateFederationRespons
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest N400
+		var dest N400BadRequest
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4531,7 +10343,7 @@ func ParseCreateFederationResponse(rsp *http.Response) (*CreateFederationRespons
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4952,6 +10764,81 @@ func ParseFileStatusCallbackLinkResponse(rsp *http.Response) (*FileStatusCallbac
 	return response, nil
 }
 
+// ParsePartnerDetailsCallbackResponse parses an HTTP response from a PartnerDetailsCallbackWithResponse call
+func ParsePartnerDetailsCallbackResponse(rsp *http.Response) (*PartnerDetailsCallbackResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PartnerDetailsCallbackResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePartnerStatusLinkResponse parses an HTTP response from a PartnerStatusLinkWithResponse call
 func ParsePartnerStatusLinkResponse(rsp *http.Response) (*PartnerStatusLinkResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -5102,15 +10989,477 @@ func ParseResourceReservationCallbackLinkResponse(rsp *http.Response) (*Resource
 	return response, nil
 }
 
-// ParseInstallAppResponse parses an HTTP response from a InstallAppWithResponse call
-func ParseInstallAppResponse(rsp *http.Response) (*InstallAppResponse, error) {
+// ParseCreateAlarmReportingSubscriptionResponse parses an HTTP response from a CreateAlarmReportingSubscriptionWithResponse call
+func ParseCreateAlarmReportingSubscriptionResponse(rsp *http.Response) (*CreateAlarmReportingSubscriptionResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &InstallAppResponse{
+	response := &CreateAlarmReportingSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SubscriptionIdentifier
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveServiceAPISessionResponse parses an HTTP response from a RemoveServiceAPISessionWithResponse call
+func ParseRemoveServiceAPISessionResponse(rsp *http.Response) (*RemoveServiceAPISessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveServiceAPISessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// ConnectID An identifier generated by the Partner OP to represent the end user identity in the Service API request.
+			ConnectID      ConnectID      `json:"connectID"`
+			ExpiryDuration ExpiryInterval `json:"expiryDuration"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetServiceAPISessionInfoResponse parses an HTTP response from a GetServiceAPISessionInfoWithResponse call
+func ParseGetServiceAPISessionInfoResponse(rsp *http.Response) (*GetServiceAPISessionInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetServiceAPISessionInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			ServiceAPIRespBody *ServiceAPIContent `json:"ServiceAPIRespBody,omitempty"`
+
+			// ConnectID An identifier generated by the Partner OP to represent the end user identity in the Service API request.
+			ConnectID      ConnectID      `json:"connectID"`
+			ExpiryDuration ExpiryInterval `json:"expiryDuration"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAPIForwardingResponse parses an HTTP response from a APIForwardingWithResponse call
+func ParseAPIForwardingResponse(rsp *http.Response) (*APIForwardingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &APIForwardingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ServiceAPIResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateApplicationPolicySubscriptionResponse parses an HTTP response from a CreateApplicationPolicySubscriptionWithResponse call
+func ParseCreateApplicationPolicySubscriptionResponse(rsp *http.Response) (*CreateApplicationPolicySubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateApplicationPolicySubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			ApplPolicySubscriptionId *string `json:"applPolicySubscriptionId,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetrieveApplicationPolicyResponse parses an HTTP response from a RetrieveApplicationPolicyWithResponse call
+func ParseRetrieveApplicationPolicyResponse(rsp *http.Response) (*RetrieveApplicationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetrieveApplicationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssocApplPolicies
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseModifyApplicationPolicyResponse parses an HTTP response from a ModifyApplicationPolicyWithResponse call
+func ParseModifyApplicationPolicyResponse(rsp *http.Response) (*ModifyApplicationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ModifyApplicationPolicyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -5131,7 +11480,1001 @@ func ParseInstallAppResponse(rsp *http.Response) (*InstallAppResponse, error) {
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseApplyApplicationPolicyResponse parses an HTTP response from a ApplyApplicationPolicyWithResponse call
+func ParseApplyApplicationPolicyResponse(rsp *http.Response) (*ApplyApplicationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ApplyApplicationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssocApplPolicies
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveApplicationPoliciesResponse parses an HTTP response from a RemoveApplicationPoliciesWithResponse call
+func ParseRemoveApplicationPoliciesResponse(rsp *http.Response) (*RemoveApplicationPoliciesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveApplicationPoliciesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssocApplPolicies
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateApplicationEventSubscriptionResponse parses an HTTP response from a CreateApplicationEventSubscriptionWithResponse call
+func ParseCreateApplicationEventSubscriptionResponse(rsp *http.Response) (*CreateApplicationEventSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateApplicationEventSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			AppEventSubsId              *string              `json:"appEventSubsId,omitempty"`
+			ApplEventSubscriptionConfig *PeriodicNotifConfig `json:"applEventSubscriptionConfig,omitempty"`
+
+			// NumEvtsPerNotif The number of applications events that the Partner OP should include in a notification
+			NumEvtsPerNotif *int `json:"numEvtsPerNotif,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteApplNotifSubscriptionResponse parses an HTTP response from a DeleteApplNotifSubscriptionWithResponse call
+func ParseDeleteApplNotifSubscriptionResponse(rsp *http.Response) (*DeleteApplNotifSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteApplNotifSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetrieveApplSubsMetaInfoResponse parses an HTTP response from a RetrieveApplSubsMetaInfoWithResponse call
+func ParseRetrieveApplSubsMetaInfoResponse(rsp *http.Response) (*RetrieveApplSubsMetaInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetrieveApplSubsMetaInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			union json.RawMessage
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseModifyApplEventNotifSubscriptionResponse parses an HTTP response from a ModifyApplEventNotifSubscriptionWithResponse call
+func ParseModifyApplEventNotifSubscriptionResponse(rsp *http.Response) (*ModifyApplEventNotifSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ModifyApplEventNotifSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSubscribeApplsEvtNotifResponse parses an HTTP response from a SubscribeApplsEvtNotifWithResponse call
+func ParseSubscribeApplsEvtNotifResponse(rsp *http.Response) (*SubscribeApplsEvtNotifResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SubscribeApplsEvtNotifResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			AddAppsForNotif *AddAppsForNotif `json:"addAppsForNotif,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetrieveAppsEventsInfoResponse parses an HTTP response from a RetrieveAppsEventsInfoWithResponse call
+func ParseRetrieveAppsEventsInfoResponse(rsp *http.Response) (*RetrieveAppsEventsInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetrieveAppsEventsInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AggrApplEventsList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveAppsEventSubscriptionResponse parses an HTTP response from a RemoveAppsEventSubscriptionWithResponse call
+func ParseRemoveAppsEventSubscriptionResponse(rsp *http.Response) (*RemoveAppsEventSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveAppsEventSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RemoveAppsForNotif
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRegisterApplicationPolicyResponse parses an HTTP response from a RegisterApplicationPolicyWithResponse call
+func ParseRegisterApplicationPolicyResponse(rsp *http.Response) (*RegisterApplicationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RegisterApplicationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			PolicyId string `json:"policyId"`
+
+			// PplConcretePolicy Application policy id and policy parameter value limits registered by the Originating OP
+			PplConcretePolicy ApplConcretePolicy `json:"pplConcretePolicy"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetrieveAppPolicyTemplatesResponse parses an HTTP response from a RetrieveAppPolicyTemplatesWithResponse call
+func ParseRetrieveAppPolicyTemplatesResponse(rsp *http.Response) (*RetrieveAppPolicyTemplatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetrieveAppPolicyTemplatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// ApplPolicyTemplateList List of Application policy templates from the Partner OP
+			ApplPolicyTemplateList *ApplPolicyTemplateList `json:"applPolicyTemplateList,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseInstallAppResponse parses an HTTP response from a InstallAppWithResponse call
+func ParseInstallAppResponse(rsp *http.Response) (*InstallAppResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &InstallAppResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest struct {
+			// AppInstIdentifier Unique identifier generated by the partner OP to identify an instance of the application on a specific zone.
+			AppInstIdentifier InstanceIdentifier `json:"appInstIdentifier"`
+
+			// ZoneId Human readable name of the zone.
+			ZoneId ZoneIdentifier `json:"zoneId"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5224,7 +12567,7 @@ func ParseGetAllAppInstancesResponse(rsp *http.Response) (*GetAllAppInstancesRes
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5299,7 +12642,7 @@ func ParseRemoveAppResponse(rsp *http.Response) (*RemoveAppResponse, error) {
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5361,8 +12704,13 @@ func ParseGetAppInstanceDetailsResponse(rsp *http.Response) (*GetAppInstanceDeta
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// AccessPointInfo Information about the IP and Port exposed by the OP. Application clients shall use these access points to reach this application instance.
-			AccessPointInfo *AccessPointInfo `json:"accessPointInfo,omitempty"`
+			// AccesspointInfo Information about the IP and Port exposed by the OP. Application clients shall use these access points to reach this application instance
+			AccesspointInfo *[]struct {
+				AccessPoints ServiceEndpoint `json:"accessPoints"`
+
+				// InterfaceId This is the interface identifier that app provider defines when application is onboarded.
+				InterfaceId string `json:"interfaceId"`
+			} `json:"accesspointInfo,omitempty"`
 
 			// AppInstanceState Running status of the application instance.
 			AppInstanceState *InstanceState `json:"appInstanceState,omitempty"`
@@ -5387,7 +12735,7 @@ func ParseGetAppInstanceDetailsResponse(rsp *http.Response) (*GetAppInstanceDeta
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5462,7 +12810,7 @@ func ParseOnboardApplicationResponse(rsp *http.Response) (*OnboardApplicationRes
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5537,7 +12885,7 @@ func ParseDeleteAppResponse(rsp *http.Response) (*DeleteAppResponse, error) {
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5599,11 +12947,17 @@ func ParseViewApplicationResponse(rsp *http.Response) (*ViewApplicationResponse,
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// AppComponentSpecs An application may consist of more than one component. Each component is associated with a descriptor and may exposes its services externally or internally. App providers are required to provide details about all these components, their associated descriptors and their DNS names.
+			// AppComponentSpecs An application may consist of more than one component. Each component is associated with a descriptor and may exposes its services externally or internally.  App providers are required to provide details about all these components, their associated descriptors and their DNS names.
 			AppComponentSpecs AppComponentSpecs `json:"appComponentSpecs"`
 
-			// AppDeploymentZones Details about partner OP zones where the application should be made available. This field when specified will instruct the OP to restrict application instantiation only on the listed zones.
-			AppDeploymentZones []ZoneIdentifier `json:"appDeploymentZones"`
+			// AppDeploymentZones Details about partner OP zones where the application should be made available;  This field when specified will instruct the OP to restrict application instantiation only on the listed zones.
+			AppDeploymentZones []struct {
+				// CountryCode ISO 3166-1 Alpha-2 code for the country of Partner operator
+				CountryCode CountryCode `json:"countryCode"`
+
+				// ZoneInfo Human readable name of the zone.
+				ZoneInfo ZoneIdentifier `json:"zoneInfo"`
+			} `json:"appDeploymentZones"`
 
 			// AppId Identifier used to refer to an application.
 			AppId AppIdentifier `json:"appId"`
@@ -5611,11 +12965,14 @@ func ParseViewApplicationResponse(rsp *http.Response) (*ViewApplicationResponse,
 			// AppMetaData Application metadata details
 			AppMetaData AppMetaData `json:"appMetaData"`
 
-			// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+			// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 			AppProviderId AppProviderId `json:"appProviderId"`
 
 			// AppQoSProfile Parameters corresponding to the performance constraints, tenancy details etc.
 			AppQoSProfile AppQoSProfile `json:"appQoSProfile"`
+
+			// OnboardStatusInfo Defines change in application status. This change could be related to application itself or an application instance status
+			OnboardStatusInfo OnboardStatusInfo `json:"onboardStatusInfo"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -5637,7 +12994,7 @@ func ParseViewApplicationResponse(rsp *http.Response) (*ViewApplicationResponse,
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5712,7 +13069,7 @@ func ParseUpdateApplicationResponse(rsp *http.Response) (*UpdateApplicationRespo
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5787,7 +13144,7 @@ func ParseOnboardExistingAppNewZonesResponse(rsp *http.Response) (*OnboardExisti
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5862,7 +13219,7 @@ func ParseDeboardApplicationResponse(rsp *http.Response) (*DeboardApplicationRes
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5937,7 +13294,7 @@ func ParseLockUnlockApplicationZoneResponse(rsp *http.Response) (*LockUnlockAppl
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6012,7 +13369,7 @@ func ParseUploadArtefactResponse(rsp *http.Response) (*UploadArtefactResponse, e
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6087,7 +13444,7 @@ func ParseRemoveArtefactResponse(rsp *http.Response) (*RemoveArtefactResponse, e
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6149,20 +13506,20 @@ func ParseGetArtefactResponse(rsp *http.Response) (*GetArtefactResponse, error) 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+			// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 			AppProviderId AppProviderId `json:"appProviderId"`
 
 			// ArtefactDescription Brief description of the artefact by the application provider
-			ArtefactDescription *string `json:"artefactDescription,omitempty"`
+			ArtefactDescription *ArtefactDescription `json:"artefactDescription,omitempty"`
 
-			// ArtefactDescriptorType Type of descriptor present in the artefact. App provider can either define either a Helm chart or a Terraform script or container spec.
-			ArtefactDescriptorType UploadArtefactMultipartBodyArtefactDescriptorType `json:"artefactDescriptorType"`
+			// ArtefactDescriptorType Type of descriptor present in the artefact.  App provider can either define either a Helm chart or a Terraform script or container spec.
+			ArtefactDescriptorType ArtefactDescriptorType `json:"artefactDescriptorType"`
 
 			// ArtefactFileFormat Artefacts like Helm charts or Terraform scripts may need compressed format.
-			ArtefactFileFormat *UploadArtefactMultipartBodyArtefactFileFormat `json:"artefactFileFormat,omitempty"`
+			ArtefactFileFormat *ArtefactFileFormat `json:"artefactFileFormat,omitempty"`
 
 			// ArtefactFileName Name of the file.
-			ArtefactFileName *string `json:"artefactFileName,omitempty"`
+			ArtefactFileName *ArtefactFileName `json:"artefactFileName,omitempty"`
 
 			// ArtefactId A globally unique identifier associated with the artefact. Originating OP generates this identifier when artefact is submitted over NBI.
 			ArtefactId ArtefactId `json:"artefactId"`
@@ -6172,14 +13529,11 @@ func ParseGetArtefactResponse(rsp *http.Response) (*GetArtefactResponse, error) 
 			ArtefactRepoLocation *ObjectRepoLocation `json:"artefactRepoLocation,omitempty"`
 
 			// ArtefactVersionInfo Artefact version information
-			ArtefactVersionInfo string               `json:"artefactVersionInfo"`
-			ArtefactVirtType    UploadArtefactMultipartBodyArtefactVirtType `json:"artefactVirtType"`
+			ArtefactVersionInfo ArtefactVersionInfo `json:"artefactVersionInfo"`
+			ArtefactVirtType    ArtefactVirtType    `json:"artefactVirtType"`
 
-			// ComponentSpec Details about compute, networking and storage requirements for each component of the application. App provider should define all information needed to instantiate the component. If artefact is being defined at component level this section should have information just about the component. In case the artefact is being defined at application level the section should provide details about all the components.
-			ComponentSpec *[]ComponentSpec `json:"componentSpec,omitempty"`
-
-			// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal. OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
-			RepoType *UploadArtefactMultipartBodyRepoType `json:"repoType,omitempty"`
+			// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal.  OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
+			RepoType *RepoType `json:"repoType,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -6201,7 +13555,7 @@ func ParseGetArtefactResponse(rsp *http.Response) (*GetArtefactResponse, error) 
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6262,7 +13616,7 @@ func ParseGetCandidateZonesResponse(rsp *http.Response) (*GetCandidateZonesRespo
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DiscoveredEdgeNodes
+		var dest NodeDiscoveryResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6283,7 +13637,7 @@ func ParseGetCandidateZonesResponse(rsp *http.Response) (*GetCandidateZonesRespo
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6302,6 +13656,568 @@ func ParseGetCandidateZonesResponse(rsp *http.Response) (*GetCandidateZonesRespo
 			return nil, err
 		}
 		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateEventSubscriptionResponse parses an HTTP response from a CreateEventSubscriptionWithResponse call
+func ParseCreateEventSubscriptionResponse(rsp *http.Response) (*CreateEventSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateEventSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EventSubscriptionInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAlarmSubscriptionResponse parses an HTTP response from a DeleteAlarmSubscriptionWithResponse call
+func ParseDeleteAlarmSubscriptionResponse(rsp *http.Response) (*DeleteAlarmSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAlarmSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAlarmsListResponse parses an HTTP response from a GetAlarmsListWithResponse call
+func ParseGetAlarmsListResponse(rsp *http.Response) (*GetAlarmsListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAlarmsListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// ActiveAlarmsList List of active alarms
+			ActiveAlarmsList *ActiveAlarmsList `json:"activeAlarmsList,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteEventSubscriptionResponse parses an HTTP response from a DeleteEventSubscriptionWithResponse call
+func ParseDeleteEventSubscriptionResponse(rsp *http.Response) (*DeleteEventSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteEventSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetEventsListResponse parses an HTTP response from a GetEventsListWithResponse call
+func ParseGetEventsListResponse(rsp *http.Response) (*GetEventsListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetEventsListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// EventCriterionList List of event criterion
+			EventCriterionList *EventTypeList `json:"eventCriterionList,omitempty"`
+
+			// EventIdList List of events detected
+			EventIdList *EventsList `json:"eventIdList,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateEventCriterionResponse parses an HTTP response from a CreateEventCriterionWithResponse call
+func ParseCreateEventCriterionResponse(rsp *http.Response) (*CreateEventCriterionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateEventCriterionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EventInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteEventCriterionResponse parses an HTTP response from a DeleteEventCriterionWithResponse call
+func ParseDeleteEventCriterionResponse(rsp *http.Response) (*DeleteEventCriterionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteEventCriterionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
 
 	}
 
@@ -6337,7 +14253,7 @@ func ParseUploadFileResponse(rsp *http.Response) (*UploadFileResponse, error) {
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6412,7 +14328,7 @@ func ParseRemoveFileResponse(rsp *http.Response) (*RemoveFileResponse, error) {
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6474,34 +14390,34 @@ func ParseViewFileResponse(rsp *http.Response) (*ViewFileResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			// AppProviderId UserId of the app provider. Identifier is relevant only in context of this federation.
+			// AppProviderId UserId of the app provider.  Identifier is relevant only in context of this federation.
 			AppProviderId AppProviderId `json:"appProviderId"`
 
 			// Checksum MD5 checksum for VM and file-based images, sha256 digest for containers
 			Checksum *string `json:"checksum,omitempty"`
 
 			// FileDescription Brief description about the image file.
-			FileDescription *string `json:"fileDescription,omitempty"`
+			FileDescription *FileDescription `json:"fileDescription,omitempty"`
 
 			// FileId A globally unique identifier associated with the image file. Originating OP generates this identifier when file is uploaded over NBI.
 			FileId FileId `json:"fileId"`
 
-			// FileName Name of the image file.
+			// FileName Name of the image file.   App provides specifies this name when image is uploaded on originating OP over NBI.
 			FileName         FileName            `json:"fileName"`
 			FileRepoLocation *ObjectRepoLocation `json:"fileRepoLocation,omitempty"`
 
 			// FileType Indicate if the file is Container image or VM image (QCOW2, OVA)
 			FileType VirtImageType `json:"fileType"`
 
-			// FileVersionInfo File version information
-			FileVersionInfo string `json:"fileVersionInfo"`
+			// FileVersionInfo File version information.
+			FileVersionInfo FileVersionInfo `json:"fileVersionInfo"`
 
 			// ImgInsSetArch CPU Instruction Set Architecture (ISA) E.g., Intel, Arm etc.
 			ImgInsSetArch CPUArchType `json:"imgInsSetArch"`
 			ImgOSType     OSType      `json:"imgOSType"`
 
-			// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal. OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
-			RepoType *UploadArtefactMultipartBodyRepoType `json:"repoType,omitempty"`
+			// RepoType Artefact or file repository location. PUBLICREPO is used of public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO is used for private repo managed by the application developer, UPLOAD is for the case when artefact/file is uploaded from MEC web portal.  OP should pull the image from ‘repoUrl' immediately after receiving the request and then send back the response. In case the repoURL corresponds to a docker registry, use docker v2 http api to do the pull.
+			RepoType *RepoType `json:"repoType,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -6523,7 +14439,91 @@ func ParseViewFileResponse(rsp *http.Response) (*ViewFileResponse, error) {
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetFederationHealthResponse parses an HTTP response from a GetFederationHealthWithResponse call
+func ParseGetFederationHealthResponse(rsp *http.Response) (*GetFederationHealthResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFederationHealthResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			FederationHealthStatus FederationHealthInfo `json:"federationHealthStatus"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6597,7 +14597,7 @@ func ParseViewISVResPoolResponse(rsp *http.Response) (*ViewISVResPoolResponse, e
 				// Count Total number of flavours reserved
 				Count int32 `json:"count"`
 
-				// FlavourId An identifier to refer to a specific combination of compute resources.
+				// FlavourId An identifier to refer to a specific combination of compute resources
 				FlavourId FlavourId `json:"flavourId"`
 			} `json:"reservedFlavours"`
 
@@ -6624,7 +14624,7 @@ func ParseViewISVResPoolResponse(rsp *http.Response) (*ViewISVResPoolResponse, e
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6684,6 +14684,19 @@ func ParseCreateResourcePoolsResponse(rsp *http.Response) (*CreateResourcePoolsR
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// PoolId OP defined Identifier for the pool reserved for the ISV. It should be unique with an OP.
+			PoolId PoolId `json:"poolId"`
+
+			// PoolName ISV defined name of the resource pool.
+			PoolName PoolName `json:"poolName"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -6699,7 +14712,7 @@ func ParseCreateResourcePoolsResponse(rsp *http.Response) (*CreateResourcePoolsR
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6849,7 +14862,1068 @@ func ParseUpdateISVResPoolResponse(rsp *http.Response) (*UpdateISVResPoolRespons
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSubscribeMonitoringInfoResponse parses an HTTP response from a SubscribeMonitoringInfoWithResponse call
+func ParseSubscribeMonitoringInfoResponse(rsp *http.Response) (*SubscribeMonitoringInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SubscribeMonitoringInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResourceSubscriptionInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateNetworkCapsEventSubscriptionResponse parses an HTTP response from a CreateNetworkCapsEventSubscriptionWithResponse call
+func ParseCreateNetworkCapsEventSubscriptionResponse(rsp *http.Response) (*CreateNetworkCapsEventSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateNetworkCapsEventSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PeriodicNotifConfig
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNwEventNotifSubscriptionResponse parses an HTTP response from a DeleteNwEventNotifSubscriptionWithResponse call
+func ParseDeleteNwEventNotifSubscriptionResponse(rsp *http.Response) (*DeleteNwEventNotifSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNwEventNotifSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateNetworkCapEventResponse parses an HTTP response from a CreateNetworkCapEventWithResponse call
+func ParseCreateNetworkCapEventResponse(rsp *http.Response) (*CreateNetworkCapEventResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateNetworkCapEventResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			NetworkCapSubsInfo NetworkCapSubsInfo `json:"networkCapSubsInfo"`
+
+			// TxnIdentifier A API transaction identifier generated by the Partner OP for each API request
+			TxnIdentifier TxnIdentifier `json:"txnIdentifier"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNetworkCapSubscriptionResponse parses an HTTP response from a DeleteNetworkCapSubscriptionWithResponse call
+func ParseDeleteNetworkCapSubscriptionResponse(rsp *http.Response) (*DeleteNetworkCapSubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNetworkCapSubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNetworkCapsSubscribedListResponse parses an HTTP response from a GetNetworkCapsSubscribedListWithResponse call
+func ParseGetNetworkCapsSubscribedListResponse(rsp *http.Response) (*GetNetworkCapsSubscribedListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNetworkCapsSubscribedListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			SubscribedNwCaps *[]NetworkCapSubsInfo `json:"subscribedNwCaps,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateOperationPolicySubscriptionResponse parses an HTTP response from a CreateOperationPolicySubscriptionWithResponse call
+func ParseCreateOperationPolicySubscriptionResponse(rsp *http.Response) (*CreateOperationPolicySubscriptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateOperationPolicySubscriptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			OpslPolicySubscriptionId *string `json:"opslPolicySubscriptionId,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveOperationPoliciesResponse parses an HTTP response from a RemoveOperationPoliciesWithResponse call
+func ParseRemoveOperationPoliciesResponse(rsp *http.Response) (*RemoveOperationPoliciesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveOperationPoliciesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssocOpsPolicies
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRegisterOperationPolicyResponse parses an HTTP response from a RegisterOperationPolicyWithResponse call
+func ParseRegisterOperationPolicyResponse(rsp *http.Response) (*RegisterOperationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RegisterOperationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// OpsConcretePolicy Application policy id and policy parameter value limits registered by the Originating OP
+			OpsConcretePolicy OpsConcretePolicy `json:"opsConcretePolicy"`
+			PolicyId          string            `json:"policyId"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetrieveOpsPolicyTemplatesResponse parses an HTTP response from a RetrieveOpsPolicyTemplatesWithResponse call
+func ParseRetrieveOpsPolicyTemplatesResponse(rsp *http.Response) (*RetrieveOpsPolicyTemplatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetrieveOpsPolicyTemplatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// OpsPolicyTemplateList List of Operation policy templates from the Partner OP
+			OpsPolicyTemplateList *OpsPolicyTemplateList `json:"opsPolicyTemplateList,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetrieveOperationPolicyResponse parses an HTTP response from a RetrieveOperationPolicyWithResponse call
+func ParseRetrieveOperationPolicyResponse(rsp *http.Response) (*RetrieveOperationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetrieveOperationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssocOpsPolicies
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseModifyOperationPolicyResponse parses an HTTP response from a ModifyOperationPolicyWithResponse call
+func ParseModifyOperationPolicyResponse(rsp *http.Response) (*ModifyOperationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ModifyOperationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseApplyOperationPolicyResponse parses an HTTP response from a ApplyOperationPolicyWithResponse call
+func ParseApplyOperationPolicyResponse(rsp *http.Response) (*ApplyOperationPolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ApplyOperationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssocOpsPolicies
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6924,7 +15998,7 @@ func ParseDeleteFederationDetailsResponse(rsp *http.Response) (*DeleteFederation
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -6989,9 +16063,12 @@ func ParseGetFederationDetailsResponse(rsp *http.Response) (*GetFederationDetail
 			// AllowedFixedNetworkIds List of network identifier associated with the fixed line network of the operator platform.
 			AllowedFixedNetworkIds       *FixedNetworkIds  `json:"allowedFixedNetworkIds,omitempty"`
 			AllowedMobileNetworkIds      *MobileNetworkIds `json:"allowedMobileNetworkIds,omitempty"`
-			EdgeDiscoveryServiceEndPoint ServiceEndpoint   `json:"edgeDiscoveryServiceEndPoint"`
-			LcmServiceEndPoint           ServiceEndpoint   `json:"lcmServiceEndPoint"`
+			EdgeDiscoveryServiceEndPoint *ServiceEndpoint  `json:"edgeDiscoveryServiceEndPoint,omitempty"`
+			LcmServiceEndPoint           *ServiceEndpoint  `json:"lcmServiceEndPoint,omitempty"`
 			OfferedAvailabilityZones     *[]ZoneDetails    `json:"offeredAvailabilityZones,omitempty"`
+
+			// PlatformCaps Home routing - Operator platform is capable of routing edge application data traffic from its edges to user device in their home location. This is the case where user devices are served in their home region (requesting platform region, non-roaming) but the corresponding edge application are in operator platform edges. Anchoring - Operator platform is capable of routing edge application traffic for roaming user devices to edge application in user device home network. Service APIs - Capability to handle Service APIs (e.g., CAMARA APIs) from the Leading OP
+			PlatformCaps *PlatformCaps `json:"platformCaps,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -7013,7 +16090,7 @@ func ParseGetFederationDetailsResponse(rsp *http.Response) (*GetFederationDetail
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7078,8 +16155,8 @@ func ParseUpdateFederationResponse(rsp *http.Response) (*UpdateFederationRespons
 			// AllowedFixedNetworkIds List of network identifier associated with the fixed line network of the operator platform.
 			AllowedFixedNetworkIds       *FixedNetworkIds  `json:"allowedFixedNetworkIds,omitempty"`
 			AllowedMobileNetworkIds      *MobileNetworkIds `json:"allowedMobileNetworkIds,omitempty"`
-			EdgeDiscoveryServiceEndPoint ServiceEndpoint   `json:"edgeDiscoveryServiceEndPoint"`
-			LcmServiceEndPoint           ServiceEndpoint   `json:"lcmServiceEndPoint"`
+			EdgeDiscoveryServiceEndPoint *ServiceEndpoint  `json:"edgeDiscoveryServiceEndPoint,omitempty"`
+			LcmServiceEndPoint           *ServiceEndpoint  `json:"lcmServiceEndPoint,omitempty"`
 			OfferedAvailabilityZones     *[]ZoneDetails    `json:"offeredAvailabilityZones,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -7102,7 +16179,7 @@ func ParseUpdateFederationResponse(rsp *http.Response) (*UpdateFederationRespons
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7148,76 +16225,22 @@ func ParseUpdateFederationResponse(rsp *http.Response) (*UpdateFederationRespons
 	return response, nil
 }
 
-// ParseAuthenticateDeviceResponse parses an HTTP response from a AuthenticateDeviceWithResponse call
-func ParseAuthenticateDeviceResponse(rsp *http.Response) (*AuthenticateDeviceResponse, error) {
+// ParsePartnerDetailsResponse parses an HTTP response from a PartnerDetailsWithResponse call
+func ParsePartnerDetailsResponse(rsp *http.Response) (*PartnerDetailsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &AuthenticateDeviceResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest N401
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest N422
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON422 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest N500
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON500 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
-		var dest N503
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON503 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseZoneSubscribeResponse parses an HTTP response from a ZoneSubscribeWithResponse call
-func ParseZoneSubscribeResponse(rsp *http.Response) (*ZoneSubscribeResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ZoneSubscribeResponse{
+	response := &PartnerDetailsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ZoneRegistrationResponseData
+		var dest FederationDetailResponseData
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7238,7 +16261,7 @@ func ParseZoneSubscribeResponse(rsp *http.Response) (*ZoneSubscribeResponse, err
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7284,20 +16307,36 @@ func ParseZoneSubscribeResponse(rsp *http.Response) (*ZoneSubscribeResponse, err
 	return response, nil
 }
 
-// ParseZoneUnsubscribeResponse parses an HTTP response from a ZoneUnsubscribeWithResponse call
-func ParseZoneUnsubscribeResponse(rsp *http.Response) (*ZoneUnsubscribeResponse, error) {
+// ParseGetServiceAPIsDetailsResponse parses an HTTP response from a GetServiceAPIsDetailsWithResponse call
+func ParseGetServiceAPIsDetailsResponse(rsp *http.Response) (*GetServiceAPIsDetailsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &ZoneUnsubscribeResponse{
+	response := &GetServiceAPIsDetailsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// ApiRoutingInfo List of public IP addresses MNO manages for UEs to connect with public data networks
+			ApiRoutingInfo ServiceRoutingInfo `json:"apiRoutingInfo"`
+
+			// ServiceCaps List of Service API capability names an OP supports and offers to other OPs "quality_on_demand", "device_location" etc.
+			ServiceCaps ServiceAPINames `json:"serviceCaps"`
+
+			// ServiceType An identifier to refer to partner OP capabilities for application providers.
+			ServiceType *ServiceType `json:"serviceType,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest N400
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -7313,7 +16352,186 @@ func ParseZoneUnsubscribeResponse(rsp *http.Response) (*ZoneUnsubscribeResponse,
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPlatformCapabilitiesResponse parses an HTTP response from a GetPlatformCapabilitiesWithResponse call
+func ParseGetPlatformCapabilitiesResponse(rsp *http.Response) (*GetPlatformCapabilitiesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPlatformCapabilitiesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			DeviceConnStatusChangeCap *DeviceConnStatusChangeCap `json:"deviceConnStatusChangeCap,omitempty"`
+			DynamicQoSCap             *DynamicQoSCap             `json:"dynamicQoSCap,omitempty"`
+			LocationRetrievalCap      *LocationRetrievalCap      `json:"locationRetrievalCap,omitempty"`
+			UserPlaneMgmtEvtCap       *UserPlaneMgmtEvtCap       `json:"userPlaneMgmtEvtCap,omitempty"`
+			union                     json.RawMessage
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRenewFederationResponse parses an HTTP response from a RenewFederationWithResponse call
+func ParseRenewFederationResponse(rsp *http.Response) (*RenewFederationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RenewFederationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// FederationContextId This identifier shall be provided by the partner OP on successful verification and validation of the federation create request and is used by partner op to identify this newly created federation context. Originating OP shall provide this identifier in any subsequent request towards the partner op.
+			FederationContextId *FederationContextId `json:"FederationContextId,omitempty"`
+
+			// FederationExpiryDate Date and Time zone info format
+			FederationExpiryDate DateAndTimeZoneObject `json:"federationExpiryDate"`
+
+			// FederationRenewalDate Date and Time zone info format
+			FederationRenewalDate DateAndTimeZoneObject `json:"federationRenewalDate"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7395,7 +16613,246 @@ func ParseGetZoneDataResponse(rsp *http.Response) (*GetZoneDataResponse, error) 
 		response.ApplicationproblemJSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseZoneSubscribeResponse parses an HTTP response from a ZoneSubscribeWithResponse call
+func ParseZoneSubscribeResponse(rsp *http.Response) (*ZoneSubscribeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ZoneSubscribeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ZoneRegistrationResponseData
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseZoneUnsubscribeResponse parses an HTTP response from a ZoneUnsubscribeWithResponse call
+func ParseZoneUnsubscribeResponse(rsp *http.Response) (*ZoneUnsubscribeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ZoneUnsubscribeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest N422
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest N500
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 520:
+		var dest N520
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON520 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetZoneDetailsResponse parses an HTTP response from a GetZoneDetailsWithResponse call
+func ParseGetZoneDetailsResponse(rsp *http.Response) (*GetZoneDetailsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetZoneDetailsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ZoneRegisteredData
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

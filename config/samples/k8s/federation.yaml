@@ -1,0 +1,18 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: Federation
+metadata:
+  namespace: guest
+  name: fed-telecomitalia
+spec:
+  federationData:
+    relationType: GUEST
+    technologyType: K8S
+    origOPFederationId: "telecomitalia"
+    origOPCountryCode: "IT"
+    initialDate: "2026-07-23T14:00:02+02:00"
+    clientId: 3acde22c-d245-480d-b01e-24e38e01806d
+    clientSecret: 4rr55445-d245-480d-b01e-24e38e01806d
+    k8sOptions:
+      namespace: host
+      secretName: kubeconfig-secret
+      contextName: host-name

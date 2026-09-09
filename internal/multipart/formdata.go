@@ -35,7 +35,7 @@ func SerializeUploadFileMultipartBody(fileMPBody opgmodels.UploadFileMultipartBo
 	if err := fileReader.addFormFieldPtr("fileDescription", fileMPBody.FileDescription); err != nil {
 		return nil, "", err
 	}
-	if err := fileReader.addFormField("fileId", fileMPBody.FileId); err != nil {
+	if err := fileReader.addFormField("fileId", string(fileMPBody.FileId[:])); err != nil {
 		return nil, "", err
 	}
 	if err := fileReader.addFormField("fileName", fileMPBody.FileName); err != nil {
@@ -61,6 +61,11 @@ func SerializeUploadFileMultipartBody(fileMPBody opgmodels.UploadFileMultipartBo
 			return nil, "", err
 		}
 	}
+	if fileMPBody.FileNotifLink != nil { // Handle potential nil pointer
+		if err := fileReader.addFormField("fileNotifLink", string(*fileMPBody.FileNotifLink)); err != nil {
+			return nil, "", err
+		}
+	}
 
 	err := fileReader.close() // Important: Close the writer to finalize the multipart body
 	if err != nil {
@@ -83,7 +88,7 @@ func SerializeUploadArtefactMultipartBody(aMPBody opgmodels.UploadArtefactMultip
 	if err := aReader.addFormFieldPtr("artefactDescription", aMPBody.ArtefactDescription); err != nil {
 		return nil, "", err
 	}
-	if err := aReader.addFormField("artefactId", aMPBody.ArtefactId); err != nil {
+	if err := aReader.addFormField("artefactId", string(aMPBody.ArtefactId[:])); err != nil {
 		return nil, "", err
 	}
 	if err := aReader.addFormField("artefactName", aMPBody.ArtefactName); err != nil {
@@ -101,7 +106,11 @@ func SerializeUploadArtefactMultipartBody(aMPBody opgmodels.UploadArtefactMultip
 	if err := aReader.addComponentSpecField("componentSpec", aMPBody.ComponentSpec); err != nil {
 		return nil, "", err
 	}
-
+	if aMPBody.ArtefactNotifLink != nil { // Handle potential nil pointer
+		if err := aReader.addFormField("artefactNotifLink", string(*aMPBody.ArtefactNotifLink)); err != nil {
+			return nil, "", err
+		}
+	}
 	err := aReader.close() // Important: Close the writer to finalize the multipart body
 	if err != nil {
 		return nil, "", err

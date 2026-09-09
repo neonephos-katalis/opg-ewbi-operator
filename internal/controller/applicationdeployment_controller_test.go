@@ -1,0 +1,299 @@
+/*
+Copyright 2025.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package controller
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
+	"github.com/neonephos-katalis/opg-ewbi-operator/test/mock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+)
+
+const (
+
+	// ApplicationDeployment
+	testAppInstName       = "appinst001"
+	testAppInstExternalId = "appinst-00000000-0000-0000-0000-000000000001"
+)
+
+func TestApplicationDeploymentReconciler(t *testing.T) {
+	feder := makeTestFederation(testFederationName, withFederationContextId(testFederationContextId))
+	file := makeTestImage(testFederationContextId)
+
+	type fields struct {
+		resources          []client.Object
+		mockOpgFederations []*v1beta1.Federation
+		mockOpgAppInsts    []*v1beta1.ApplicationDeployment
+	}
+	type args struct {
+		req ctrl.Request
+	}
+	type response struct {
+		wantResult       ctrl.Result
+		wantReconcileErr bool
+		wantGetErr       func(err error) bool
+		wantStatusState  v1beta1.ApplicationDeploymentState
+		wantFinalizer    string
+		wantAPIAppInsts  []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		resp   response
+	}{
+		{
+			name: "New ApplicationDeployment without Finalizer will get it and return",
+			fields: fields{
+				resources: []client.Object{feder, file, makeTestAppDeploy(testFederationContextId)},
+			},
+			args: args{
+				req: ctrl.Request{
+					NamespacedName: types.NamespacedName{Name: testAppInstName, Namespace: testNamespace},
+				},
+			},
+			resp: response{
+				wantResult:       ctrl.Result{Requeue: false},
+				wantReconcileErr: false,
+				wantStatusState:  "",
+				wantFinalizer:    v1beta1.ApplicationDeploymentFinalizer,
+			},
+		},
+		{
+			name: "A Host ApplicationDeployment is ignored, state is set to Ready",
+			fields: fields{
+				resources: []client.Object{feder, file, makeTestAppDeploy(testFederationContextId, appInstWithFinalizer())},
+			},
+			args: args{
+				req: ctrl.Request{
+					NamespacedName: types.NamespacedName{Name: testAppInstName, Namespace: testNamespace},
+				},
+			},
+			resp: response{
+				wantResult:       ctrl.Result{Requeue: false},
+				wantReconcileErr: false,
+				wantStatusState:  v1beta1.ApplicationDeploymentStateReady,
+				wantFinalizer:    v1beta1.ApplicationDeploymentFinalizer,
+			},
+		},
+		{
+			name: "A New Guest ApplicationDeployment is created at federation partner Operator",
+			fields: fields{
+				resources:          []client.Object{feder, file, makeTestAppDeploy(testFederationContextId, appInstWithFinalizer())},
+				mockOpgFederations: []*v1beta1.Federation{feder},
+			},
+			args: args{
+				req: ctrl.Request{
+					NamespacedName: types.NamespacedName{Name: testAppInstName, Namespace: testNamespace},
+				},
+			},
+			resp: response{
+				wantResult:       ctrl.Result{Requeue: false},
+				wantReconcileErr: false,
+				wantStatusState:  v1beta1.ApplicationDeploymentStateReady,
+				wantFinalizer:    v1beta1.ApplicationDeploymentFinalizer,
+				wantAPIAppInsts:  []string{testAppInstExternalId},
+			},
+		},
+		{
+			name: "An existing Guest ApplicationDeployment is synced at federation partner if already exists",
+			fields: fields{
+				resources: []client.Object{
+					feder,
+					file,
+					makeTestAppDeploy(testFederationContextId,
+						appInstWithFinalizer(),
+						appInstWithState(v1beta1.ApplicationDeploymentStateReady),
+					)},
+				mockOpgFederations: []*v1beta1.Federation{feder},
+				mockOpgAppInsts:    []*v1beta1.ApplicationDeployment{makeTestAppDeploy(testFederationContextId)},
+			},
+			args: args{
+				req: ctrl.Request{NamespacedName: types.NamespacedName{Name: testAppInstName, Namespace: testNamespace}},
+			},
+			resp: response{
+				wantResult:       ctrl.Result{Requeue: false},
+				wantReconcileErr: false,
+				wantStatusState:  v1beta1.ApplicationDeploymentStateReady,
+				wantFinalizer:    v1beta1.ApplicationDeploymentFinalizer,
+				wantAPIAppInsts:  []string{testAppInstExternalId},
+			},
+		},
+		{
+			name: "Delete ApplicationDeployment is synced at federation partner and its finalizer removed in a single reconcile",
+			fields: fields{
+				resources: []client.Object{feder, file,
+					makeTestAppDeploy(testFederationContextId, appInstWithFinalizer(), appInstWithDeletedAt(time.Now()))},
+				mockOpgFederations: []*v1beta1.Federation{feder},
+				mockOpgAppInsts:    []*v1beta1.ApplicationDeployment{makeTestAppDeploy(testFederationContextId)},
+			},
+			args: args{
+				req: ctrl.Request{NamespacedName: types.NamespacedName{Name: testAppInstName, Namespace: testNamespace}},
+			},
+			resp: response{
+				wantResult:       ctrl.Result{Requeue: false},
+				wantReconcileErr: false,
+				wantGetErr:       errors.IsNotFound,
+				wantAPIAppInsts:  []string{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.TODO()
+			apiObjs := &ApiObjects{
+				Federations: tt.fields.mockOpgFederations,
+				AppInsts:    tt.fields.mockOpgAppInsts,
+			}
+			cl, opgcmap, mockedOpgAPI, sch := prepareEnv(tt.fields.resources, apiObjs)
+
+			r := makeTestAppDeployReconciler(cl, sch, opgcmap)
+
+			gotResult, err := r.Reconcile(ctx, tt.args.req)
+
+			if tt.resp.wantReconcileErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			assert.Equal(t, tt.resp.wantResult, gotResult)
+
+			for _, apiAppInst := range tt.resp.wantAPIAppInsts {
+				assert.Contains(t, mockedOpgAPI.AppDeploys, apiAppInst)
+			}
+
+			var reqAppInst v1beta1.ApplicationDeployment
+			err = r.Client.Get(ctx, tt.args.req.NamespacedName, &reqAppInst)
+			if tt.resp.wantGetErr != nil {
+				assert.True(t, tt.resp.wantGetErr(err))
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.resp.wantStatusState, reqAppInst.Status.AppInstanceInfo.AppInstanceState)
+			assert.Contains(t, reqAppInst.Finalizers, tt.resp.wantFinalizer)
+
+		})
+	}
+}
+
+type appInstOpt func(*v1beta1.ApplicationDeployment)
+
+func appInstWithDeletedAt(now time.Time) appInstOpt {
+	return func(a *v1beta1.ApplicationDeployment) {
+		wrapped := metav1.NewTime(now)
+		a.ObjectMeta.DeletionTimestamp = &wrapped
+		a.Finalizers = []string{v1beta1.ApplicationDeploymentFinalizer}
+	}
+}
+
+func appInstWithFinalizer() appInstOpt {
+	return func(f *v1beta1.ApplicationDeployment) {
+		controllerutil.AddFinalizer(f, v1beta1.ApplicationDeploymentFinalizer)
+	}
+}
+
+func appInstWithState(state v1beta1.ApplicationDeploymentState) appInstOpt {
+	return func(f *v1beta1.ApplicationDeployment) {
+		f.Status.AppInstanceInfo.AppInstanceState = state
+	}
+}
+
+func makeTestAppDeploy(fedCtxId string, opts ...appInstOpt) *v1beta1.ApplicationDeployment {
+	a := &v1beta1.ApplicationDeployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      testAppInstName,
+			Namespace: testNamespace,
+		},
+		Spec: v1beta1.ApplicationDeploymentSpec{
+			FederationContextId: fedCtxId,
+			AppProviderId:       testAppProvider,
+			AppId:               testAppName,
+			ZoneId:              testAZName,
+			AppDetails: &v1beta1.AppDetails{
+				AppVersion: testAppMetaDataVersion,
+				ZoneInfo: &v1beta1.ZoneInfo{
+					FlavourId:           "NOT_SPECIFIED",
+					ResourceConsumption: "RESERVED_RES_AVOID",
+					ResPool:             "mock-res-pool",
+				},
+				AppInstCallbackLink: "https://onboard.app/callback",
+			},
+		},
+	}
+	for _, o := range opts {
+		o(a)
+	}
+	return a
+}
+
+func makeTestAppDeployReconciler(
+	client client.Client,
+	sch *runtime.Scheme,
+	opgClients opg.OPGClientsMapInterface,
+) *ApplicationDeploymentReconciler {
+	r := &ApplicationDeploymentReconciler{
+		Client:                 client,
+		Scheme:                 sch,
+		OPGClientsMapInterface: opgClients,
+	}
+	return r
+}
+
+type ApiObjects struct {
+	Federations []*v1beta1.Federation
+	Files       []*v1beta1.Image
+	Artefacts   []*v1beta1.Artefact
+	Apps        []*v1beta1.ApplicationOnboarding
+	AppInsts    []*v1beta1.ApplicationDeployment
+	AZs         []*v1beta1.AvailabilityZone
+}
+
+func prepareEnv(clientObjs []client.Object, apiObjs *ApiObjects,
+) (client.Client, opg.OPGClientsMapInterface, *mock.MockedOpgAPI, *runtime.Scheme) {
+	log.SetLogger(zap.New(zap.UseDevMode(true)))
+	sch := makeTestReconcilerScheme(v1beta1.AddToScheme)
+	cl := makeTestReconcilerClient(sch, clientObjs, clientObjs, []runtime.Object{})
+
+	mockedOpgAPI := mock.MakeMokedOpgAPI()
+	mockedOpgAPI.WithFederations(apiObjs.Federations)
+	mockedOpgAPI.WithFiles(apiObjs.Files)
+	mockedOpgAPI.WithArtefacts(apiObjs.Artefacts)
+	mockedOpgAPI.WithApplications(apiObjs.Apps)
+	mockedOpgAPI.WithApplicationDeployments(apiObjs.AppInsts)
+	mockedOpgAPI.WithAZs(apiObjs.AZs)
+
+	opgcmap := opg.NewOPGClientsMap()
+	// opgcmap.SetOPGClient(testFederationExternalId, mockedOpgAPI)
+
+	return cl, opgcmap, mockedOpgAPI, sch
+}

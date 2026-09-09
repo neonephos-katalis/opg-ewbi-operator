@@ -1,0 +1,96 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: Federation
+metadata:
+  namespace: guest
+  name: fed-telecomitalia-rest
+spec:
+  federationData:
+    relationType: GUEST
+    technologyType: REST
+    origOPFederationId: "testfednew"
+    origOPCountryCode: "IT"
+    initialDate: "2026-07-29T09:00:00+02:00"
+    clientId: 4acde22c-d245-480d-b01e-24e38e01806d
+    clientSecret: 4rr55445-d245-480d-b01e-24e38e01806d
+    restOptions:
+      tokenUrl: "http://katalis-fm-api.host.svc.cluster.local:8080"
+      partnerStatusLink: "http://katalis-fm-api.guest.svc.cluster.local:8080"
+
+  # optional field
+  # fixedNetworkIds:
+  #   - "none"
+  # mobileNetworkIds:
+  #     mcc: "999"
+  #     mncs:
+  #       - "99"
+  # capType: NW_CAP_CONN_STATE_CHANGE
+  # updateData:
+  #   objectType: MOBILE_NETWORK_CODES
+  #   operationType: ADD_CODES
+  #   assocAppPolicies:
+  #     policyId: "policyApp-001"
+  #     appIdList:
+  #       - appId: "example-app-id"
+  #         appProvId: "example-app-prov-id"
+  #         zoneId:
+  #           - "example-zone-id-1"
+  #   assocOpsPolicies:
+  #     policyId: "policyOps-001"
+  #     oppIdList:
+  #       - appId: "example-app-id"
+  #         appProvId: "example-app-prov-id"
+  #         zoneId:
+  #           - "example-zone-id-1"
+  #   modificationDate: "" # added by the operator
+# status:
+#   state: "" # added by the operator
+#   federationContextId: "" # added by the operator
+#   zoneDetails: # added via external system
+#     - zoneId: ""
+#       geoLocation: "" 
+#       geoDetails: ""
+#     - zoneId: ""
+#       geoLocation: "" 
+#       geoDetails: ""
+#   federationExpiryDate: "" # added by the operator
+#   federationRenewalDate: "" # added by the operator
+#   partnerOPFederationId: "ewbi-federation-host-001"
+#   partnerOpCounterCode: "ES" # added by the operator
+#   federationHealthInfo:
+#     alarmState: ""
+#     dateAndTimeZoneObject: ""
+#     numOfAcceptedZones: "0"
+#     numOfActiveAlarms: "0"
+#     numOfApplications: "0"
+#   caps:
+#     capabilityId: ""
+#     maxiDetectionTime: ""
+#     locationType: ""
+#     locationAccuracy: ""
+#     maxUserPlaneLatency: ""
+#     supportedQoS: ""
+#   serviceEndpoint:  # added by the operator
+#     - endpointType: "" # added by the operator
+#       port: "" # added by the operator
+#       fqdn: ""
+#       ipv4Addresses: [] # added by the operator
+#       ipv6Addresses: [] # added by the operator
+#   mobileNetworkIds:
+#     mcc: "123" # added by the operator
+#     mncs:
+#       - "45"
+#   fixedNetworkIds:
+#     - "678"
+#   platformCaps: 
+#     - "platform-capability-1"
+#     - "platform-capability-2"
+
+
+
+#   service:
+#     serviceCaps: 
+#       - QualityOnDemand
+#       - DeviceLocation
+#     serviceType: api_federation
+#     apiRoutingInfo: 
+#      - ""

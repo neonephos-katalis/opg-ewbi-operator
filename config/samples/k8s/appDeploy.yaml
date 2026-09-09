@@ -1,0 +1,18 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: ApplicationDeployment
+metadata:
+  namespace: guest
+  name: appdeploy-34f5fht632dty6543567yh43
+spec:
+  relationType: GUEST
+  federationContextId: 59e69878-ff37-5794-ba4e-c4cdebdde893
+  appId: app_4d559f1bf00858c2
+  appInstanceId: 49pGXkNBaGpjA2mR4OjJ4shvH7CGvZYevDe4lRJFnKdyysqnl7
+  zoneId: 2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f
+  appProviderId: katalis_provider
+  appDetails:
+    appVersion: 1.23.3
+    zoneInfo:
+      flavourId: NOT_SPECIFIED
+      resPool: mockr_es_pool
+      resourceConsumption: RESERVED_RES_AVOID

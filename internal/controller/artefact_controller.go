@@ -18,20 +18,22 @@ package controller
 
 import (
 	"context"
-	"errors"
+	"reflect"
+	"time"
 
-	opgmodels "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/multipart"
+	k8s "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
+	rest "github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
+	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
 )
 
 // ArtefactReconciler reconciles a Artefact object
@@ -39,366 +41,207 @@ type ArtefactReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	opg.OPGClientsMapInterface
+	K8sClient  *k8s.ArtefactReconciler
+	RestClient *rest.ArtefactReconciler
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.nby.one,resources=artefacts,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.nby.one,resources=artefacts/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.nby.one,resources=artefacts/finalizers,verbs=update,namespace=foo
+type ExternalArtefactClient interface {
+	CreateArtefact(ctx context.Context, f *v1beta1.Artefact, fed *v1beta1.Federation) error
+	DeleteArtefact(ctx context.Context, f *v1beta1.Artefact, fed *v1beta1.Federation) error
+	UpdateArtefactStatus(ctx context.Context, f *v1beta1.Artefact, fed *v1beta1.Federation) error //Callback for REST and GET for K8s
+}
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// Modify the Reconcile function to compare the state specified by
-// the Artefact object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.4/pkg/reconcile
-func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues("name", req.Name, "namespace", req.Namespace)
-	log.Info("starting reconcile function for artefact")
-	defer log.Info("end reconcile for artefact")
-
-	// Getting main artefact or requeue
-	var a v1beta1.Artefact
-	if err := r.Get(ctx, req.NamespacedName, &a); err != nil {
-		if apierrors.IsNotFound(err) {
-			log.Info("artefact object not found")
-			return ctrl.Result{}, nil
-		}
-		log.Error(err, "error getting artefact object")
-		return ctrl.Result{}, err
+func (r *ArtefactReconciler) getExternalClient(isRest bool) ExternalArtefactClient {
+	if isRest {
+		return r.RestClient
 	}
-
-	// Getting artefact's federation or requeue by using federation-context-id label
-	isGuest := IsGuestResource(a.Labels)
-	extraLabels := map[string]string{}
-	if isGuest {
-		extraLabels[v1beta1.FederationRelationLabel] = string(v1beta1.FederationRelationGuest)
-	} else {
-		extraLabels[v1beta1.FederationRelationLabel] = string(v1beta1.FederationRelationHost)
-	}
-	feder, err := GetFederationByContextId(ctx, r.Client, a.Labels[v1beta1.FederationContextIdLabel], extraLabels)
-	if err != nil {
-		log.Error(err, "An Artefact should always have a parent federation")
-		a.Status.State = v1beta1.ArtefactStateError
-		upErr := r.Status().Update(ctx, a.DeepCopy())
-		if upErr != nil {
-			log.Error(upErr, errorUpdatingResourceStatusMsg)
-		}
-		return ctrl.Result{}, err
-	}
-
-	log.Info("Federation object obtained", "name", feder.Name)
-
-	if a.GetDeletionTimestamp().IsZero() {
-		if controllerutil.AddFinalizer(&a, v1beta1.ArtefactFinalizer) {
-			log.Info("Added finalizer to Artefact")
-			if err := r.Update(ctx, a.DeepCopy()); err != nil {
-				log.Info("unable to Update Artefact with finalizer")
-				return ctrl.Result{}, err
-			}
-			log.Info("Successfully added finalizer to Artefact")
-			return ctrl.Result{}, nil
-		}
-	} else {
-		if isGuest {
-			if err := r.handleExternalArtefactDeletion(ctx, &a, feder); err != nil {
-				log.Error(err, "error deleting Artefact")
-				a.Status.State = v1beta1.ArtefactStateError
-				upErr := r.Status().Update(ctx, a.DeepCopy())
-				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
-				}
-				return ctrl.Result{}, err
-			}
-		}
-		// if external Artefact is correctly deleted, we can remove the finalizer
-		if controllerutil.RemoveFinalizer(&a, v1beta1.ArtefactFinalizer) {
-			log.Info("Removed basic finalizer for Artefact")
-			if err := r.Update(ctx, a.DeepCopy()); err != nil {
-				log.Error(err, "update failed while removing finalizers")
-				return ctrl.Result{}, err
-			}
-			log.Info("removed all finalizers, exiting...")
-			return ctrl.Result{}, nil
-		}
-	}
-
-	// if federation is guest, send OPG API request
-	if isGuest {
-		if a.Status.State == "" {
-			if err := r.handleExternalArtefactCreation(ctx, &a, feder); err != nil {
-				log.Info("error creating Artefact")
-				a.Status.State = v1beta1.ArtefactStateError
-				upErr := r.Status().Update(ctx, a.DeepCopy())
-				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
-				}
-				return ctrl.Result{}, nil
-			}
-		} else {
-			log.Info("+++++++++++++++++++ Artefact status is ", "state", a.Status.State)
-		}
-	} else {
-		if a.Status.State == "" {
-			a.Status.State = v1beta1.ArtefactStateReconciling
-			log.Info("Initialized new CR state", "state", a.Status.State)
-			upErr := r.Status().Update(ctx, a.DeepCopy())
-			if upErr != nil {
-				log.Error(upErr, errorUpdatingResourceStatusMsg)
-				return ctrl.Result{}, upErr
-			}
-		} else {
-			log.Info("New CR state", "state", a.Status.State)
-			if err := r.handleExternalArtefactCallback(ctx, &a, feder); err != nil {
-				log.Error(err, "error handling artefact callback")
-				a.Status.State = v1beta1.ArtefactStateError
-				upErr := r.Status().Update(ctx, a.DeepCopy())
-				if upErr != nil {
-					log.Error(upErr, errorUpdatingResourceStatusMsg)
-				}
-			}
-		}
-	}
-	return ctrl.Result{}, nil
+	return r.K8sClient
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ArtefactReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&opgewbiv1beta1.Artefact{}).
+		For(&v1beta1.Artefact{}).
 		Named("artefact").
+		WatchesRawSource(
+			source.Channel(
+				k8s.ArtefactRemoteEvents,
+				&handler.EnqueueRequestForObject{},
+			),
+		).
 		Complete(r)
 }
 
-func (r *ArtefactReconciler) handleExternalArtefactCreation(
-	ctx context.Context, a *v1beta1.Artefact, feder *v1beta1.Federation,
-) error {
-	log := log.FromContext(ctx)
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=artefacts,verbs=*,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=artefacts/status,verbs=get;update;patch,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=artefacts/finalizers,verbs=update,namespace=foo
 
-	components := []opgmodels.ComponentSpec{}
-	for _, c := range a.Spec.ComponentSpec {
-		components = append(components, opgmodels.ComponentSpec{
-			CommandLineParams: &opgmodels.CommandLineParams{
-				Command:     c.CommandLineParams.Command,
-				CommandArgs: &c.CommandLineParams.Args,
-			},
-			// CompEnvParams:          &[]opgmodels.CompEnvParams{},
-			ComponentName: c.Name,
-			ComputeResourceProfile: opgmodels.ComputeResourceInfo{
-				CpuArchType:    opgmodels.ComputeResourceInfoCpuArchType(c.ComputeResourceProfile.CPUArchType),
-				CpuExclusivity: &c.ComputeResourceProfile.CPUExclusivity,
-				// DiskStorage:    new(int32),
-				// Fpga:           new(int),
-				// Gpu:            &[]opgmodels.GpuInfo{},
-				// Hugepages:      &[]opgmodels.HugePage{},
-				Memory: c.ComputeResourceProfile.Memory,
-				NumCPU: c.ComputeResourceProfile.NumCPU,
-				// Vpu:    new(int),
-			},
-			// DeploymentConfig:  &opgmodels.DeploymentConfig{},
-			ExposedInterfaces: &[]opgmodels.InterfaceDetails{},
-			Images:            c.Images,
-			NumOfInstances:    int32(c.NumOfInstances),
-			// PersistentVolumes: &[]opgmodels.PersistentVolumeDetails{},
-			RestartPolicy: opgmodels.ComponentSpecRestartPolicy(c.RestartPolicy),
-		})
-	}
+func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
+	log := ctrl.Log
+	log.Info(">>> [Artefact] Starting RECONCILE FUNCTION.", "name", req.Name, "namespace", req.Namespace)
+	defer log.Info(">>> [Artefact] End RECONCILE FUNCTION.", "name", req.Name, "namespace", req.Namespace)
 
-	reqBody := opgmodels.UploadArtefactMultipartBody{
-		AppProviderId:          a.Spec.AppProviderId,
-		ArtefactDescriptorType: opgmodels.UploadArtefactMultipartBodyArtefactDescriptorType(a.Spec.DescriptorType),
-		ArtefactId:             a.Labels[v1beta1.ExternalIdLabel],
-		ArtefactName:           a.Spec.ArtefactName,
-		// ArtefactRepoLocation:   &opgmodels.ObjectRepoLocation{}
-		// RepoType:            &"",
-		ArtefactVersionInfo: a.Spec.ArtefactVersion,
-		ArtefactVirtType:    opgmodels.UploadArtefactMultipartBodyArtefactVirtType(a.Spec.VirtType),
-		ComponentSpec:       components,
-	}
-
-	body, contentType, err := multipart.SerializeUploadArtefactMultipartBody(reqBody)
-	if err != nil {
-		log.Error(err, "error serializing multipart body")
-		return err
-	}
-
-	res, err := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.GuestPartnerCredentials.TokenUrl,
-		feder.Spec.GuestPartnerCredentials.ClientId,
-	).UploadArtefactWithBodyWithResponse(
-		context.TODO(),
-		feder.Status.FederationContextId,
-		contentType,
-		body)
-
-	if err != nil {
-		log.Error(err, "error creating Artefact")
-		return err
-	}
-
-	statusCode := res.StatusCode()
-
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("ARTEFACTS - Status code 2xx received from OPG API", "status", statusCode)
-		a.Status.State = v1beta1.ArtefactStateReconciling
-		log.Info("Created/Updated external artefact", "state", a.Status.State)
-	case statusCode == 400:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		log.Info("Couldn't be created", "Detail", res.ApplicationproblemJSON400.Detail)
-		return errors.New(*res.ApplicationproblemJSON400.Detail)
-	case statusCode == 401:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 404:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 409:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 422:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 500:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		// this should be deleted when API returns a 400 for this case
-		if *res.ApplicationproblemJSON500.Detail == "file not found" {
-			return errors.New(*res.ApplicationproblemJSON500.Detail)
+	// Getting main artefact or requeue
+	var art v1beta1.Artefact
+	if err := r.Get(ctx, req.NamespacedName, &art); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
 		}
-	case statusCode == 503:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-	case statusCode == 520:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
-	default:
-		a.Status.State = v1beta1.ArtefactStateReconciling
+		log.Error(err, ">>> [Artefact] Error getting artefact object.", "name", req.Name, "namespace", req.Namespace)
+		return ctrl.Result{}, err
 	}
-	upErr := r.Status().Update(ctx, a)
-	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
-		return upErr
-	}
-	return nil
-}
 
-func (r *ArtefactReconciler) handleExternalArtefactCallback(
-	ctx context.Context, a *v1beta1.Artefact, feder *v1beta1.Federation,
-) error {
-	log := log.FromContext(ctx)
-	// Check if callback is configured
-	if feder.Spec.Partner.StatusLink == "" {
-		log.Info("No callback StatusLink configured in Federation, skipping App callback")
-		return nil
-	}
-	log.Info("Sending App callback to Guest",
-		"appId", a.Labels[v1beta1.ExternalIdLabel],
-		"state", a.Status.State,
-		"statusLink", feder.Spec.Partner.StatusLink)
-	callbackBody := opgmodels.ArtefactStatusCallbackLinkJSONRequestBody{
-		ArtefactId:   a.Labels[v1beta1.ExternalIdLabel],
-		UpdateStatus: opgmodels.ArtefactStatusCallbackLinkJSONBodyUpdateStatus(a.Status.State),
-	}
-	// Get callback client (pointing to Guest's callback URL via Federation.spec.partner.statusLink)
-	res, err := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.Partner.StatusLink,
-		feder.Spec.Partner.CallbackCredentials.ClientId,
-	).ArtefactStatusCallbackLinkWithResponse(
-		context.TODO(),
-		feder.Spec.Partner.CallbackCredentials.ClientId,
-		callbackBody)
+	//Helper function to set the status to NotAvailable and update the resource
+	originalArtefact := art.DeepCopy()
+	defer func() {
+		isDeleting := !art.GetDeletionTimestamp().IsZero()
+		if err != nil && !isDeleting {
+			log.Error(err, ">>> [Artefact] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", art.Name, "namespace", art.Namespace)
+			art.Status.State = v1beta1.ArtefactStateError
+		}
 
+		// Metadata Patch (Annotations, Labels, Finalizers)
+		metaChanged := !reflect.DeepEqual(art.Annotations, originalArtefact.Annotations) ||
+			!reflect.DeepEqual(art.Labels, originalArtefact.Labels) ||
+			!reflect.DeepEqual(art.Finalizers, originalArtefact.Finalizers)
+
+		if metaChanged {
+			currentStatus := art.Status.DeepCopy()
+			// Using Patch instead of Update to avoid overwriting changes made by other controllers
+			if patchErr := r.Patch(ctx, &art, client.MergeFrom(originalArtefact)); patchErr != nil {
+				if !apierrors.IsNotFound(patchErr) {
+					log.Error(patchErr, ">>> [Artefact] UNEXPECTED ERROR during Artefact Metadata UPDATE.", "name", art.Name, "namespace", art.Namespace)
+				}
+				if err == nil {
+					err = patchErr
+				}
+				return // If there's an error patching metadata, we return early to avoid patching status with potentially inconsistent data
+			}
+			if currentStatus != nil {
+				art.Status = *currentStatus
+			}
+			// Alignment of the resource version after patching metadata
+			originalArtefact.SetResourceVersion(art.GetResourceVersion())
+		}
+		if isDeleting {
+			return
+		}
+		// Status Update
+		if patchErr := r.Status().Patch(ctx, &art, client.MergeFrom(originalArtefact)); patchErr != nil {
+			if !apierrors.IsNotFound(patchErr) {
+				log.Error(patchErr, ">>> [Artefact] UNEXPECTED ERROR during Artefact Status UPDATE.", "name", art.Name, "namespace", art.Namespace)
+			}
+			if err == nil {
+				err = patchErr
+			}
+		} else {
+			log.Info(">>> [Artefact] SUCCESSFULLY Reconciled.", "name", art.Name, "namespace", art.Namespace)
+		}
+	}()
+
+	isGuest := IsGuestResource(art.Spec.RelationType)
+	fed, isRest, err := GetFederation(ctx, isGuest, r.Client, art.Spec.FederationContextId, art.Namespace)
+	extClient := r.getExternalClient(isRest)
 	if err != nil {
-		log.Error(err, "error sending App callback")
-		return err
-	}
-	statusCode := res.StatusCode()
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("****************** Successfully sent Artefact callback to Guest", "status", statusCode)
-	case statusCode == 400:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 401:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 404:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		a.Status.State = v1beta1.ArtefactStateError
-	default:
-		log.Info("############# Artefact callback returned unexpected status", "status", statusCode, "body", string(res.Body))
-		a.Status.State = v1beta1.ArtefactStateReconciling
-	}
-	upErr := r.Status().Update(ctx, a)
-	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
-		return upErr
-	}
-	return nil
-}
-
-func (r *ArtefactReconciler) handleExternalArtefactDeletion(
-	ctx context.Context, a *v1beta1.Artefact, feder *v1beta1.Federation,
-) error {
-	log := log.FromContext(ctx)
-	log.Info("Deleting external Artefact")
-	// we should delete the Artefact
-	res, err := r.GetOPGClient(
-		feder.Labels[v1beta1.ExternalIdLabel],
-		feder.Spec.GuestPartnerCredentials.TokenUrl,
-		feder.Spec.GuestPartnerCredentials.ClientId,
-	).RemoveArtefactWithResponse(
-		context.TODO(),
-		feder.Status.FederationContextId,
-		a.Labels[v1beta1.ExternalIdLabel],
-	)
-	if err != nil {
-		log.Error(err, "error deleting artefact")
-		a.Status.State = v1beta1.ArtefactStateError
-		return err
+		log.Error(err, ">>> [Artefact] Should always have a parent federation.", "name", art.Name, "namespace", art.Namespace)
+		art.Status.State = v1beta1.ArtefactStateError
+		return ctrl.Result{}, err
 	}
 
-	statusCode := res.StatusCode()
+	// Check if the federation is locked and stop the watcher if it is (K8s only) or stop the callbacks if it is (REST only)
+	if !CheckFederationState(fed, isRest, "Artefact", art.Name, art.Namespace) {
+		return ctrl.Result{}, nil
+	}
 
-	switch {
-	case statusCode >= 200 && statusCode < 300:
-		log.Info("Deleted")
-		// federResponse.OfferedAvailabilityZones
-		a.Status.State = v1beta1.ArtefactStateReady
-	case statusCode == 400:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON400)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 401:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON401)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 404:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON404)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 409:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON409)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 422:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON422)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 500:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON500)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 503:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON503)
-		a.Status.State = v1beta1.ArtefactStateError
-	case statusCode == 520:
-		handleProblemDetails(log, statusCode, res.ApplicationproblemJSON520)
-		a.Status.State = v1beta1.ArtefactStateError
-	default:
-		log.Info(unexpectedStatusCodeMsg, "status", statusCode, "body", string(res.Body))
-		a.Status.State = v1beta1.ArtefactStateReconciling
+	// Handle deletion of the Artefact resource
+	if !art.GetDeletionTimestamp().IsZero() {
+		if isGuest {
+			if err := extClient.DeleteArtefact(ctx, &art, fed); err != nil {
+				log.Error(err, ">>> [Artefact] Error deleting Artefact.", "name", art.Name, "namespace", art.Namespace)
+				art.Status.State = v1beta1.ArtefactStateError
+				return ctrl.Result{}, err
+			}
+		}
+		if controllerutil.RemoveFinalizer(&art, v1beta1.ArtefactFinalizer) {
+			log.Info(">>> [Artefact] Removed basic finalizer for Artefact, exiting...", "name", art.Name, "namespace", art.Namespace)
+		}
+		return ctrl.Result{}, nil
 	}
-	upErr := r.Status().Update(ctx, a)
-	if upErr != nil {
-		log.Error(upErr, errorUpdatingResourceStatusMsg)
-		return upErr
+
+	// Handle creation/finalizer
+	if controllerutil.AddFinalizer(&art, v1beta1.ArtefactFinalizer) {
+		log.Info(">>> [Artefact] Added finalizer to Artefact.", "name", art.Name, "namespace", art.Namespace)
+		return ctrl.Result{}, nil
 	}
-	return nil
+
+	if art.Labels == nil {
+		art.Labels = make(map[string]string)
+	}
+
+	isNewArtefact := art.Status.State == ""
+	if !isGuest {
+		// Host Artefact handling
+		if isNewArtefact {
+			art.Status.State = v1beta1.ArtefactStatePending
+			art.Labels[v1beta1.ResourceIdLabel] = "art-" + uuid.V5(art.Spec.ArtefactId+art.Spec.FederationContextId)
+		} else {
+			if isRest {
+				if err := extClient.UpdateArtefactStatus(ctx, &art, fed); err != nil {
+					log.Error(err, ">>> [Artefact][REST] Error during CALLBACK OPERATION via OPG EWBI API.", "name", art.Name, "namespace", art.Namespace)
+					return ctrl.Result{}, err
+				}
+			} else {
+				log.Info(">>> [Artefact][K8s] Resource updated (GUEST via watcher update through the resource)", "name", art.Name, "namespace", art.Namespace)
+			}
+		}
+		return ctrl.Result{}, nil
+	} else {
+		// Guest Artefact handling
+		if isNewArtefact {
+			art.Status.State = v1beta1.ArtefactStatePending
+			art.Labels[v1beta1.ResourceIdLabel] = "art-" + uuid.V5(art.Spec.ArtefactId+art.Spec.FederationContextId)
+			componentSpec := art.Spec.ArtefactBody.ComponentSpec
+			for _, component := range componentSpec {
+				image := component.Images
+				for _, imageId := range image {
+					imageObj := &v1beta1.Image{}
+					imageList := &v1beta1.ImageList{}
+					if err := r.List(
+						ctx,
+						imageList,
+						client.InNamespace(art.Namespace),
+						client.MatchingLabels{
+							v1beta1.ResourceIdLabel: "image-" + uuid.V5(imageId+art.Spec.FederationContextId),
+						}); err != nil {
+						return ctrl.Result{}, err
+					}
+					if len(imageList.Items) == 0 {
+						log.Info(">>> [Artefact] No Image foud for Artefact ", "name", art.Name, "naemspace", art.Namespace, "imageId", imageId)
+					}
+					imageObj = &imageList.Items[0]
+					if imageObj.Status.State != v1beta1.ImageStateReady {
+						log.Info(">>> [Artefact] Image is not READY for Artefact.", "name", art.Name, "namespace", art.Namespace, "imageId", imageId, "imageState", imageObj.Status.State)
+						return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
+					}
+				}
+			}
+			if err := extClient.CreateArtefact(ctx, &art, fed); err != nil {
+				log.Error(err, ">>> [Artefact] Error APPLYING/UPDATING SPEC Artefact.", "name", art.Name, "namespace", art.Namespace)
+				return ctrl.Result{}, err
+			}
+			log.Info(">>> [Artefact] SUCCESSFULLY APPLIED SPEC AND SET INITIAL STATUS.", "name", art.Name, "namespace", art.Namespace)
+			return ctrl.Result{}, nil
+		} else {
+			if isRest {
+				log.Info(">>> [Artefact][REST] Received UPDATEs via CALLBACK OPERATION with OPG EWBI API.", "name", art.Name, "namespace", art.Namespace)
+			} else {
+				if err := extClient.UpdateArtefactStatus(ctx, &art, fed); err != nil {
+					log.Error(err, ">>> [Artefact][K8s] Error updating Artefact.", "name", art.Name, "namespace", art.Namespace)
+					return ctrl.Result{}, err
+				}
+			}
+		}
+
+	}
+	return ctrl.Result{}, nil
 }

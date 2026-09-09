@@ -1,44 +1,63 @@
 {{- if .Values.rbac.enable }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
   name: opg-ewbi-manager-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingadmissionpolicies
+  - validatingadmissionpolicybindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: opg-ewbi-manager-role
   namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
-  - applicationinstances
-  - applications
+  - applicationdeployments
+  - applicationonboardings
   - artefacts
   - availabilityzones
   - federations
-  - files
+  - images
   verbs:
   - '*'
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
-  - applicationinstances/finalizers
-  - applications/finalizers
+  - applicationdeployments/finalizers
+  - applicationonboardings/finalizers
   - artefacts/finalizers
   - availabilityzones/finalizers
   - federations/finalizers
-  - files/finalizers
+  - images/finalizers
   verbs:
   - update
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
-  - applicationinstances/status
-  - applications/status
+  - applicationdeployments/status
+  - applicationonboardings/status
   - artefacts/status
   - availabilityzones/status
   - federations/status
-  - files/status
+  - images/status
   verbs:
   - get
   - patch

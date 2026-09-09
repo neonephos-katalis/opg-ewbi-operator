@@ -50,7 +50,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{ $hasValidating }}}}{{- end }}
 
 {{/* Generate resource name */}}
-{{- define "nearbyone.fullname" -}}
+{{- define "katalis.fullname" -}}
 {{- $root := index . 0 -}}
 {{- $objectName := index . 1 -}}
 {{- if $root.Values.fullnameOverride }}

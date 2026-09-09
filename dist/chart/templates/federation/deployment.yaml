@@ -2,22 +2,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "nearbyone.fullname" (list . "federation-api") }}
+  name: {{ include "katalis.fullname" (list . "fm-api") }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-    control-plane: federation-api
+    control-plane: katalis-fm-api
 spec:
   replicas:  {{ .Values.federation.replicas }}
   selector:
     matchLabels:
       {{- include "chart.selectorLabels" . | nindent 6 }}
-      control-plane: federation-api
+      control-plane: katalis-fm-api
   template:
     metadata:
       labels:
         {{- include "chart.labels" . | nindent 8 }}
-        control-plane: federation-api
+        control-plane: katalis-fm-api
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:

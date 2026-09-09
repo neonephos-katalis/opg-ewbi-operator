@@ -1,7 +1,7 @@
 package metastore
 
 const (
-	opgLabelKeyPrefix = "opg.ewbi.nby.one"
+	opgLabelKeyPrefix = "opg.ewbi.katalis.com"
 )
 
 type labelKey string
@@ -16,19 +16,19 @@ const (
 )
 
 const (
-	applicationInstanceKind   string = "applicationInstance"
-	applicationInstancePrefix string = "application-instance"
-	applicationKind           string = "application"
-	artefactKind              string = "artefact"
-	availabilityZoneKind      string = "availabilityZone"
-	federationKind            string = "federation"
-	fileKind                  string = "file"
+	applicationDeploymentKind   string = "applicationDeployment"
+	applicationDeploymentPrefix string = "application-deployment"
+	applicationOnboardingKind   string = "applicationOnboarding"
+	artefactKind                string = "artefact"
+	availabilityZoneKind        string = "availabilityZone"
+	federationKind              string = "federation"
+	imageKind                   string = "image"
 )
 
 const (
 	// values for federation relation label
-	host  string = "host"
-	guest string = "guest"
+	host  string = "HOST"
+	guest string = "GUEST"
 )
 
 func opgLabel(l labelKey) string {

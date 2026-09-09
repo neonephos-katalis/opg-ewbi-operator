@@ -1,0 +1,33 @@
+{{- if .Values.rbac.enable }}
+# This rule is not used by the project opg-ewbi itself.
+# It is provided to allow the cluster admin to help manage permissions for users.
+#
+# Grants read-only access to opg.ewbi.katalis.com resources.
+# This role is intended for users who need visibility into these resources
+# without permissions to modify them. It is ideal for monitoring purposes and limited-access viewing.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/name: opg-ewbi
+    app.kubernetes.io/managed-by: kustomize
+  name: applicationonboarding-viewer-role
+rules:
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - applicationonboardings
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - applicationonboardings/status
+  verbs:
+  - get
+{{- end -}}

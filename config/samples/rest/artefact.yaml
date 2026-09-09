@@ -1,0 +1,34 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: Artefact
+metadata:
+  namespace: guest
+  name: artefact-234e4567
+spec:
+  relationType: GUEST
+  federationContextId: c3d13748-0b70-5b1c-8a01-d97e2ca502e7
+  artefactId: 234e4567-e89b-12d3-a456-426614174001
+  artefactNotifLink: "http://katalis-fm-api.guest.svc.cluster.local:8080"
+  artefactBody:
+    appProviderId: katalis_
+    artefactName: "nginx_helm"
+    artefactVersionInfo: "14"
+    artefactDescription: "nginx_helm"
+    artefactVirtType: CONTAINER_TYPE
+    artefactDescriptorType: HELM
+    repoType: PUBLICREPO
+    artefactRepoLocation:
+      repoURL: "https://charts.bitnami.com/bitnami"
+    componentSpec: 
+      - componentName: "nginx_comp"
+        images:
+         - 123e4567-e89b-12d3-a456-426614174002
+        numOfInstances: 1
+        restartPolicy: RESTART_POLICY_ALWAYS
+        computeResourceProfile:
+          cpuArchType: ISA_X86_64
+          memory: 512
+          numCPU: "1"
+        commandLineParams:
+          command: 
+            - test
+          commandArgs: []

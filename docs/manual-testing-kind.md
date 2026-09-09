@@ -94,7 +94,7 @@ kubectl -n katalis-dev-guest get pods
 
 ## 4. Pre-Provision Host Resources
 
-The host API's `CreateFederation` handler **does not create** a new Federation CR — it **looks up an existing one** by matching label `opg.ewbi.nby.one/origin-client-id` against the incoming `X-Client-ID` header. A cluster admin must pre-provision it.
+The host API's `CreateFederation` handler **does not create** a new Federation CR — it **looks up an existing one** by matching label `opg.ewbi.katalis.com/origin-client-id` against the incoming `X-Client-ID` header. A cluster admin must pre-provision it.
 
 > **Important:** The host Federation CR must offer **at least 1** AvailabilityZone in `spec.offeredAvailabilityZones`. The guest operator's `handleAcceptExternalAZ` picks `offeredAvailabilityZones[0]` and calls `ZoneSubscribe` with it. With 0 offered zones the subscription is skipped.
 
@@ -106,7 +106,7 @@ kubectl apply -f config/samples/federationHostAuth.yaml
 
 > **Note:** You do **not** need to create a matching `AvailabilityZone` CR. The value in `spec.offeredAvailabilityZones` is just a string ID — `CreateFederation` and `ZoneSubscribe` both read it directly from the Federation CR spec without doing any CR lookup. An `AvailabilityZone` CR is only needed if you later call `GET /{fcid}/zones/{zoneId}` (`GetZoneData`), which is not part of this flow.
 
-The sample sets `opg.ewbi.nby.one/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d`. The guest Federation CR's `spec.guestPartnerCredentials.clientId` must match this value exactly.
+The sample sets `opg.ewbi.katalis.com/origin-client-id: 3acde22c-d245-480d-b01e-24e38e01806d`. The guest Federation CR's `spec.guestPartnerCredentials.clientId` must match this value exactly.
 
 Note: the current implementation deterministically derives the `federationContextId` from the `clientId` (UUID V5). All sample YAML files already contain the resulting FederationContextId value `4d559f1b-f008-58c2-a2f8-0596892a0f7a` — if you use a different `clientId`, read the actual FCID from the guest Federation CR's `status.federationContextId` after establishment and update the sample files accordingly.
 
@@ -117,7 +117,7 @@ This CR triggers the guest operator to call `POST /federation` on the host API.
 Key fields in `config/samples/federationGuest.yaml`:
 - `spec.guestPartnerCredentials.tokenUrl` — the **base URL** of the host API (no path suffix). The generated client appends route paths automatically. The sample file already sets `http://nearbyone-federation-api.katalis-dev-host.svc.cluster.local:8080`, which is correct for this Kind setup.
 - `spec.guestPartnerCredentials.clientId` — sent as `X-Client-ID` header to the host; **must match** the `origin-client-id` label on the host's pre-provisioned Federation CR (`3acde22c-d245-480d-b01e-24e38e01806d`).
-- `metadata.labels["opg.ewbi.nby.one/id"]` — the `origOPFederationId` business ID sent in the request body.
+- `metadata.labels["opg.ewbi.katalis.com/id"]` — the `origOPFederationId` business ID sent in the request body.
 
 ```sh
 kubectl apply -f config/samples/federationGuest.yaml
@@ -133,7 +133,7 @@ kubectl -n katalis-dev-guest get federation fed-2dae064c-28cc-456e-8b0a-dd67bab7
 # On next reconcile, guest operator calls ZoneSubscribe and updates spec
 # Look for: spec.acceptedAvailabilityZones
 
-# Host-side: the Federation CR should have been updated with initialDate, partner info and have opg.ewbi.nby.one/federation-context-id label that matches the guest CR's status.federationContextId
+# Host-side: the Federation CR should have been updated with initialDate, partner info and have opg.ewbi.katalis.com/federation-context-id label that matches the guest CR's status.federationContextId
 kubectl -n katalis-dev-host get federation fed-e35f69d8-ae5a-456b-9f95-d950e4c03e8d -o yaml
 ```
 
@@ -227,7 +227,7 @@ helm uninstall federation-guest -n katalis-dev-guest
 helm uninstall federation-host -n katalis-dev-host
 
 # Delete installed CRDs (not automatically removed by Helm because they are shared between guest and host)
-kubectl delete crd federations.opg.ewbi.nby.one files.opg.ewbi.nby.one artefacts.opg.ewbi.nby.one applications.opg.ewbi.nby.one applicationinstances.opg.ewbi.nby.one availabilityzones.opg.ewbi.nby.one
+kubectl delete crd federations.opg.ewbi.katalis.com files.opg.ewbi.katalis.com artefacts.opg.ewbi.katalis.com applications.opg.ewbi.katalis.com applicationinstances.opg.ewbi.katalis.com availabilityzones.opg.ewbi.katalis.com
 
 # Delete kind cluster
 kind delete cluster --name federation

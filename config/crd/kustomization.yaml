@@ -2,15 +2,15 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/opg.ewbi.nby.one_applicationinstances.yaml
-- bases/opg.ewbi.nby.one_federations.yaml
-- bases/opg.ewbi.nby.one_files.yaml
-- bases/opg.ewbi.nby.one_artefacts.yaml
-- bases/opg.ewbi.nby.one_applications.yaml
-- bases/opg.ewbi.nby.one_availabilityzones.yaml
+- bases/opg.ewbi.katalis.com_applicationdeployments.yaml
+- bases/opg.ewbi.katalis.com_federations.yaml
+- bases/opg.ewbi.katalis.com_images.yaml
+- bases/opg.ewbi.katalis.com_artefacts.yaml
+- bases/opg.ewbi.katalis.com_applicationonboardings.yaml
+- bases/opg.ewbi.katalis.com_availabilityzones.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
-patches:
+# patches:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 # +kubebuilder:scaffold:crdkustomizewebhookpatch

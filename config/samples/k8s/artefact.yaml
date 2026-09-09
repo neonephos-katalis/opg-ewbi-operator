@@ -1,0 +1,29 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: Artefact
+metadata:
+  namespace: guest
+  name: art-66c9fcf3-4609-58e2-8868-123001d4f14c
+spec:
+  relationType: GUEST
+  federationContextId: 59e69878-ff37-5794-ba4e-c4cdebdde893
+  artefactId: 123e4567-e89b-12d3-a456-426614174000
+  artefactBody:
+    appProviderId: katalis_9b_12d3_a456
+    artefactName: "nginx_helm"
+    artefactVersionInfo: "14"
+    artefactDescription: "nginx_helm"
+    artefactVirtType: CONTAINER_TYPE
+    artefactDescriptorType: HELM
+    repoType: PUBLICREPO
+    artefactRepoLocation:
+      repoURL: "https://charts.bitnami.com/bitnami"
+    componentSpec: 
+      - componentName: "nginx_9b_12d3_a456"
+        images:
+         - 123e4567-e89b-12d3-a456-426614174000
+        numOfInstances: 1
+        restartPolicy: RESTART_POLICY_ALWAYS
+        computeResourceProfile:
+          cpuArchType: ISA_X86_64
+          memory: 512
+          numCPU: "1"

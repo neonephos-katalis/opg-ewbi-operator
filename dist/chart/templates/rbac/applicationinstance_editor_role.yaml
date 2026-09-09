@@ -2,7 +2,7 @@
 # This rule is not used by the project opg-ewbi itself.
 # It is provided to allow the cluster admin to help manage permissions for users.
 #
-# Grants permissions to create, update, and delete resources within the opg.ewbi.nby.one.
+# Grants permissions to create, update, and delete resources within the opg.ewbi.katalis.com.
 # This role is intended for users who need to manage these resources
 # but should not control RBAC or manage permissions for others.
 
@@ -14,12 +14,12 @@ metadata:
   labels:
     app.kubernetes.io/name: opg-ewbi
     app.kubernetes.io/managed-by: kustomize
-  name: applicationinstance-editor-role
+  name: applicationdeployment-editor-role
 rules:
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
-  - applicationinstances
+  - applicationdeployments
   verbs:
   - create
   - delete
@@ -29,9 +29,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - opg.ewbi.nby.one
+  - opg.ewbi.katalis.com
   resources:
-  - applicationinstances/status
+  - applicationdeployments/status
   verbs:
   - get
 {{- end -}}

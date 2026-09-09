@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -73,7 +72,7 @@ func TestAvailabilityZoneReconciler(t *testing.T) {
 			resp: response{
 				wantResult:       ctrl.Result{Requeue: false},
 				wantReconcileErr: false,
-				wantStatusState:  v1beta1.ZoneStateReady,
+				wantStatusState:  v1beta1.ZoneStateAvailable,
 			},
 		},
 	}
@@ -110,10 +109,10 @@ func TestAvailabilityZoneReconciler(t *testing.T) {
 	}
 }
 
-type azOpt func(*opgewbiv1beta1.AvailabilityZone)
+type azOpt func(*v1beta1.AvailabilityZone)
 
-func makeTestAvailabilityZone(opts ...azOpt) *opgewbiv1beta1.AvailabilityZone {
-	a := &opgewbiv1beta1.AvailabilityZone{
+func makeTestAvailabilityZone(opts ...azOpt) *v1beta1.AvailabilityZone {
+	a := &v1beta1.AvailabilityZone{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testAZName,
 			Namespace: testNamespace,
@@ -129,8 +128,8 @@ func makeTestAvailabilityZoneReconciler(
 	client client.Client,
 	sch *runtime.Scheme,
 	opgClients opg.OPGClientsMapInterface,
-) *AvailabilityZoneReconciler {
-	r := &AvailabilityZoneReconciler{
+) *ZoneReconciler {
+	r := &ZoneReconciler{
 		Client:                 client,
 		Scheme:                 sch,
 		OPGClientsMapInterface: opgClients,

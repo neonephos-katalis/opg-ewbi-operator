@@ -15,7 +15,7 @@ func Validator() echo.MiddlewareFunc {
 	swagger, err := models.GetSwagger()
 	if err != nil {
 		log.WithError(err).
-			Fatal("failed loading swagger spec for server")
+			Fatal(">>> [Main] Failed loading swagger spec for server")
 		os.Exit(1)
 	}
 	// Clear out the servers array in the swagger spec, that skips validating

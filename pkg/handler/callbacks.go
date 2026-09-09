@@ -18,10 +18,25 @@ func (h *handler) FileStatusCallbackLink(c echo.Context, federationCallbackId mo
 		return sendErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	if err := h.metaStoreClient.UpdateFileStatus(ctx, federationCallbackId, request); err != nil {
+	if err := h.metaStoreClient.UpdateImageStatus(ctx, federationCallbackId, request); err != nil {
 		return sendErrorResponseFromError(c, err)
 	}
 	return c.JSON(http.StatusNoContent, nil)
+}
+
+// (POST /{federationCallbackId}/partnerDetailsCallbackLink')
+func (h *handler) PartnerDetailsCallback(c echo.Context, federationCallbackId models.FederationCallbackId) error {
+	ctx := h.getRequestContextFunc(c)
+
+	request, err := bindRequest[models.PartnerDetailsCallbackJSONRequestBody](c)
+	if err != nil {
+		return sendErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
+
+	if _, err := h.metaStoreClient.PartnerDetailsCallback(ctx, federationCallbackId, request); err != nil {
+		return sendErrorResponseFromError(c, err)
+	}
+	return h.GetFederationDetails(c, federationCallbackId)
 }
 
 // Notification payload.
@@ -66,7 +81,7 @@ func (h *handler) AppInstCallbackLink(c echo.Context, federationCallbackId model
 		return sendErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	if err := h.metaStoreClient.UpdateApplicationInstanceStatus(ctx, federationCallbackId, request); err != nil {
+	if err := h.metaStoreClient.UpdateApplicationDeploymentStatus(ctx, federationCallbackId, request); err != nil {
 		return sendErrorResponseFromError(c, err)
 	}
 	return c.JSON(http.StatusNoContent, nil)
@@ -78,17 +93,6 @@ func (h *handler) AvailZoneNotifLink(c echo.Context, federationCallbackId models
 	return c.JSON(http.StatusNotImplemented, nil)
 }
 
-// OP uses this callback api to notify partner OP about change in federation status, federation metadata or offered zone details. Allowed combinations of objectType and operationType are
-// - FEDERATION - STATUS: Status specified by parameter 'federationStatus'.
-// - ZONES - STATUS: Status specified by parameter 'zoneStatus'.
-// - ZONES - ADD: Use parameter 'addZones' to define add new zones
-// - ZONES - REMOVE: Use parameter 'removeZones' to define remove zones.
-// - EDGE_DISCOVERY_SERVICE - UPDATE: Use parameter 'edgeDiscoverySvcEndPoint' to specify new endpoints
-// - LCM_SERVICE - UPDATE: Use parameter 'lcmSvcEndPoint' to specify new endpoints
-// - MOBILE_NETWORK_CODES - ADD: Use parameter 'addMobileNetworkIds' to define new mobile network codes.
-// - MOBILE_NETWORK_CODES - REMOVE: Use parameter 'removeMobileNetworkIds' to remove mobile network codes.
-// - FIXED_NETWORK_CODES - ADD: Use parameter 'addFixedNetworkIds' to define new fixed network codes.
-// - FIXED_NETWORK_CODES - REMOVE: Use parameter 'removeFixedNetworkIds' to remove fixed network codes.
 // (POST /{federationCallbackId}/partnerStatusLink)
 func (h *handler) PartnerStatusLink(c echo.Context, federationCallbackId models.FederationCallbackId) error {
 	ctx := h.getRequestContextFunc(c)
@@ -98,24 +102,9 @@ func (h *handler) PartnerStatusLink(c echo.Context, federationCallbackId models.
 		return sendErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	unsuportedOperationErr := func() error {
-		return sendErrorResponse(c, http.StatusBadRequest, "unsuported operation type for objectType "+string(request.ObjectType))
+	if err := h.metaStoreClient.UpdateFederationStatus(ctx, federationCallbackId, request); err != nil {
+		return sendErrorResponseFromError(c, err)
 	}
-	switch request.ObjectType {
-	case models.PartnerStatusLinkJSONBodyObjectTypeFEDERATION:
-		if request.OperationType != models.PartnerStatusLinkJSONBodyOperationTypeSTATUS {
-			return unsuportedOperationErr()
-		}
-		if request.FederationStatus == nil {
-			return sendErrorResponse(c, http.StatusBadRequest, "missing federationStatus")
-		}
-		if err := h.metaStoreClient.UpdateFederationStatus(ctx, federationCallbackId, *request.FederationStatus); err != nil {
-			return sendErrorResponseFromError(c, err)
-		}
-	default:
-		return sendErrorResponse(c, http.StatusNotImplemented, "ObjectType not implemented")
-	}
-
 	return c.JSON(http.StatusNoContent, nil)
 }
 

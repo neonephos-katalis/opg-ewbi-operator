@@ -1,0 +1,229 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: images.opg.ewbi.katalis.com
+spec:
+  group: opg.ewbi.katalis.com
+  names:
+    kind: Image
+    listKind: ImageList
+    plural: images
+    shortNames:
+    - imgman
+    singular: image
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.relationType
+      name: relationType
+      type: string
+    - jsonPath: .spec.federationContextId
+      name: federationContextId
+      type: string
+    - jsonPath: .spec.imageId
+      name: imageId
+      type: string
+    - jsonPath: .status.state
+      name: state
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: Image is the Schema for the images API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ImageSpec defines the desired state of Image
+            properties:
+              federationContextId:
+                description: This identifier shall be provided by the partner OP on
+                  successful verification and validation of the federation create
+                  request and is used by partner op to identify this newly created
+                  federation context. Originating OP shall provide this identifier
+                  in any subsequent request towards the partner op.
+                pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                type: string
+              imageBody:
+                properties:
+                  appProviderId:
+                    description: UserId of the app provider. Identifier is relevant
+                      only in context of this federation.
+                    pattern: ^[A-Za-z][A-Za-z0-9_]{7,63}$
+                    type: string
+                  checksum:
+                    description: MD5 checksum for VM and image-based images, sha256
+                      digest for containers
+                    type: string
+                  image:
+                    format: byte
+                    type: string
+                  imageDescription:
+                    description: Brief description about the image.
+                    maxLength: 128
+                    minLength: 8
+                    type: string
+                  imageName:
+                    description: Name of the image.   App provides specifies this
+                      name when image is uploaded on originating OP over NBI.
+                    pattern: ^[A-Za-z][A-Za-z0-9_]{7,31}$
+                    type: string
+                  imageRepoLocation:
+                    properties:
+                      password:
+                        description: Password to access the repository
+                        type: string
+                      repoURL:
+                        type: string
+                      token:
+                        description: Authorization token to access the repository
+                        type: string
+                      userName:
+                        description: Username to access the repository
+                        type: string
+                    type: object
+                  imageType:
+                    description: Indicate if the image is Container image or VM image
+                      (QCOW2, OVA)
+                    enum:
+                    - QCOW2
+                    - DOCKER
+                    - OVA
+                    type: string
+                  imageVersionInfo:
+                    description: Image version information.
+                    type: string
+                  imgInsSetArch:
+                    description: CPU Instruction Set Architecture (ISA) E.g., Intel,
+                      Arm etc.
+                    enum:
+                    - ISA_X86_64
+                    - ISA_ARM_64
+                    type: string
+                  imgOSType:
+                    properties:
+                      architecture:
+                        enum:
+                        - x86_64
+                        - x86
+                        type: string
+                      distribution:
+                        enum:
+                        - RHEL
+                        - UBUNTU
+                        - COREOS
+                        - FEDORA
+                        - WINDOWS
+                        - OTHER
+                        type: string
+                      license:
+                        enum:
+                        - OS_LICENSE_TYPE_FREE
+                        - OS_LICENSE_TYPE_ON_DEMAND
+                        - NOT_SPECIFIED
+                        type: string
+                      version:
+                        enum:
+                        - OS_VERSION_UBUNTU_2204_LTS
+                        - OS_VERSION_RHEL_8
+                        - OS_VERSION_RHEL_7
+                        - OS_VERSION_DEBIAN_11
+                        - OS_VERSION_COREOS_STABLE
+                        - OS_MS_WINDOWS_2012_R2
+                        - OTHER
+                        type: string
+                    required:
+                    - architecture
+                    - distribution
+                    - license
+                    - version
+                    type: object
+                  repoType:
+                    description: Image repository location. PUBLICREPO is used of
+                      public URLs like GitHub, Helm repo, docker registry etc., PRIVATEREPO
+                      is used for private repo managed by the application developer,
+                      UPLOAD is for the case when image is uploaded from MEC web portal.  OP
+                      should pull the image from ‘repoUrl' immediately after receiving
+                      the request and then send back the response. In case the repoURL
+                      corresponds to a docker registry, use docker v2 http api to
+                      do the pull.
+                    enum:
+                    - PRIVATEREPO
+                    - PUBLICREPO
+                    - UPLOAD
+                    type: string
+                required:
+                - appProviderId
+                - imageName
+                - imageType
+                - imageVersionInfo
+                - imgInsSetArch
+                - imgOSType
+                type: object
+              imageId:
+                description: A globally unique identifier associated with the image.
+                  Originating OP generates this identifier when image is uploaded
+                  over NBI.
+                format: uuid
+                type: string
+              imageNotifLink:
+                description: Callback URL to which the partner OP will send the image
+                  status update. This is provided by the partner OP when the image
+                  is created and is used by originating OP to send the image status
+                  update.
+                format: uri
+                type: string
+              relationType:
+                enum:
+                - HOST
+                - GUEST
+                type: string
+            required:
+            - federationContextId
+            - imageId
+            - relationType
+            type: object
+          status:
+            description: ImageStatus defines the observed state of Image.
+            properties:
+              lastUpdated:
+                description: Timestamp of the last status update
+                format: date-time
+                type: string
+              message:
+                description: Message indicating details about the current state
+                type: string
+              state:
+                description: Current state of the artefact upload
+                enum:
+                - PENDING
+                - UPLOADING
+                - UPLOADED
+                - FAILED
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

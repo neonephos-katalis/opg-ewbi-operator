@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: opg-ewbi-operator-controller-manager
+  name: {{ include "katalis.fullname" (list . "ewbi-operator-manager") }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "chart.labels" . | nindent 4 }}

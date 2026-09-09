@@ -13,9 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/server"
+	v1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/config"
 	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/handler"
-	opgv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 )
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 	e.Use(server.Validator())
 
 	scheme := runtime.NewScheme()
-	utilruntime.Must(opgv1beta1.AddToScheme(scheme))
+	utilruntime.Must(v1beta1.AddToScheme(scheme))
 
 	config := ctrl.GetConfigOrDie()
 	k8sClient, err := client.New(config, client.Options{

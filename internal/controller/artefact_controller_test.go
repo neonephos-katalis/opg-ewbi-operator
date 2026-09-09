@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,10 +42,8 @@ const (
 )
 
 func TestArtefactReconciler(t *testing.T) {
-	feder := makeTestFederation(testFederationName, withFederationContextId(testFederationContextId),
-		federationWithFederationRelation(v1beta1.FederationRelationGuest),
-	)
-	file := makeTestFile(testFederationContextId)
+	feder := makeTestFederation(testFederationName, withFederationContextId(testFederationContextId))
+	file := makeTestImage(testFederationContextId)
 
 	type fields struct {
 		resources          []client.Object
@@ -206,7 +203,7 @@ func TestArtefactReconciler(t *testing.T) {
 	}
 }
 
-type artefactOpt func(*opgewbiv1beta1.Artefact)
+type artefactOpt func(*v1beta1.Artefact)
 
 func artefactWithFinalizer() artefactOpt {
 	return func(f *v1beta1.Artefact) {
@@ -215,10 +212,10 @@ func artefactWithFinalizer() artefactOpt {
 }
 
 func artefactWithDeletedAt(now time.Time) artefactOpt {
-	return func(a *opgewbiv1beta1.Artefact) {
+	return func(a *v1beta1.Artefact) {
 		wrapped := metav1.NewTime(now)
 		a.ObjectMeta.DeletionTimestamp = &wrapped
-		a.Finalizers = []string{opgewbiv1beta1.ArtefactFinalizer}
+		a.Finalizers = []string{v1beta1.ArtefactFinalizer}
 	}
 }
 
@@ -228,45 +225,43 @@ func artefactWithState(state v1beta1.ArtefactState) artefactOpt {
 	}
 }
 
-func makeTestArtefact(fedCtxId string, opts ...artefactOpt) *opgewbiv1beta1.Artefact {
-	a := &opgewbiv1beta1.Artefact{
+func makeTestArtefact(fedCtxId string, opts ...artefactOpt) *v1beta1.Artefact {
+	a := &v1beta1.Artefact{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testArtefactName,
 			Namespace: testNamespace,
-			Labels: map[string]string{
-				opgewbiv1beta1.FederationContextIdLabel: fedCtxId,
-				opgewbiv1beta1.ExternalIdLabel:          testArtefactExternalId,
-				v1beta1.FederationRelationLabel:         string(defaultTestFederationRelation),
-			},
 		},
-		Spec: opgewbiv1beta1.ArtefactSpec{
-			AppProviderId:   testAppProvider,
-			ArtefactName:    "ContainerDeploy001",
-			ArtefactVersion: "14",
-			DescriptorType:  "COMPONENTSPEC",
-			VirtType:        "CONTAINER_TYPE",
-			ComponentSpec: []opgewbiv1beta1.ComponentSpec{{
-				Name: "test-pod",
-				CommandLineParams: opgewbiv1beta1.CommandLine{
-					Command: []string{"nginx-debug"},
-					Args:    []string{"-g", "daemon off;"},
-				},
-				Images:         []string{testFileName},
-				NumOfInstances: 0,
-				RestartPolicy:  "RESTART_POLICY_ALWAYS",
-				ComputeResourceProfile: opgewbiv1beta1.ComputeResourceProfile{
-					CPUArchType:    "ISA_X86_64",
-					CPUExclusivity: false,
-					Memory:         512,
-					NumCPU:         "1",
-				},
-				ExposedInterfaces: []opgewbiv1beta1.ExposedInterface{{
-					Port:           30013,
-					Protocol:       "TCP",
-					InterfaceId:    "interfaceid",
-					VisibilityType: "VISIBILITY_EXTERNAL",
+		Spec: v1beta1.ArtefactSpec{
+			FederationContextId: fedCtxId,
+			ArtefactBody: &v1beta1.ArtefactBody{
+				AppProviderId:       testAppProvider,
+				ArtefactName:        "ContainerDeploy001",
+				ArtefactVersionInfo: "14",
+				ArtefactDescription: "COMPONENTSPEC",
+				ArtefactVirtType:    "CONTAINER_TYPE",
+				ComponentSpec: []v1beta1.ComponentSpec{{
+					ComponentName: "test-pod",
+					CommandLineParams: &v1beta1.CommandLineParams{
+						Command:     []string{"nginx-debug"},
+						CommandArgs: []string{"-g", "daemon off;"},
+					},
+					Images:         []string{testFileName},
+					NumOfInstances: 0,
+					RestartPolicy:  "RESTART_POLICY_ALWAYS",
+					ComputeResourceProfile: &v1beta1.ComputeResourceProfile{
+						CPUArchType:    "ISA_X86_64",
+						CPUExclusivity: false,
+						Memory:         512,
+						NumCPU:         "1",
+					},
+					ExposedInterfaces: []v1beta1.ExposedInterfaceInfo{{
+						Port:           30013,
+						Protocol:       "TCP",
+						InterfaceId:    "interfaceid",
+						VisibilityType: "VISIBILITY_EXTERNAL",
+					}},
 				}},
-			}},
+			},
 		},
 	}
 	for _, o := range opts {

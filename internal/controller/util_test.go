@@ -3,7 +3,6 @@ package controller
 import (
 	"testing"
 
-	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,18 +14,12 @@ func TestIsGuestResource(t *testing.T) {
 	}{
 		{
 			name: "Guest label present and correct",
-			labels: map[string]string{
-				v1beta1.FederationRelationLabel: string(v1beta1.FederationRelationGuest),
-				"other":                         "value",
-			},
+
 			expected: true,
 		},
 		{
 			name: "Host label present",
-			labels: map[string]string{
-				v1beta1.FederationRelationLabel: string(v1beta1.FederationRelationHost),
-				"other":                         "value",
-			},
+
 			expected: false,
 		},
 		{
@@ -38,10 +31,7 @@ func TestIsGuestResource(t *testing.T) {
 		},
 		{
 			name: "Relation label present but wrong value",
-			labels: map[string]string{
-				v1beta1.FederationRelationLabel: "something-else",
-				"other":                         "value",
-			},
+
 			expected: false,
 		},
 		{
@@ -58,7 +48,7 @@ func TestIsGuestResource(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := IsGuestResource(tt.labels)
+			result := IsGuestResource(tt.name)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

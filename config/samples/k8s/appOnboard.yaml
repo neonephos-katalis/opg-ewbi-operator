@@ -1,0 +1,22 @@
+apiVersion: opg.ewbi.katalis.com/v1beta1
+kind: ApplicationOnboarding
+metadata:
+  namespace: guest
+  # CORRETTO: tutto minuscolo
+  name: apponboard-4d559f1bre564rhr54fe 
+spec:
+  relationType: GUEST
+  federationContextId: 59e69878-ff37-5794-ba4e-c4cdebdde893
+  appInfo:
+    appId: app_4d559f1bf00858c2
+    appProviderId: katalis_provider
+    appComponentSpecs: 
+      - artefactId: 123e4567-e89b-12d3-a456-426614174000
+    appDeploymentZones:
+      - zoneId: 2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f
+        countryCode: IT
+    appMetaData:
+      appName: my_app_name 
+      version: 1.0.0
+      accessToken: accessToken
+      appDescription: This is a sample application for onboarding

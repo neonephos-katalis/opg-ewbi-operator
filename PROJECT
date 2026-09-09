@@ -2,7 +2,7 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: nby.one
+domain: katalis.com
 layout:
 - go.kubebuilder.io/v4
 plugins:
@@ -14,7 +14,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: nby.one
+  domain: katalis.com
   group: opg.ewbi
   kind: ApplicationInstance
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
@@ -23,7 +23,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: nby.one
+  domain: katalis.com
   group: opg.ewbi
   kind: Federation
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
@@ -32,7 +32,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: nby.one
+  domain: katalis.com
   group: opg.ewbi
   kind: File
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
@@ -41,7 +41,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: nby.one
+  domain: katalis.com
   group: opg.ewbi
   kind: Artefact
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
@@ -50,16 +50,16 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: nby.one
+  domain: katalis.com
   group: opg.ewbi
-  kind: Application
+  kind: ApplicationOnboarding
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: nby.one
+  domain: katalis.com
   group: opg.ewbi
   kind: AvailabilityZone
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1

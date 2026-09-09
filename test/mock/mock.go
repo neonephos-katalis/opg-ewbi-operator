@@ -5,7 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	v1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
 
 	opgc "github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/client"
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/ewbi/models"
@@ -20,27 +21,27 @@ const (
 )
 
 type MockedOpgAPI struct {
-	Federations map[string]*opgewbiv1beta1.Federation
-	Files       map[string]*opgewbiv1beta1.File
-	Artefacts   map[string]*opgewbiv1beta1.Artefact
-	Apps        map[string]*opgewbiv1beta1.Application
-	AppInsts    map[string]*opgewbiv1beta1.ApplicationInstance
-	AZs         map[string]*opgewbiv1beta1.AvailabilityZone
+	Federations map[string]*v1beta1.Federation
+	Images      map[string]*v1beta1.Image
+	Artefacts   map[string]*v1beta1.Artefact
+	AppOnboards map[string]*v1beta1.ApplicationOnboarding
+	AppDeploys  map[string]*v1beta1.ApplicationDeployment
+	AZs         map[string]*v1beta1.AvailabilityZone
 }
 
 func MakeMokedOpgAPI() *MockedOpgAPI {
 	c := &MockedOpgAPI{
-		Federations: make(map[string]*opgewbiv1beta1.Federation),
-		Files:       make(map[string]*opgewbiv1beta1.File),
-		Artefacts:   make(map[string]*opgewbiv1beta1.Artefact),
-		Apps:        make(map[string]*opgewbiv1beta1.Application),
-		AppInsts:    make(map[string]*opgewbiv1beta1.ApplicationInstance),
-		AZs:         make(map[string]*opgewbiv1beta1.AvailabilityZone),
+		Federations: make(map[string]*v1beta1.Federation),
+		Images:      make(map[string]*v1beta1.Image),
+		Artefacts:   make(map[string]*v1beta1.Artefact),
+		AppOnboards: make(map[string]*v1beta1.ApplicationOnboarding),
+		AppDeploys:  make(map[string]*v1beta1.ApplicationDeployment),
+		AZs:         make(map[string]*v1beta1.AvailabilityZone),
 	}
 	return c
 }
 
-func (c *MockedOpgAPI) WithFederations(feds []*opgewbiv1beta1.Federation) *MockedOpgAPI {
+func (c *MockedOpgAPI) WithFederations(feds []*v1beta1.Federation) *MockedOpgAPI {
 	for _, f := range feds {
 		// the index in this function is different than the others, because in this case,
 		// the client's function only has the federation-context-id and not the federation-external-id
@@ -49,37 +50,37 @@ func (c *MockedOpgAPI) WithFederations(feds []*opgewbiv1beta1.Federation) *Mocke
 	return c
 }
 
-func (c *MockedOpgAPI) WithFiles(files []*opgewbiv1beta1.File) *MockedOpgAPI {
+func (c *MockedOpgAPI) WithFiles(files []*v1beta1.Image) *MockedOpgAPI {
 	for _, f := range files {
-		c.Files[f.Labels[opgewbiv1beta1.ExternalIdLabel]] = f
+		c.Images[f.Spec.ImageId] = f
 	}
 	return c
 }
 
-func (c *MockedOpgAPI) WithArtefacts(arts []*opgewbiv1beta1.Artefact) *MockedOpgAPI {
+func (c *MockedOpgAPI) WithArtefacts(arts []*v1beta1.Artefact) *MockedOpgAPI {
 	for _, a := range arts {
-		c.Artefacts[a.Labels[opgewbiv1beta1.ExternalIdLabel]] = a
+		c.Artefacts[a.Spec.ArtefactId] = a
 	}
 	return c
 }
 
-func (c *MockedOpgAPI) WithApplications(apps []*opgewbiv1beta1.Application) *MockedOpgAPI {
+func (c *MockedOpgAPI) WithApplications(apps []*v1beta1.ApplicationOnboarding) *MockedOpgAPI {
 	for _, a := range apps {
-		c.Apps[a.Labels[opgewbiv1beta1.ExternalIdLabel]] = a
+		c.AppOnboards[a.Spec.AppInfo.AppId] = a
 	}
 	return c
 }
 
-func (c *MockedOpgAPI) WithApplicationInstances(appInsts []*opgewbiv1beta1.ApplicationInstance) *MockedOpgAPI {
+func (c *MockedOpgAPI) WithApplicationDeployments(appInsts []*v1beta1.ApplicationDeployment) *MockedOpgAPI {
 	for _, a := range appInsts {
-		c.AppInsts[a.Labels[opgewbiv1beta1.ExternalIdLabel]] = a
+		c.AppDeploys[a.Spec.AppId] = a
 	}
 	return c
 }
 
-func (c *MockedOpgAPI) WithAZs(azs []*opgewbiv1beta1.AvailabilityZone) *MockedOpgAPI {
+func (c *MockedOpgAPI) WithAZs(azs []*v1beta1.AvailabilityZone) *MockedOpgAPI {
 	for _, a := range azs {
-		c.AZs[a.Labels[opgewbiv1beta1.ExternalIdLabel]] = a
+		c.AZs[a.Spec.ZoneId] = a
 	}
 	return c
 }
@@ -92,7 +93,7 @@ func (c *MockedOpgAPI) CreateFederationWithResponse(
 
 	var res *opgc.CreateFederationResponse
 	// federation must already be pre-registered, otherwise the partner-guest can't join it
-	f, ok := c.Federations[body.OrigOPFederationId]
+	f, ok := c.Federations[string(*body.OrigOPFederationId)]
 	if ok {
 		// we assume creds are valid
 		// we should update the fed with the new data
@@ -105,7 +106,7 @@ func (c *MockedOpgAPI) CreateFederationWithResponse(
 				StatusCode: 200,
 			},
 			JSON200: &opgmodels.FederationResponseData{
-				OfferedAvailabilityZones: &[]opgmodels.ZoneDetails{{ZoneId: f.Status.OfferedAvailabilityZones[0].ZoneId}},
+				OfferedAvailabilityZones: &[]opgmodels.ZoneDetails{{ZoneId: f.Status.ZoneDetails[0].ZoneId}},
 				FederationContextId:      &f.Status.FederationContextId,
 			},
 		}
@@ -176,7 +177,7 @@ func (c *MockedOpgAPI) UploadFileWithBodyWithResponse(
 	}
 
 	// if file already exists return conflict
-	_, ok := c.Files[fileName]
+	_, ok := c.Images[fileName]
 	if ok {
 		detail := alreadyExistsMsg
 		res = &opgc.UploadFileResponse{
@@ -189,7 +190,7 @@ func (c *MockedOpgAPI) UploadFileWithBodyWithResponse(
 		}
 	} else {
 		// for now we are not storing it... we are using the map as a set
-		c.Files[fileName] = &opgewbiv1beta1.File{}
+		c.Images[fileName] = &v1beta1.Image{}
 		res = &opgc.UploadFileResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -212,7 +213,7 @@ func (c *MockedOpgAPI) RemoveFileWithResponse(
 
 	var res *opgc.RemoveFileResponse
 	// if file already exists return conflict
-	_, ok := c.Files[fileId]
+	_, ok := c.Images[string(fileId[:])]
 	if !ok {
 		detail := "unable to remove file, not found"
 		res = &opgc.RemoveFileResponse{
@@ -224,7 +225,7 @@ func (c *MockedOpgAPI) RemoveFileWithResponse(
 			},
 		}
 	} else {
-		delete(c.Files, fileId)
+		delete(c.Images, string(fileId[:]))
 		res = &opgc.RemoveFileResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -266,7 +267,7 @@ func (c *MockedOpgAPI) UploadArtefactWithBodyWithResponse(
 		}
 	} else {
 		// for now we are not storing it... we are using the map as a set
-		c.Artefacts[aName] = &opgewbiv1beta1.Artefact{}
+		c.Artefacts[aName] = &v1beta1.Artefact{}
 		res = &opgc.UploadArtefactResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -288,7 +289,7 @@ func (c *MockedOpgAPI) RemoveArtefactWithResponse(
 
 	var res *opgc.RemoveArtefactResponse
 	// if artefact already exists return conflict
-	_, ok := c.Artefacts[artefactId]
+	_, ok := c.Artefacts[string(artefactId[:])]
 	if !ok {
 		detail := "unable to remove artefact, not found"
 		res = &opgc.RemoveArtefactResponse{
@@ -300,7 +301,7 @@ func (c *MockedOpgAPI) RemoveArtefactWithResponse(
 			},
 		}
 	} else {
-		delete(c.Artefacts, artefactId)
+		delete(c.Artefacts, string(artefactId[:]))
 		res = &opgc.RemoveArtefactResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -323,7 +324,7 @@ func (c *MockedOpgAPI) OnboardApplicationWithResponse(
 	aName := body.AppId
 
 	// if app already exists return conflict
-	_, ok := c.Apps[aName]
+	_, ok := c.AppOnboards[aName]
 	if ok {
 		detail := alreadyExistsMsg
 		res = &opgc.OnboardApplicationResponse{
@@ -336,7 +337,7 @@ func (c *MockedOpgAPI) OnboardApplicationWithResponse(
 		}
 	} else {
 		// for now we are not storing it... we are using the map as a set
-		c.Apps[aName] = &opgewbiv1beta1.Application{}
+		c.AppOnboards[aName] = &v1beta1.ApplicationOnboarding{}
 		res = &opgc.OnboardApplicationResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -357,7 +358,7 @@ func (c *MockedOpgAPI) DeleteAppWithResponse(
 ) (*opgc.DeleteAppResponse, error) {
 	var res *opgc.DeleteAppResponse
 	// if app already exists return conflict
-	_, ok := c.Apps[appId]
+	_, ok := c.AppOnboards[appId]
 	if !ok {
 		detail := "unable to remove app, not found"
 		res = &opgc.DeleteAppResponse{
@@ -369,7 +370,7 @@ func (c *MockedOpgAPI) DeleteAppWithResponse(
 			},
 		}
 	} else {
-		delete(c.Apps, appId)
+		delete(c.AppOnboards, appId)
 		res = &opgc.DeleteAppResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -389,10 +390,10 @@ func (c *MockedOpgAPI) InstallAppWithResponse(
 ) (*opgc.InstallAppResponse, error) {
 	var res *opgc.InstallAppResponse
 
-	aName := body.AppInstanceId
+	aName := uuid.V5(body.AppId + body.AppProviderId)
 
 	// if appInst already exists return conflict
-	_, ok := c.AppInsts[aName]
+	_, ok := c.AppDeploys[aName]
 	if ok {
 		detail := alreadyExistsMsg
 		res = &opgc.InstallAppResponse{
@@ -405,7 +406,7 @@ func (c *MockedOpgAPI) InstallAppWithResponse(
 		}
 	} else {
 		// for now we are not storing it... we are using the map as a set
-		c.AppInsts[aName] = &opgewbiv1beta1.ApplicationInstance{}
+		c.AppDeploys[aName] = &v1beta1.ApplicationDeployment{}
 		res = &opgc.InstallAppResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -428,7 +429,7 @@ func (c *MockedOpgAPI) RemoveAppWithResponse(
 ) (*opgc.RemoveAppResponse, error) {
 	var res *opgc.RemoveAppResponse
 	// if appInst already exists return conflict
-	_, ok := c.AppInsts[appInstanceId]
+	_, ok := c.AppDeploys[appInstanceId]
 	if !ok {
 		detail := "unable to remove appInst, not found"
 		res = &opgc.RemoveAppResponse{
@@ -440,7 +441,7 @@ func (c *MockedOpgAPI) RemoveAppWithResponse(
 			},
 		}
 	} else {
-		delete(c.AppInsts, appInstanceId)
+		delete(c.AppDeploys, appInstanceId)
 		res = &opgc.RemoveAppResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -476,7 +477,7 @@ func (c *MockedOpgAPI) ZoneSubscribeWithResponse(
 		}
 	} else {
 		// for now we are not storing it... we are using the map as a set
-		c.AZs[aName] = &opgewbiv1beta1.AvailabilityZone{}
+		c.AZs[aName] = &v1beta1.AvailabilityZone{}
 		res = &opgc.ZoneSubscribeResponse{
 			Body: []byte{},
 			HTTPResponse: &http.Response{
@@ -810,15 +811,15 @@ func (c *MockedOpgAPI) UpdateFederationWithResponse(
 }
 
 // AuthenticateDeviceWithResponse request returning *AuthenticateDeviceResponse
-func (c *MockedOpgAPI) AuthenticateDeviceWithResponse(
-	ctx context.Context,
-	federationContextId opgmodels.FederationContextId,
-	deviceId opgmodels.DeviceId,
-	authToken opgmodels.AuthorizationToken,
-	reqEditors ...opgc.RequestEditorFn,
-) (*opgc.AuthenticateDeviceResponse, error) {
-	panic(notImplementedMsg)
-}
+// func (c *MockedOpgAPI) AuthenticateDeviceWithResponse(
+// 	ctx context.Context,
+// 	federationContextId opgmodels.FederationContextId,
+// 	// deviceId opgmodels.DeviceId,
+// 	// authToken opgmodels.AuthorizationToken,
+// 	reqEditors ...opgc.RequestEditorFn,
+// ) (*opgc.AuthenticateDeviceResponse, error) {
+// 	panic(notImplementedMsg)
+// }
 
 // ZoneSubscribeWithBodyWithResponse request with arbitrary body returning *ZoneSubscribeResponse
 func (c *MockedOpgAPI) ZoneSubscribeWithBodyWithResponse(
@@ -1201,8 +1202,8 @@ func (c *MockedOpgAPI) UpdateFederation(
 func (c *MockedOpgAPI) AuthenticateDevice(
 	ctx context.Context,
 	federationContextId opgmodels.FederationContextId,
-	deviceId opgmodels.DeviceId,
-	authToken opgmodels.AuthorizationToken,
+	// deviceId opgmodels.DeviceId,
+	// authToken opgmodels.AuthorizationToken,
 	reqEditors ...opgc.RequestEditorFn,
 ) (*http.Response, error) {
 	panic(notImplementedMsg)

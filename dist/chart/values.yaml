@@ -68,18 +68,18 @@ federation:
     level: "info"
   externalServices:
     hydra:
-      name: nearbyone-hydra-admin
+      name: katalis-fm-hydra-admin
       port: 4445
     userBuster:
-      name: nearbyone-user-buster
+      name: katalis-fm-user-buster
       port: 80
   services:
     federation:
-      name: nearbyone-federation-api
+      name: katalis-fm-api
       port: 8080
       # nodePort: 30081  # Optional: specify a specific nodePort (30000-32767), or leave empty for auto-assignment
 
-fullnameOverride: nearbyone
+fullnameOverride: katalis-fm
 
 imagePullSecrets:
   - name: opg-registry-secret

@@ -53,7 +53,7 @@ const (
 	testFederationContextId2 = "00000000-0000-0000-0000-222222222222"
 
 	defaultTestFederationRelation = v1beta1.FederationRelationGuest
-	testFederationDomain          = "https://oscar.envs.nearbycomputing.com"
+	testFederationDomain          = "https://federation.katalis.com"
 
 	testFederationUrlBasePath = "/apicatalog/unauthorized/operatorplatform/federation/v1"
 	testFederationUrl         = testFederationDomain + testFederationUrlBasePath
@@ -108,7 +108,6 @@ func TestFederationReconciler(t *testing.T) {
 					makeTestFederation(
 						testFederationName,
 						federationWithFinalizer(),
-						federationWithFederationRelation(v1beta1.FederationRelationHost),
 					),
 				},
 			},
@@ -246,8 +245,8 @@ func TestFederationReconciler(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.resp.wantStatusState, reqFeder.Status.State)
 			assert.Contains(t, reqFeder.Finalizers, tt.resp.wantFinalizer)
-			assert.Equal(t, tt.resp.wantOfferedAZs, reqFeder.Status.OfferedAvailabilityZones)
-			assert.Equal(t, tt.resp.wantAcceptedAZs, reqFeder.Spec.AcceptedAvailabilityZones)
+			assert.Equal(t, tt.resp.wantOfferedAZs, reqFeder.Status.ZoneDetails)
+			// assert.Equal(t, tt.resp.wantAcceptedAZs, reqFeder.Spec.AcceptedAvailabilityZones)
 
 		})
 	}
@@ -266,16 +265,10 @@ func federationDeletedAt(now time.Time) federationOpt {
 //nolint:unparam
 func federationWithAvailableAZ(azId string) federationOpt {
 	return func(f *v1beta1.Federation) {
-		if f.Status.OfferedAvailabilityZones == nil {
-			f.Status.OfferedAvailabilityZones = []v1beta1.ZoneDetails{}
+		if f.Status.ZoneDetails == nil {
+			f.Status.ZoneDetails = []v1beta1.ZoneDetails{}
 		}
-		f.Status.OfferedAvailabilityZones = append(f.Status.OfferedAvailabilityZones, v1beta1.ZoneDetails{ZoneId: azId})
-	}
-}
-
-func federationWithFederationRelation(rel v1beta1.FederationRelation) federationOpt {
-	return func(f *v1beta1.Federation) {
-		f.Labels[v1beta1.FederationRelationLabel] = string(rel)
+		f.Status.ZoneDetails = append(f.Status.ZoneDetails, v1beta1.ZoneDetails{ZoneId: azId})
 	}
 }
 
@@ -296,32 +289,23 @@ func makeTestFederation(name string, opts ...federationOpt) *v1beta1.Federation 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: testNamespace,
-			Labels: map[string]string{
-				// the FederationContextIdLabel points to itself
-				// opgewbiv1beta1.FederationContextIdLabel: testFederationExternalId,
-				v1beta1.ExternalIdLabel:         testFederationExternalId,
-				v1beta1.FederationRelationLabel: string(defaultTestFederationRelation),
-				v1beta1.FederationGuestUrlLabel: testFederationUrl,
-			},
 		},
 		Spec: v1beta1.FederationSpec{
-			InitialDate: metav1.NewTime(time.Now()),
-			OriginOP: v1beta1.Origin{
-				CountryCode:       testFederationCountryCode,
-				FixedNetworkCodes: []string{"123", "456"},
-				MobileNetworkCodes: v1beta1.MobileNetworkCodes{
-					MCC: testFederationMCC,
-					MNC: []string{testFederationMNC},
+			FederationData: &v1beta1.FederationData{
+				InitialDate:       metav1.Time{Time: time.Now()},
+				OrigOPCountryCode: testFederationCountryCode,
+				ClientId:          testFederationClientId,
+				RestOptions: &v1beta1.RestOptions{
+					TokenUrl:          testFederationTokenUrl,
+					PartnerStatusLink: testFederationLink,
 				},
 			},
-			Partner: v1beta1.Partner{
-				CallbackCredentials: v1beta1.FederationCredentials{
-					ClientId: testFederationClientId,
-					TokenUrl: testFederationTokenUrl,
-				},
-				StatusLink: testFederationLink,
+			FixedNetworkIds: []string{"123", "456"},
+			MobileNetworkIds: &v1beta1.MobileNetworkIds{
+				Mcc:  testFederationMCC,
+				Mncs: []string{testFederationMNC},
 			},
-			AcceptedAvailabilityZones: []string{},
+			// AcceptedAvailabilityZones: []string{},
 		},
 	}
 	for _, o := range opts {
@@ -376,11 +360,5 @@ func makeTestReconcilerScheme(sOpts ...SchemeOpt) *runtime.Scheme {
 func withFederationContextId(fcid string) federationOpt {
 	return func(f *v1beta1.Federation) {
 		f.Status.FederationContextId = fcid
-	}
-}
-
-func withFederationContextIdAsLabel(fcid string) federationOpt {
-	return func(f *v1beta1.Federation) {
-		f.Labels[v1beta1.FederationContextIdLabel] = fcid
 	}
 }

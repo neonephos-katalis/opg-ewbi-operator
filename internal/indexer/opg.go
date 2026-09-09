@@ -15,13 +15,5 @@ func GetFederationIndexers(ctx context.Context, mgr ctrl.Manager) error {
 }
 
 func FedContextIdIndexer(rawObj client.Object) []string {
-	f := rawObj.(*opgewbiv1beta1.Federation)
-	if f.Status.FederationContextId == "" {
-		v, ok := f.Labels[opgewbiv1beta1.FederationContextIdLabel]
-		if !ok || v == "" {
-			return nil
-		}
-		return []string{f.Labels[opgewbiv1beta1.FederationContextIdLabel]}
-	}
-	return []string{f.Status.FederationContextId}
+	return []string{rawObj.(*opgewbiv1beta1.Federation).Status.FederationContextId}
 }
