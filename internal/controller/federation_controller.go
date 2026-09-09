@@ -32,7 +32,6 @@ import (
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
-	policy "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s/policy"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 
@@ -48,7 +47,6 @@ type FederationReconciler struct {
 	Scheme *runtime.Scheme
 	opg.OPGClientsMapInterface
 	K8sClient  *k8s.FederationReconciler
-	K8sPolicy  *policy.FederationReconciler
 	RestClient *rest.FederationReconciler
 }
 
@@ -198,20 +196,6 @@ func (r *FederationReconciler) Reconcile(
 		}
 	}()
 
-	policy := func(action string) error {
-		role, policyName := v1beta1.FederationRelationHost, v1beta1.PolicyHostName
-		if isGuest {
-			role, policyName = v1beta1.FederationRelationGuest, v1beta1.PolicyGuestName
-		}
-		log.Info(">>> [Federation][POLICY] Updating FederationContextId policy.", "name", fed.Name, "namespace", fed.Namespace, "role", role, "policyName", policyName)
-		policyHandler := &policy.FederationReconciler{Client: r.Client, Scheme: r.Scheme}
-		if err := policyHandler.FederationContextIdPolicy(ctx, role, policyName, action, fed.Status.FederationContextId); err != nil {
-			log.Error(err, ">>> [Federation][POLICY] Error updating FederationContextId policy.", "name", fed.Name, "namespace", fed.Namespace, "role", role, "policyName", policyName)
-			return err
-		}
-		return nil
-	}
-
 	// Handle deletion of the federation resource
 	if !fed.GetDeletionTimestamp().IsZero() {
 		if isGuest {
@@ -219,10 +203,6 @@ func (r *FederationReconciler) Reconcile(
 				log.Error(err, ">>> [Federation] Error during the deletion.", "name", fed.Name, "namespace", fed.Namespace)
 				return ctrl.Result{}, err
 			}
-		}
-		if err := policy("remove"); err != nil {
-			log.Error(err, ">>> [Federation] Error updating FederationContextId policy during deletion.", "name", fed.Name, "namespace", fed.Namespace)
-			return ctrl.Result{}, err
 		}
 		if controllerutil.RemoveFinalizer(&fed, v1beta1.FederationFinalizer) {
 			log.Info(">>> [Federation] Removed basic finalizer for Federation, exiting...", "name", fed.Name, "namespace", fed.Namespace)
@@ -244,10 +224,6 @@ func (r *FederationReconciler) Reconcile(
 
 	// Policy management for federation context ID
 	if fed.Status.FederationContextId != "" && fed.Annotations[v1beta1.FederationPolicyAnnotation] == "not-set" {
-		if err := policy("add"); err != nil {
-			log.Error(err, ">>> [Federation] Error updating FederationContextId policy.", "name", fed.Name, "namespace", fed.Namespace)
-			return ctrl.Result{}, err
-		}
 		fed.Annotations[v1beta1.FederationPolicyAnnotation] = "set"
 		return ctrl.Result{}, nil
 	}
