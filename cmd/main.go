@@ -39,7 +39,6 @@ import (
 
 	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/controller"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/options"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
@@ -187,11 +186,6 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
-		K8sClient: &k8s.FederationReconciler{
-			Client:                 mgr.GetClient(),
-			Scheme:                 mgr.GetScheme(),
-			OPGClientsMapInterface: opgClients,
-		},
 		RestClient: &rest.FederationReconciler{
 			Client:                 mgr.GetClient(),
 			Scheme:                 mgr.GetScheme(),
@@ -205,11 +199,6 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
-		K8sClient: &k8s.ZoneReconciler{
-			Client:                 mgr.GetClient(),
-			Scheme:                 mgr.GetScheme(),
-			OPGClientsMapInterface: opgClients,
-		},
 		RestClient: &rest.ZoneReconciler{
 			Client:                 mgr.GetClient(),
 			Scheme:                 mgr.GetScheme(),
@@ -223,11 +212,6 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
-		K8sClient: &k8s.ImageReconciler{
-			Client:                 mgr.GetClient(),
-			Scheme:                 mgr.GetScheme(),
-			OPGClientsMapInterface: opgClients,
-		},
 		RestClient: &rest.ImageReconciler{
 			Client:                 mgr.GetClient(),
 			Scheme:                 mgr.GetScheme(),
@@ -241,11 +225,6 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
-		K8sClient: &k8s.ArtefactReconciler{
-			Client:                 mgr.GetClient(),
-			Scheme:                 mgr.GetScheme(),
-			OPGClientsMapInterface: opgClients,
-		},
 		RestClient: &rest.ArtefactReconciler{
 			Client:                 mgr.GetClient(),
 			Scheme:                 mgr.GetScheme(),
@@ -259,11 +238,6 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
-		K8sClient: &k8s.ApplicationOnboardingReconciler{
-			Client:                 mgr.GetClient(),
-			Scheme:                 mgr.GetScheme(),
-			OPGClientsMapInterface: opgClients,
-		},
 		RestClient: &rest.ApplicationOnboardingReconciler{
 			Client:                 mgr.GetClient(),
 			Scheme:                 mgr.GetScheme(),
@@ -277,11 +251,6 @@ func main() {
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		OPGClientsMapInterface: opgClients,
-		K8sClient: &k8s.ApplicationDeploymentReconciler{
-			Client:                 mgr.GetClient(),
-			Scheme:                 mgr.GetScheme(),
-			OPGClientsMapInterface: opgClients,
-		},
 		RestClient: &rest.ApplicationDeploymentReconciler{
 			Client:                 mgr.GetClient(),
 			Scheme:                 mgr.GetScheme(),

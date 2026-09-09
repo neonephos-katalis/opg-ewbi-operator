@@ -22,7 +22,6 @@ import (
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
-	k8s "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	rest "github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
@@ -31,8 +30,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // ImageReconciler reconciles an Image object
@@ -40,7 +37,6 @@ type ImageReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	opg.OPGClientsMapInterface
-	K8sClient  *k8s.ImageReconciler
 	RestClient *rest.ImageReconciler
 }
 type ExternalImageClient interface {
@@ -53,7 +49,7 @@ func (r *ImageReconciler) getExternalClient(isRest bool) ExternalImageClient {
 	if isRest {
 		return r.RestClient
 	}
-	return r.K8sClient
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -64,12 +60,6 @@ func (r *ImageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.Image{}).
 		Named("image").
-		WatchesRawSource(
-			source.Channel(
-				k8s.ImageRemoteEvents,
-				&handler.EnqueueRequestForObject{},
-			),
-		).
 		Complete(r)
 }
 

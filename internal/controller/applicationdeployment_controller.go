@@ -26,11 +26,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	k8s "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	rest "github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
@@ -41,7 +38,6 @@ type ApplicationDeploymentReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	opg.OPGClientsMapInterface
-	K8sClient  *k8s.ApplicationDeploymentReconciler
 	RestClient *rest.ApplicationDeploymentReconciler
 }
 type ExternalAppDeployClient interface {
@@ -54,7 +50,7 @@ func (r *ApplicationDeploymentReconciler) getExternalClient(isRest bool) Externa
 	if isRest {
 		return r.RestClient
 	}
-	return r.K8sClient
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -62,12 +58,6 @@ func (r *ApplicationDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) err
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.ApplicationDeployment{}).
 		Named("applicationdeployment").
-		WatchesRawSource(
-			source.Channel(
-				k8s.ApplicationDeploymentRemoteEvents,
-				&handler.EnqueueRequestForObject{},
-			),
-		).
 		Complete(r)
 }
 
