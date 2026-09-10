@@ -37,6 +37,14 @@ flowchart TD
 
 ---
 
+# End-to-End Federation Workflow
+
+A typical application deployment progresses through three broad stages: establishing the federation relationship, accepting an Availability Zone offered by the Host, and preparing and deploying the application.
+
+The following diagram provides a simplified end-to-end view of these stages and the operations involved.
+
+![End-to-end federation workflow](images/federation-workflow.png)
+
 # Federation Registration
 
 Federation registration establishes the relationship between the Guest and Host.
@@ -340,21 +348,7 @@ For example, when an Application Instance changes state, the Host can send the c
 
 ---
 
-# Communication Model
-
-Federation uses different communication mechanisms for different purposes.
-
-## Kubernetes API
-
-The Kubernetes API is used within an operator environment.
-
-It is used to create, retrieve and update federation Custom Resources and their status.
-
-## EWBI REST API
-
-The EWBI REST API is used for communication between the Guest and Host.
-
-Federation requests such as registration, resource onboarding and application deployment are exchanged through the EWBI interface.
+# Status and Callback Model
 
 ## Callbacks
 
@@ -371,7 +365,7 @@ Guest Kubernetes
 Guest federation processing
       │
       ▼
-   EWBI REST
+   EWBI
       │
       ▼
 Host federation processing
@@ -413,8 +407,6 @@ Intermediate states such as `PENDING` allow an operation to remain active while 
 
 The resource state therefore provides the primary indication of whether an operation is progressing, has completed successfully, or has encountered a problem.
 
-For operational diagnosis and debugging procedures, see [Troubleshooting](troubleshooting.md).
-
 ---
 
 # Federation Lifecycle Summary
@@ -454,10 +446,7 @@ The federation layer coordinates the relationship and exchanges information betw
 ## Related Documentation
 
 * [Quick Start Guide](Quick-start-introduction.md) — Introduction to the platform and its key concepts.
+* [Architecture](architecture.md) — Describes the high-level architecture of the EWBI Federation Platform
 * [Core Components](components.md) — Detailed responsibilities and implementation of the platform components.
 * [Federation Model and Workflows](federation.md) — Detailed federation behaviour and resource workflows.
 * [Security](security.md) — Security model and trust boundaries.
-* [Diagrams](diagrams.md) — Collection of the platform's Mermaid diagrams.
-* [Deployment Guide](deployment.md) — Installation and configuration.
-* [Connectivity Guide](connectivity.md) — Connectivity requirements between operators.
-* [Troubleshooting Guide](troubleshooting.md) — Verification and troubleshooting.

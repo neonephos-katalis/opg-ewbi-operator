@@ -195,9 +195,8 @@ The relationships and lifecycle of these resources are described in more detail 
 
 Once the basic concepts are understood, the remaining documentation can be read according to what you need to understand or do:
 
-* [Architecture](architecture.md) — Understand the overall system architecture and the relationships between its major components.
-* [Core Components](components.md) — Understand the implementation and responsibilities of the individual components.
-* [Federation Model and Workflows](federation.md) — Understand how federation operations, resource flows and status updates work.
-* [Deployment](deployment.md) — Learn how to install and configure the federation components.
-* [Connectivity](connectivity.md) — Understand the network and connectivity requirements between operators.
-* [Troubleshooting](troubleshooting.md) — Verify a deployment and diagnose common problems.
+* [Quick Start Guide](Quick-start-introduction.md) — Introduction to the platform and its key concepts.
+* [Architecture](architecture.md) — Describes the high-level architecture of the EWBI Federation Platform
+* [Core Components](components.md) — Detailed responsibilities and implementation of the platform components.
+* [Federation Model and Workflows](federation.md) — Detailed federation behaviour and resource workflows.
+* [Security](security.md) — Security model and trust boundaries.

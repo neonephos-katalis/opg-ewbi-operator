@@ -1,4 +1,5 @@
 # EWBI Federation Platform Architecture
+![alt text](images/image.png)
 
 ## Purpose
 
@@ -264,10 +265,8 @@ The detailed differences in Guest and Host behaviour are described in [Federatio
 ## Related Documentation
 
 * [Quick Start Guide](Quick-start-introduction.md) — Introduction to the platform and its key concepts.
+* [Architecture](architecture.md) — Describes the high-level architecture of the EWBI Federation Platform
 * [Core Components](components.md) — Detailed responsibilities and implementation of the platform components.
 * [Federation Model and Workflows](federation.md) — Detailed federation behaviour and resource workflows.
 * [Security](security.md) — Security model and trust boundaries.
-* [Diagrams](diagrams.md) — Collection of the platform's Mermaid diagrams.
-* [Deployment Guide](deployment.md) — Installation and configuration.
-* [Connectivity Guide](connectivity.md) — Connectivity requirements between operators.
-* [Troubleshooting Guide](troubleshooting.md) — Verification and troubleshooting.
+

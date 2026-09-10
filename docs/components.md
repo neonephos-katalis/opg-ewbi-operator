@@ -2,7 +2,7 @@
 
 This document describes the main implementation components of the EWBI Federation Platform and the responsibility of each component.
 
-The platform combines a Kubernetes-native federation management layer with the EWBI REST interface used for communication between operators. Federation resources are represented as Kubernetes Custom Resources, while workload execution remains the responsibility of the local operator platform.
+The platform combines a Kubernetes-native federation management layer with the EWBI interface used for communication between operators. Federation resources are represented as Kubernetes Custom Resources, while workload execution remains the responsibility of the local operator platform.
 
 ---
 
@@ -60,21 +60,25 @@ For example:
 * File upload creates a `File` resource.
 * Artefact upload creates an `Artefact` resource.
 
-## The API therefore provides the transition between the external EWBI interface and the Host's local Kubernetes environment.
+The API therefore provides the transition between the external EWBI interface and the Host's local Kubernetes environment.
 
 # Federation Manager
 
+The following diagram shows the main building blocks of the Federation Manager and how the EWBI interface, Custom Resource Definitions and Kubernetes controllers fit together.
+
 The Federation Manager is the core federation software deployed within an operator environment.
 
-It consists of:
-
-* **EWBI Operator**
-* **EWBI API**
-
-The two components have complementary responsibilities:
-
+It consists of the **EWBI Operator** and **EWBI API**. Together, these components provide the federation functionality and manage the lifecycle of the federation resources.
 * The **EWBI Operator** manages and processes federation resources within Kubernetes.
 * The **EWBI API** provides the external federation interface between operators.
+
+The Federation Manager is not an end-to-end resource orchestration solution. It is integrated with the operator's local edge resource management or orchestration environment, which is responsible for carrying out platform-specific operations.
+
+The following diagram shows the main building blocks of the Federation Manager and their relationships.
+
+![Federation Manager architecture](images/federation-manager-architecture.png)
+
+
 
 ---
 
@@ -386,42 +390,22 @@ In such an environment, the federation resources can provide the information req
 
 NearbyOne is therefore an example of an **operator platform integrated with the federation layer**, rather than a component required by EWBI.
 
-# Component Interaction
+# Operator-to-Operator Communication
 
-The following diagram summarises the main implementation boundary without describing the complete federation workflow:
+The Federation Manager operates within the environment of each participating operator. The two operator environments communicate through their federation components, with the EWBI interface providing the boundary between them.
 
-```mermaid
-flowchart LR
+The following diagram shows the main operator-to-operator communication paths and the relationship between the federation components on each side.
 
-    GCR["Guest Kubernetes<br/>Federation Resources"]
-    GOP["Guest EWBI Operator"]
-    GAPI["Guest EWBI API"]
-    HAPI["Host EWBI API"]
-    HCR["Host Kubernetes<br/>Federation Resources"]
-    ORCH["Local Orchestrator"]
-    WORK["Application Workload"]
+![Operator-to-operator communication](images/operator-to-operator.png)
 
-    GCR --> GOP
-    GOP --> GAPI
-    GAPI -->|"EWBI"| HAPI
-    HAPI --> HCR
-    HCR --> ORCH
-    ORCH --> WORK
-```
-
-The diagram represents the principal implementation boundary:
-
-**Guest Kubernetes resources → Guest federation components → EWBI → Host federation components → Host Kubernetes resources → local orchestration.**
+Within each operator environment, the EWBI API, EWBI Custom Resources and Kubernetes controllers provide the local federation implementation. The federation components communicate with the corresponding components of the partner operator to support federated operations.
 
 The detailed sequence of operations, state transitions and callbacks is documented in [Federation Model and Workflows](federation.md).
 
 ## Related Documentation
 
 * [Quick Start Guide](Quick-start-introduction.md) — Introduction to the platform and its key concepts.
+* [Architecture](architecture.md) — Describes the high-level architecture of the EWBI Federation Platform
 * [Core Components](components.md) — Detailed responsibilities and implementation of the platform components.
 * [Federation Model and Workflows](federation.md) — Detailed federation behaviour and resource workflows.
 * [Security](security.md) — Security model and trust boundaries.
-* [Diagrams](diagrams.md) — Collection of the platform's Mermaid diagrams.
-* [Deployment Guide](deployment.md) — Installation and configuration.
-* [Connectivity Guide](connectivity.md) — Connectivity requirements between operators.
-* [Troubleshooting Guide](troubleshooting.md) — Verification and troubleshooting.
