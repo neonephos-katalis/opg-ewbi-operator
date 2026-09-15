@@ -107,11 +107,12 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
       --docker-password= $accessToken
   ```
 7. In the end exec this command (in the **project root folder** via terminal)
-  ```bash
-  helm install federation-manager dist/chart -n federation \
-  --set federation.services.federation.nodePort=30080 \
-  --set crd.enable=true
-  ```
+**NOTE**: before executing this command, you should edit `dist/chart/templates/rbac/host_delete_protection_policy.yaml` at `spec.matchConditions.expression`, including the correct guest service account name, otherwise you won't be able to delete resources.
+```bash
+helm install federation-manager dist/chart -n federation \
+--set federation.services.federation.nodePort=30080 \
+--set crd.enable=true
+```
 After this command the OPG-EWBI-CONTROLLER and OPG-EWBI-API, if everything goes well, they will be available.
 By running the command kubectl get pods -A, you should see two pods running in the federation namespace with names like nearbyone-federation-api-XXX and opg-ewbi-operator-controller-manager-XXX.
 

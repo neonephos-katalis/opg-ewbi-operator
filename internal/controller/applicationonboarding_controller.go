@@ -96,8 +96,12 @@ func (r *ApplicationOnboardingReconciler) Reconcile(ctx context.Context, req ctr
 	defer func() {
 		isDeleting := !appOnboard.GetDeletionTimestamp().IsZero()
 		if err != nil && !isDeleting {
-			log.Error(err, ">>> [AppOnboard] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", appOnboard.Name, "namespace", appOnboard.Namespace)
-			appOnboard.Status.State = v1beta1.ApplicationOnboardingStateFailed
+			if isTransientError(err) {
+				log.Info(">>> [AppOnboard] Transient error detected in Reconcile, will retry without changing state", "name", appOnboard.Name, "namespace", appOnboard.Namespace, "error", err.Error())
+			} else {
+				log.Error(err, ">>> [AppOnboard] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", appOnboard.Name, "namespace", appOnboard.Namespace)
+				appOnboard.Status.State = v1beta1.ApplicationOnboardingStateFailed
+			}
 		}
 
 		// Metadata Patch (Annotations, Labels, Finalizers)
@@ -154,6 +158,19 @@ func (r *ApplicationOnboardingReconciler) Reconcile(ctx context.Context, req ctr
 	// Handle deletion of the ApplicationOnboarding resource
 	if !appOnboard.GetDeletionTimestamp().IsZero() {
 		if isGuest {
+			var appId string
+			if appOnboard.Spec.AppInfo != nil {
+				appId = appOnboard.Spec.AppInfo.AppId
+			}
+			hasDependents, depErr := r.resourcesDependOnApplicationOnboarding(ctx, appOnboard.Namespace, appOnboard.Spec.FederationContextId, appId)
+			if depErr != nil {
+				log.Error(depErr, ">>> [AppOnboard] Error checking for dependent resources before deletion.", "name", appOnboard.Name, "namespace", appOnboard.Namespace)
+				return ctrl.Result{}, depErr
+			}
+			if hasDependents {
+				log.Info(">>> [AppOnboard] BLOCKED deletion: dependent ApplicationDeployment(s) still reference this appId.", "name", appOnboard.Name, "namespace", appOnboard.Namespace, "appId", appId)
+				return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
+			}
 			if err := extClient.DeleteApplicationOnboarding(ctx, &appOnboard, fed); err != nil {
 				log.Error(err, ">>> [AppOnboard] Error deleting ApplicationOnboarding.", "name", appOnboard.Name, "namespace", appOnboard.Namespace)
 				appOnboard.Status.State = v1beta1.ApplicationOnboardingStateFailed
@@ -241,4 +258,17 @@ func (r *ApplicationOnboardingReconciler) Reconcile(ctx context.Context, req ctr
 		}
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ApplicationOnboardingReconciler) resourcesDependOnApplicationOnboarding(ctx context.Context, namespace string, federationContextId string, appId string) (bool, error) {
+	var deployList v1beta1.ApplicationDeploymentList
+	if err := r.List(ctx, &deployList, client.InNamespace(namespace)); err != nil {
+		return false, err
+	}
+	for _, deploy := range deployList.Items {
+		if deploy.Spec.FederationContextId == federationContextId && deploy.Spec.AppId == appId {
+			return true, nil
+		}
+	}
+	return false, nil
 }
