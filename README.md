@@ -162,6 +162,8 @@ helm install federationguest dist/chart -n katalis-dev-guest \
 
 ### Test:
 
+**Note:** You can launch the e2e federation test from github actions locally using [act](https://github.com/nektos/act). Make sure to stop any local kind cluster before starting the test.
+
 Create Client ID in identity provider and store in a federation on the host. This is not yet the establishment of the federation: This is done to link the federation to the clientID.
 
 It is named ..Auth because it represents identity provider integration and representation in the cluster.
