@@ -1,9 +1,12 @@
 package uuid
 
 import (
-	uuid "github.com/google/uuid"
 	"crypto/sha256"
 	"math/big"
+	"strconv"
+
+	uuid "github.com/google/uuid"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func V5(s string) string {
@@ -34,4 +37,8 @@ func Base62(federationContextId, appId, appInstanceId string) string {
 	}
 
 	return string(out)
+}
+
+func CreateFederationContextId(origOpFederationId string, initialDate metav1.Time, origOpCountryCode string) string {
+	return V5(origOpFederationId + strconv.FormatInt(initialDate.UnixMilli(), 10) + origOpCountryCode)
 }
