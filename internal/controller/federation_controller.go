@@ -27,12 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
-	policy "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s/policy"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
 
@@ -47,8 +43,6 @@ type FederationReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	opg.OPGClientsMapInterface
-	K8sClient  *k8s.FederationReconciler
-	K8sPolicy  *policy.FederationReconciler
 	RestClient *rest.FederationReconciler
 }
 
@@ -69,7 +63,7 @@ func (r *FederationReconciler) getExternalClient(isRest bool) ExternalFederation
 	if isRest {
 		return r.RestClient
 	}
-	return r.K8sClient
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -104,13 +98,6 @@ func (r *FederationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			},
 		})).
 		Named("federation").
-		// Add watch on the channel receiving events from remote clusters, to trigger reconciliation when an event is received
-		WatchesRawSource(
-			source.Channel(
-				k8s.FederationRemoteEvents,
-				&handler.EnqueueRequestForObject{},
-			),
-		).
 		Complete(r)
 }
 
@@ -198,20 +185,6 @@ func (r *FederationReconciler) Reconcile(
 		}
 	}()
 
-	policy := func(action string) error {
-		role, policyName := v1beta1.FederationRelationHost, v1beta1.PolicyHostName
-		if isGuest {
-			role, policyName = v1beta1.FederationRelationGuest, v1beta1.PolicyGuestName
-		}
-		log.Info(">>> [Federation][POLICY] Updating FederationContextId policy.", "name", fed.Name, "namespace", fed.Namespace, "role", role, "policyName", policyName)
-		policyHandler := &policy.FederationReconciler{Client: r.Client, Scheme: r.Scheme}
-		if err := policyHandler.FederationContextIdPolicy(ctx, role, policyName, action, fed.Status.FederationContextId); err != nil {
-			log.Error(err, ">>> [Federation][POLICY] Error updating FederationContextId policy.", "name", fed.Name, "namespace", fed.Namespace, "role", role, "policyName", policyName)
-			return err
-		}
-		return nil
-	}
-
 	// Handle deletion of the federation resource
 	if !fed.GetDeletionTimestamp().IsZero() {
 		if isGuest {
@@ -219,10 +192,6 @@ func (r *FederationReconciler) Reconcile(
 				log.Error(err, ">>> [Federation] Error during the deletion.", "name", fed.Name, "namespace", fed.Namespace)
 				return ctrl.Result{}, err
 			}
-		}
-		if err := policy("remove"); err != nil {
-			log.Error(err, ">>> [Federation] Error updating FederationContextId policy during deletion.", "name", fed.Name, "namespace", fed.Namespace)
-			return ctrl.Result{}, err
 		}
 		if controllerutil.RemoveFinalizer(&fed, v1beta1.FederationFinalizer) {
 			log.Info(">>> [Federation] Removed basic finalizer for Federation, exiting...", "name", fed.Name, "namespace", fed.Namespace)
@@ -244,22 +213,11 @@ func (r *FederationReconciler) Reconcile(
 
 	// Policy management for federation context ID
 	if fed.Status.FederationContextId != "" && fed.Annotations[v1beta1.FederationPolicyAnnotation] == "not-set" {
-		if err := policy("add"); err != nil {
-			log.Error(err, ">>> [Federation] Error updating FederationContextId policy.", "name", fed.Name, "namespace", fed.Namespace)
-			return ctrl.Result{}, err
-		}
 		fed.Annotations[v1beta1.FederationPolicyAnnotation] = "set"
 		return ctrl.Result{}, nil
 	}
 
 	isNewFed := fed.Status.State == ""
-	watchers := []client.ObjectList{
-		&v1beta1.ImageList{},
-		&v1beta1.AvailabilityZoneList{},
-		&v1beta1.ArtefactList{},
-		&v1beta1.ApplicationDeploymentList{},
-		&v1beta1.ApplicationOnboardingList{},
-	}
 	if !isGuest {
 		// Host federation handling
 		if isNewFed {
@@ -308,10 +266,7 @@ func (r *FederationReconciler) Reconcile(
 				log.Info(">>> [Federation] Federation is LOCKED", "name", fed.Name, "namespace", fed.Namespace)
 				if fed.Annotations[v1beta1.FederationWatcherAnnotation] == "not-stopped" {
 					if !isRest {
-						if err := k8s.StopAllRemoteWatchers(ctx, r.Client, &fed, fed.Namespace, fed.Status.FederationContextId, watchers...); err != nil {
-							log.Error(err, ">>> [Federation][K8s] Error STOPPING remote watchers.", "name", fed.Name, "namespace", fed.Namespace)
-							return ctrl.Result{}, err
-						}
+						// handle k8s
 					}
 					fed.Annotations[v1beta1.FederationWatcherAnnotation] = "stopped"
 				}
@@ -322,10 +277,6 @@ func (r *FederationReconciler) Reconcile(
 					log.Info(">>> [Federation][REST] Received UPDATEs via CALLBACK OPERATION with OPG EWBI API.", "name", fed.Name, "namespace", fed.Namespace)
 				} else {
 					if fed.Annotations[v1beta1.FederationWatcherAnnotation] == "not-stopped" {
-						if err := k8s.RestartAllRemoteWatcher(ctx, r.Client, &fed, r.Scheme, fed.Namespace, fed.Status.FederationContextId, watchers...); err != nil {
-							log.Error(err, ">>> [Federation][K8s] Error RESTARTING remote watchers.", "name", fed.Name, "namespace", fed.Namespace)
-							return ctrl.Result{}, err
-						}
 						fed.Annotations[v1beta1.FederationWatcherAnnotation] = "stopped"
 						// if err := r.Update(ctx, &fed); err != nil {
 						// 	log.Error(err, ">>> [Federation] Failed to update", "name", fed.Name, "namespace", fed.Namespace)
@@ -335,19 +286,13 @@ func (r *FederationReconciler) Reconcile(
 						return ctrl.Result{}, nil
 					}
 					log.Info(">>> [Federation][K8s] Syncing status...", "name", fed.Name, "namespace", fed.Namespace)
-					if err := r.K8sClient.UpdateFederationStatus(ctx, &fed); err != nil {
-						return ctrl.Result{}, err
-					}
 				}
 			default:
 				if isRest {
 					log.Info(">>> [Federation][REST] Received UPDATEs via CALLBACK OPERATION with OPG EWBI API.", "name", fed.Name, "namespace", fed.Namespace)
 				} else {
 					log.Info(">>> [Federation][K8s] Syncing status...", "name", fed.Name, "namespace", fed.Namespace)
-					if err := r.K8sClient.UpdateFederationStatus(ctx, &fed); err != nil {
-						log.Error(err, ">>> [Federation][K8s] Error syncing status.", "name", fed.Name, "namespace", fed.Namespace)
-						return ctrl.Result{}, err
-					}
+					// handle k8s
 				}
 				log.Info(">>> [Federation] Current state", "name", fed.Name, "namespace", fed.Namespace, "state", fed.Status.State)
 			}
