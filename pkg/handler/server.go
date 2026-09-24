@@ -89,14 +89,13 @@ func (h *handler) CreateFederation(c echo.Context) error {
 
 	userClientCredentials, _ := h.getRequestClientCredentialsFunc(c)
 	var fed *v1beta1.Federation
-	federationContextId := uuid.V5(*request.OrigOPFederationId + request.InitialDate.String() + *request.OrigOPCountryCode)
 	if fed, err = h.metaStoreClient.CreateFederation(ctx, &metastore.Federation{
 		ClientCredentials:     userClientCredentials,
 		FederationRequestData: request,
-		FederationContextId:   federationContextId,
 	}); err != nil {
 		return sendErrorResponseFromError(c, err)
 	}
+	federationContextId := uuid.CreateFederationContextId(fed.Spec.FederationData.OrigOPFederationId, fed.Spec.FederationData.InitialDate, fed.Spec.FederationData.OrigOPCountryCode)
 
 	offeredZones := make([]models.ZoneDetails, len(fed.Status.ZoneDetails))
 	for i, zd := range fed.Status.ZoneDetails {

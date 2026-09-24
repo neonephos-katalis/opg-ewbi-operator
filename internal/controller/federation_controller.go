@@ -263,7 +263,7 @@ func (r *FederationReconciler) Reconcile(
 	if !isGuest {
 		// Host federation handling
 		if isNewFed {
-			fed.Status.FederationContextId = uuid.V5(fed.Spec.FederationData.OrigOPFederationId + fed.Spec.FederationData.InitialDate.String() + fed.Spec.FederationData.OrigOPCountryCode)
+			fed.Status.FederationContextId = uuid.CreateFederationContextId(fed.Spec.FederationData.OrigOPFederationId, fed.Spec.FederationData.InitialDate, fed.Spec.FederationData.OrigOPCountryCode)
 			fed.Labels[v1beta1.ResourceIdLabel] = "fed-" + uuid.V5(fed.Spec.FederationData.OrigOPFederationId+fed.Spec.FederationData.OrigOPCountryCode)
 			// If the federation is new, we set the initial state to "AVAILABLE" and set the expiry and renewal dates based on the initial date provided in the spec. We also set the policy label to "false" to indicate that the policy has not been created yet.
 			if fed.Status.FederationExpiryDate.IsZero() {
