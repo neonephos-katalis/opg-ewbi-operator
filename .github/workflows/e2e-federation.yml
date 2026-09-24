@@ -1,0 +1,265 @@
+name: E2E Federation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-federation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  KIND_VERSION: v0.26.0
+  KIND_NODE_IMAGE: kindest/node:v1.32.0
+  KUBEBUILDER_VERSION: v4.15.0
+  REGISTRY_NAME: kind-registry
+  REGISTRY_PORT: "5011"
+  VERSION: dev-0.0.312
+
+jobs:
+  provision-clusters:
+    name: Provision partnerop + originatingop kind clusters
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install kubebuilder
+        run: |
+          curl -Lo ./kubebuilder "https://github.com/kubernetes-sigs/kubebuilder/releases/download/${KUBEBUILDER_VERSION}/kubebuilder_linux_amd64"
+          chmod +x ./kubebuilder
+          sudo mv ./kubebuilder /usr/local/bin/kubebuilder
+          kubebuilder version
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
+
+      - name: Build dist/chart and dist/chart-crd
+        run: |
+          chmod +x ./hack/build-chart.sh
+          ./hack/build-chart.sh
+
+      - name: Install kind
+        run: |
+          curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+          kind version
+
+      - name: Install kubectl
+        run: |
+          curl -Lo ./kubectl "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
+      - name: Raise inotify limits for kind
+        run: |
+          sudo sysctl -w fs.inotify.max_user_instances=8192
+          sudo sysctl -w fs.inotify.max_user_watches=1048576
+
+      - name: Remove any stale partnerop/originatingop clusters from a previous local run
+        run: |
+          kind delete cluster --name partnerop     || true
+          kind delete cluster --name originatingop || true
+          docker rm -f "${REGISTRY_NAME}" 2>/dev/null || true
+
+      - name: Deploy local docker registry
+        run: |
+          docker run -d --restart=always \
+            -p "127.0.0.1:${REGISTRY_PORT}:5000" \
+            --network bridge \
+            --name "${REGISTRY_NAME}" \
+            registry:2
+
+      - name: Write kind cluster config for the local registry mirror
+        run: |
+          cat <<EOF > /tmp/kind-registry-config.yaml
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          containerdConfigPatches:
+          - |-
+            [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${REGISTRY_PORT}"]
+              endpoint = ["http://${REGISTRY_NAME}:5000"]
+          EOF
+
+      - name: Create partnerop cluster
+        run: |
+          kind create cluster --name partnerop --image "${KIND_NODE_IMAGE}" \
+            --config /tmp/kind-registry-config.yaml --wait 120s
+
+      - name: Create originatingop cluster
+        run: |
+          kind create cluster --name originatingop --image "${KIND_NODE_IMAGE}" \
+            --config /tmp/kind-registry-config.yaml --wait 120s
+
+      - name: Connect local registry to the kind network
+        run: |
+          docker network connect kind "${REGISTRY_NAME}" 2>/dev/null || true
+
+      - name: Verify both clusters and the registry share the kind docker network
+        run: |
+          docker network inspect kind \
+            --format '{{ range .Containers }}{{ .Name }} {{ .IPv4Address }}{{ "\n" }}{{ end }}'
+
+      - name: Merge kubeconfigs into one file
+        run: |
+          mkdir -p "$HOME/.kube"
+          kind get kubeconfig --name partnerop     > "$HOME/.kube/partnerop.config"
+          kind get kubeconfig --name originatingop > "$HOME/.kube/originatingop.config"
+          KUBECONFIG="$HOME/.kube/partnerop.config:$HOME/.kube/originatingop.config" \
+            kubectl config view --merge --flatten > "$HOME/.kube/config"
+          echo "KUBECONFIG=$HOME/.kube/config" >> "$GITHUB_ENV"
+
+      - name: Show merged contexts
+        run: kubectl config get-contexts
+
+      - name: Sanity-check each cluster is reachable via the merged kubeconfig
+        run: |
+          kubectl --context kind-partnerop     get nodes -o wide
+          kubectl --context kind-originatingop get nodes -o wide
+
+      - name: Verify cross-cluster network reachability
+        run: |
+          partnerop_ip=$(docker inspect -f '{{ (index .NetworkSettings.Networks "kind").IPAddress }}' partnerop-control-plane)
+          originatingop_ip=$(docker inspect -f '{{ (index .NetworkSettings.Networks "kind").IPAddress }}' originatingop-control-plane)
+          echo "partnerop control-plane:     $partnerop_ip"
+          echo "originatingop control-plane: $originatingop_ip"
+
+          docker run --rm --network kind curlimages/curl:8.10.1 \
+            -sk --max-time 5 -o /dev/null -w 'originatingop -> partnerop api-server: HTTP %{http_code}\n' \
+            "https://${partnerop_ip}:6443/livez"
+          docker run --rm --network kind curlimages/curl:8.10.1 \
+            -sk --max-time 5 -o /dev/null -w 'partnerop -> originatingop api-server: HTTP %{http_code}\n' \
+            "https://${originatingop_ip}:6443/livez"
+
+      - name: Setup authentication for private Go modules
+        run: |
+          echo "machine github.com login ${{ github.actor }} password ${{ secrets.GITHUB_TOKEN }}" > "$HOME/.netrc"
+          chmod 600 "$HOME/.netrc"
+
+      - name: Build and push operator/API images to the local registry
+        run: |
+          OP_IMAGE="localhost:${REGISTRY_PORT}/operator/katalis-operator:${VERSION}"
+          API_IMAGE="localhost:${REGISTRY_PORT}/operator/katalis-api:${VERSION}"
+
+          docker build . -f Dockerfile \
+            --secret id=netrc,src="$HOME/.netrc" \
+            -t "$OP_IMAGE"
+          docker build . -f Dockerfile.api \
+            --secret id=netrc,src="$HOME/.netrc" \
+            -t "$API_IMAGE"
+
+          docker push "$OP_IMAGE"
+          docker push "$API_IMAGE"
+
+          echo "OP_IMAGE=$OP_IMAGE" >> "$GITHUB_ENV"
+          echo "API_IMAGE=$API_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Point dist/chart's image values at the local registry
+        run: |
+          for old in \
+            "repository: ghcr.io/ipcei-tim-t2/operator/katalis-operator" \
+            "repository: ghcr.io/ipcei-tim-t2/operator/katalis-api"; do
+            grep -qF "$old" dist/chart/values.yaml || {
+              echo "::error::expected line not found in dist/chart/values.yaml: $old" >&2
+              exit 1
+            }
+          done
+
+          sed -i \
+            -e "s#repository: ghcr.io/ipcei-tim-t2/operator/katalis-operator#repository: localhost:${REGISTRY_PORT}/operator/katalis-operator#" \
+            -e "s#repository: ghcr.io/ipcei-tim-t2/operator/katalis-api#repository: localhost:${REGISTRY_PORT}/operator/katalis-api#" \
+            dist/chart/values.yaml
+
+          helm lint dist/chart
+
+      - name: Verify the chart renders images from the local registry
+        run: |
+          for ns in partnerop originatingop; do
+            rendered=$(helm template federation dist/chart -n "$ns" --set crd.enable=true)
+            for image in "$OP_IMAGE" "$API_IMAGE"; do
+              echo "$rendered" | grep -qF "image: $image" || {
+                echo "::error::expected 'image: $image' in $ns render, not found" >&2
+                exit 1
+              }
+            done
+          done
+          echo "both images resolve to the local registry in partnerop and originatingop renders"
+
+      - name: Verify clusters can pull the built images
+        run: |
+          docker exec partnerop-control-plane crictl pull "$OP_IMAGE"
+          docker exec partnerop-control-plane crictl pull "$API_IMAGE"
+          docker exec originatingop-control-plane crictl pull "$OP_IMAGE"
+          docker exec originatingop-control-plane crictl pull "$API_IMAGE"
+
+      - name: Install federation chart on partnerop cluster
+        run: |
+          helm --kube-context kind-partnerop install federation dist/chart \
+            -n partnerop --create-namespace --set crd.enable=true
+
+      - name: Install federation chart on originatingop cluster
+        run: |
+          helm --kube-context kind-originatingop install federation dist/chart \
+            -n originatingop --create-namespace --set crd.enable=true
+
+      - name: Verify CRDs and manager rollout on both clusters
+        run: |
+          partnerop_crds=$(kubectl --context kind-partnerop     get crds -o name | grep -c 'opg.ewbi.katalis.com' || true)
+          originatingop_crds=$(kubectl --context kind-originatingop get crds -o name | grep -c 'opg.ewbi.katalis.com' || true)
+          echo "partnerop CRDs: $partnerop_crds  originatingop CRDs: $originatingop_crds"
+          [ "$partnerop_crds"     -eq 6 ] || { echo "::error::expected 6 opg.ewbi.katalis.com CRDs on partnerop, found $partnerop_crds" >&2; exit 1; }
+          [ "$originatingop_crds" -eq 6 ] || { echo "::error::expected 6 opg.ewbi.katalis.com CRDs on originatingop, found $originatingop_crds" >&2; exit 1; }
+
+          kubectl --context kind-partnerop     -n partnerop     wait --for=condition=Available deployment \
+            -l control-plane=controller-manager --timeout=180s
+          kubectl --context kind-originatingop -n originatingop wait --for=condition=Available deployment \
+            -l control-plane=controller-manager --timeout=180s
+
+          kubectl --context kind-partnerop     -n partnerop     get pods -l control-plane=controller-manager -o wide
+          kubectl --context kind-originatingop -n originatingop get pods -l control-plane=controller-manager -o wide
+
+      - name: Create kubeconfig secret for cross-cluster federation
+        run: |
+          kind get kubeconfig --internal --name partnerop > /tmp/partnerop-internal.kubeconfig
+          kubectl --context kind-originatingop -n originatingop delete secret kubeconfig-secret --ignore-not-found
+          kubectl --context kind-originatingop -n originatingop create secret generic kubeconfig-secret \
+            --from-file=kubeconfig=/tmp/partnerop-internal.kubeconfig
+
+      - name: Run functional e2e test (Federation -> ... -> ApplicationDeployment)
+        run: go test ./test/e2e/... -v -run TestFederationWalkthrough -timeout 20m
+
+      - name: Cluster diagnostics on failure
+        if: failure()
+        run: |
+          kind export logs /tmp/kind-logs --name partnerop     || true
+          kind export logs /tmp/kind-logs --name originatingop || true
+          docker ps -a
+          docker logs "${REGISTRY_NAME}" || true
+          kubectl --context kind-partnerop     -n partnerop     get pods,events -o wide || true
+          kubectl --context kind-originatingop -n originatingop get pods,events -o wide || true
+          kubectl --context kind-partnerop     -n partnerop     logs -l control-plane=controller-manager --all-containers --tail=200 || true
+          kubectl --context kind-originatingop -n originatingop logs -l control-plane=controller-manager --all-containers --tail=200 || true
+          echo "--- resource chain state (partnerop) ---"
+          kubectl --context kind-partnerop     -n partnerop     get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments -o yaml || true
+          echo "--- resource chain state (originatingop) ---"
+          kubectl --context kind-originatingop -n originatingop get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments -o yaml || true
+
+      - name: Tear down clusters and registry
+        if: always()
+        run: |
+          kind delete cluster --name partnerop     || true
+          kind delete cluster --name originatingop || true
+          docker rm -f "${REGISTRY_NAME}" 2>/dev/null || true
