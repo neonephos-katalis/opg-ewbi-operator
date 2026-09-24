@@ -19,8 +19,11 @@ package controller
 import (
 	"context"
 	"errors"
+	"net"
+	"net/url"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -72,6 +75,32 @@ func IsGuestResource(relation string) bool {
 // false otherwise (either label wasn't present or is another technology)
 func IsRestTechnology(technology string) bool {
 	return technology == string(v1beta1.FederationTechnologyRest)
+}
+
+func isTransientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if apierrors.IsTimeout(err) || apierrors.IsServerTimeout(err) || apierrors.IsServiceUnavailable(err) ||
+		apierrors.IsTooManyRequests(err) || apierrors.IsInternalError(err) || apierrors.IsConflict(err) {
+		return true
+	}
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return true
+	}
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return true
+	}
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return true
+	}
+	return false
 }
 
 func CheckFederationState(fed *v1beta1.Federation, isRest bool, prefix string, name string, namespace string) bool {

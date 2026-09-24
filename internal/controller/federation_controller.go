@@ -22,6 +22,7 @@ import (
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -153,8 +154,12 @@ func (r *FederationReconciler) Reconcile(
 	defer func() {
 		isDeleting := !fed.GetDeletionTimestamp().IsZero()
 		if err != nil && !isDeleting {
-			log.Error(err, ">>> [Federation] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", fed.Name, "namespace", fed.Namespace)
-			fed.Status.State = v1beta1.FederationStateFailed
+			if isTransientError(err) {
+				log.Info(">>> [Federation] Transient error detected in Reconcile, will retry without changing state", "name", fed.Name, "namespace", fed.Namespace, "error", err.Error())
+			} else {
+				log.Error(err, ">>> [Federation] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", fed.Name, "namespace", fed.Namespace)
+				fed.Status.State = v1beta1.FederationStateFailed
+			}
 		}
 
 		// Metadata Patch (Annotations, Labels, Finalizers)
@@ -215,6 +220,15 @@ func (r *FederationReconciler) Reconcile(
 	// Handle deletion of the federation resource
 	if !fed.GetDeletionTimestamp().IsZero() {
 		if isGuest {
+			hasDependents, depErr := r.resourcesDependOnFederation(ctx, fed.Namespace, fed.Status.FederationContextId)
+			if depErr != nil {
+				log.Error(depErr, ">>> [Federation] Error checking for dependent resources before deletion.", "name", fed.Name, "namespace", fed.Namespace)
+				return ctrl.Result{}, depErr
+			}
+			if hasDependents {
+				log.Info(">>> [Federation] BLOCKED deletion: dependent resources still reference this federationContextId.", "name", fed.Name, "namespace", fed.Namespace, "federationContextId", fed.Status.FederationContextId)
+				return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
+			}
 			if err := extClient.DeleteFederation(ctx, &fed); err != nil {
 				log.Error(err, ">>> [Federation] Error during the deletion.", "name", fed.Name, "namespace", fed.Namespace)
 				return ctrl.Result{}, err
@@ -321,17 +335,12 @@ func (r *FederationReconciler) Reconcile(
 				if isRest {
 					log.Info(">>> [Federation][REST] Received UPDATEs via CALLBACK OPERATION with OPG EWBI API.", "name", fed.Name, "namespace", fed.Namespace)
 				} else {
+					if err := k8s.RestartAllRemoteWatcher(ctx, r.Client, &fed, r.Scheme, fed.Namespace, fed.Status.FederationContextId, watchers...); err != nil {
+						log.Error(err, ">>> [Federation][K8s] Error RESTARTING remote watchers.", "name", fed.Name, "namespace", fed.Namespace)
+						return ctrl.Result{}, err
+					}
 					if fed.Annotations[v1beta1.FederationWatcherAnnotation] == "not-stopped" {
-						if err := k8s.RestartAllRemoteWatcher(ctx, r.Client, &fed, r.Scheme, fed.Namespace, fed.Status.FederationContextId, watchers...); err != nil {
-							log.Error(err, ">>> [Federation][K8s] Error RESTARTING remote watchers.", "name", fed.Name, "namespace", fed.Namespace)
-							return ctrl.Result{}, err
-						}
 						fed.Annotations[v1beta1.FederationWatcherAnnotation] = "stopped"
-						// if err := r.Update(ctx, &fed); err != nil {
-						// 	log.Error(err, ">>> [Federation] Failed to update", "name", fed.Name, "namespace", fed.Namespace)
-						// 	return ctrl.Result{}, err
-						// }
-						// skipStatusPatch = true
 						return ctrl.Result{}, nil
 					}
 					log.Info(">>> [Federation][K8s] Syncing status...", "name", fed.Name, "namespace", fed.Namespace)
@@ -357,6 +366,51 @@ func (r *FederationReconciler) Reconcile(
 		}
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *FederationReconciler) resourcesDependOnFederation(ctx context.Context, namespace string, federationContextId string) (bool, error) {
+	if federationContextId == "" {
+		return false, nil
+	}
+
+	dependentLists := []client.ObjectList{
+		&v1beta1.ImageList{},
+		&v1beta1.AvailabilityZoneList{},
+		&v1beta1.ArtefactList{},
+		&v1beta1.ApplicationDeploymentList{},
+		&v1beta1.ApplicationOnboardingList{},
+	}
+
+	for _, list := range dependentLists {
+		if err := r.List(ctx, list, client.InNamespace(namespace)); err != nil {
+			return false, err
+		}
+		objs, err := meta.ExtractList(list)
+		if err != nil {
+			return false, err
+		}
+		for _, obj := range objs {
+			var fedContextId string
+			switch cr := obj.(type) {
+			case *v1beta1.Image:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.AvailabilityZone:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.Artefact:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.ApplicationDeployment:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.ApplicationOnboarding:
+				fedContextId = cr.Spec.FederationContextId
+			default:
+				continue
+			}
+			if fedContextId == federationContextId {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 func (r *FederationReconciler) guestFederationActions(ctx context.Context, fed *v1beta1.Federation, isRest bool, extClient ExternalFederationClient, annotations map[string]string) error {
