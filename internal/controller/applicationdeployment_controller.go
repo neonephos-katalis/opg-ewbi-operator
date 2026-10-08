@@ -94,8 +94,12 @@ func (r *ApplicationDeploymentReconciler) Reconcile(ctx context.Context, req ctr
 	defer func() {
 		isDeleting := !appDeploy.GetDeletionTimestamp().IsZero()
 		if err != nil && !isDeleting {
-			log.Error(err, ">>> [AppDeploy] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", appDeploy.Name, "namespace", appDeploy.Namespace)
-			appDeploy.Status.AppInstanceInfo.AppInstanceState = v1beta1.ApplicationDeploymentStateFailed
+			if isTransientError(err) {
+				log.Info(">>> [AppDeploy] Transient error detected in Reconcile, will retry without changing state", "name", appDeploy.Name, "namespace", appDeploy.Namespace, "error", err.Error())
+			} else {
+				log.Error(err, ">>> [AppDeploy] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", appDeploy.Name, "namespace", appDeploy.Namespace)
+				appDeploy.Status.AppInstanceInfo.AppInstanceState = v1beta1.ApplicationDeploymentStateFailed
+			}
 		}
 
 		// Metadata Patch (Annotations, Labels, Finalizers)

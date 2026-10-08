@@ -96,8 +96,12 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (r
 	defer func() {
 		isDeleting := !art.GetDeletionTimestamp().IsZero()
 		if err != nil && !isDeleting {
-			log.Error(err, ">>> [Artefact] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", art.Name, "namespace", art.Namespace)
-			art.Status.State = v1beta1.ArtefactStateError
+			if isTransientError(err) {
+				log.Info(">>> [Artefact] Transient error detected in Reconcile, will retry without changing state", "name", art.Name, "namespace", art.Namespace, "error", err.Error())
+			} else {
+				log.Error(err, ">>> [Artefact] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", art.Name, "namespace", art.Namespace)
+				art.Status.State = v1beta1.ArtefactStateError
+			}
 		}
 
 		// Metadata Patch (Annotations, Labels, Finalizers)
@@ -144,7 +148,6 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (r
 	extClient := r.getExternalClient(isRest)
 	if err != nil {
 		log.Error(err, ">>> [Artefact] Should always have a parent federation.", "name", art.Name, "namespace", art.Namespace)
-		art.Status.State = v1beta1.ArtefactStateError
 		return ctrl.Result{}, err
 	}
 
@@ -156,6 +159,16 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (r
 	// Handle deletion of the Artefact resource
 	if !art.GetDeletionTimestamp().IsZero() {
 		if isGuest {
+			hasDependents, depErr := r.resourcesDependOnArtefact(ctx, art.Namespace, art.Spec.FederationContextId, art.Spec.ArtefactId)
+			if depErr != nil {
+				log.Error(depErr, ">>> [Artefact] Error checking for dependent resources before deletion.", "name", art.Name, "namespace", art.Namespace)
+				art.Status.State = v1beta1.ArtefactStateError
+				return ctrl.Result{}, depErr
+			}
+			if hasDependents {
+				log.Info(">>> [Artefact] BLOCKED deletion: dependent ApplicationOnboarding(s) still reference this artefactId.", "name", art.Name, "namespace", art.Namespace, "artefactId", art.Spec.ArtefactId)
+				return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
+			}
 			if err := extClient.DeleteArtefact(ctx, &art, fed); err != nil {
 				log.Error(err, ">>> [Artefact] Error deleting Artefact.", "name", art.Name, "namespace", art.Namespace)
 				art.Status.State = v1beta1.ArtefactStateError
@@ -244,4 +257,22 @@ func (r *ArtefactReconciler) Reconcile(ctx context.Context, req ctrl.Request) (r
 
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ArtefactReconciler) resourcesDependOnArtefact(ctx context.Context, namespace string, federationContextId string, artefactId string) (bool, error) {
+	var onboardList v1beta1.ApplicationOnboardingList
+	if err := r.List(ctx, &onboardList, client.InNamespace(namespace)); err != nil {
+		return false, err
+	}
+	for _, onboard := range onboardList.Items {
+		if onboard.Spec.FederationContextId != federationContextId || onboard.Spec.AppInfo == nil {
+			continue
+		}
+		for _, component := range onboard.Spec.AppInfo.AppComponentSpecs {
+			if component.ArtefactId == artefactId {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }

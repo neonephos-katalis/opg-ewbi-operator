@@ -16,7 +16,6 @@ import (
 type Federation struct {
 	*models.FederationRequestData
 	ClientCredentials        ClientCredentials
-	FederationContextId      models.FederationContextId
 	OfferedAvailabilityZones *[]models.ZoneDetails
 }
 
@@ -109,7 +108,6 @@ func (c *k8sClient) GetFederation(ctx context.Context, federationContextID strin
 			},
 			PartnerStatusLink: fed.Spec.FederationData.RestOptions.PartnerStatusLink,
 		},
-		FederationContextId:      fed.Labels[opgLabel(federationContextIDLabel)],
 		OfferedAvailabilityZones: &offeredZones,
 	}, nil
 }
