@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"reflect"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -98,8 +99,12 @@ func (r *ZoneReconciler) Reconcile(
 	defer func() {
 		isDeleting := !zone.GetDeletionTimestamp().IsZero()
 		if err != nil && !isDeleting {
-			log.Error(err, ">>> [AZ] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", zone.Name, "namespace", zone.Namespace)
-			zone.Status.State = v1beta1.ZoneStateFailed
+			if isTransientError(err) {
+				log.Info(">>> [AZ] Transient error detected in Reconcile, will retry without changing state", "name", zone.Name, "namespace", zone.Namespace, "error", err.Error())
+			} else {
+				log.Error(err, ">>> [AZ] UNEXPECTED ERROR detected in Reconcile, setting state to Failed before patching", "name", zone.Name, "namespace", zone.Namespace)
+				zone.Status.State = v1beta1.ZoneStateFailed
+			}
 		}
 
 		// Metadata Patch (Annotations, Labels, Finalizers)
@@ -157,13 +162,22 @@ func (r *ZoneReconciler) Reconcile(
 	// Handle deletion of the AZ resource
 	if !zone.GetDeletionTimestamp().IsZero() {
 		if isGuest {
+			hasDependents, depErr := r.resourcesDependOnAvailabilityZone(ctx, zone.Namespace, zone.Spec.FederationContextId, zone.Spec.ZoneId)
+			if depErr != nil {
+				log.Error(depErr, ">>> [AZ] Error checking for dependent resources before deletion.", "name", zone.Name, "namespace", zone.Namespace)
+				return ctrl.Result{}, depErr
+			}
+			if hasDependents {
+				log.Info(">>> [AZ] BLOCKED deletion: dependent ApplicationDeployment(s) still reference this zoneId.", "name", zone.Name, "namespace", zone.Namespace, "zoneId", zone.Spec.ZoneId)
+				return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
+			}
 			if err := extClient.DeleteZone(ctx, &zone, fed); err != nil {
 				log.Error(err, ">>> [AZ] Error deleting external AZ.", "name", zone.Name, "namespace", zone.Namespace)
 				return ctrl.Result{}, err
 			}
-			if controllerutil.RemoveFinalizer(&zone, v1beta1.AvailabilityZoneFinalizer) {
-				log.Info(">>> [AZ] Removed basic finalizer for AZ, exiting...", "name", zone.Name, "namespace", zone.Namespace)
-			}
+		}
+		if controllerutil.RemoveFinalizer(&zone, v1beta1.AvailabilityZoneFinalizer) {
+			log.Info(">>> [AZ] Removed basic finalizer for AZ, exiting...", "name", zone.Name, "namespace", zone.Namespace)
 		}
 		return ctrl.Result{}, nil
 	}
@@ -218,4 +232,17 @@ func (r *ZoneReconciler) Reconcile(
 		}
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ZoneReconciler) resourcesDependOnAvailabilityZone(ctx context.Context, namespace string, federationContextId string, zoneId string) (bool, error) {
+	var deployList v1beta1.ApplicationDeploymentList
+	if err := r.List(ctx, &deployList, client.InNamespace(namespace)); err != nil {
+		return false, err
+	}
+	for _, deploy := range deployList.Items {
+		if deploy.Spec.FederationContextId == federationContextId && deploy.Spec.ZoneId == zoneId {
+			return true, nil
+		}
+	}
+	return false, nil
 }
