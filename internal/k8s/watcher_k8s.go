@@ -111,6 +111,12 @@ func StartRemoteResourceWatcher(ctx context.Context, dynClient dynamic.Interface
 	go informer.Run(cancelCtx.Done())
 }
 
+func HasActiveWatcher(namespace, localResourceName string) bool {
+	watchKey := fmt.Sprintf("%s/%s", namespace, localResourceName)
+	_, ok := activeResourceWatchers.Load(watchKey)
+	return ok
+}
+
 func StopRemoteResourceWatcher(namespace, localResourceName string) bool {
 	watchKey := fmt.Sprintf("%s/%s", namespace, localResourceName)
 	if cancelVal, loaded := activeResourceWatchers.LoadAndDelete(watchKey); loaded {
@@ -151,55 +157,60 @@ func StopRemoteResourceWatcherFedLocked(ctx context.Context, localClient client.
 // RestartAllRemoteWatcher restarts the remote resource watcher for a given resource if it was previously stopped due to federation being locked, and removes the annotation indicating that the watcher was stopped.
 func RestartAllRemoteWatcher(ctx context.Context, c client.Client, fed *v1beta1.Federation, scheme *runtime.Scheme, namespace string, federationContextId string, lists ...client.ObjectList) error {
 	annotations := fed.GetAnnotations()
-	// Check if the annotation indicating that the watcher was stopped due to federation being locked exists
-	if val, exists := annotations[WatcherStoppedAnnotation]; exists && val == "true" {
-		_, dynClient, err := buildHostClient(ctx, fed, c, scheme)
+	wasStoppedForLock := annotations[WatcherStoppedAnnotation] == "true"
+
+	var dynClient dynamic.Interface
+	for _, list := range lists {
+		if err := c.List(ctx, list, client.InNamespace(namespace)); err != nil {
+			return err
+		}
+		objs, err := meta.ExtractList(list)
 		if err != nil {
 			return err
 		}
-		for _, list := range lists {
-			// List all resources of the given type in the specified namespace
-			if err := c.List(ctx, list, client.InNamespace(namespace)); err != nil {
-				return err
-			}
-			// Extract the items from the list and iterate over them
-			objs, err := meta.ExtractList(list)
+		for _, obj := range objs {
+			metaObj, err := meta.Accessor(obj)
 			if err != nil {
-				return err
+				continue
 			}
-			for _, obj := range objs {
-				metaObj, err := meta.Accessor(obj)
+			resourceName := metaObj.GetName()
+			resourceNamespace := metaObj.GetNamespace()
+			resourceGroup := obj.GetObjectKind().GroupVersionKind().Group
+			resourceVersion := obj.GetObjectKind().GroupVersionKind().Version
+			resourcePlural := obj.GetObjectKind().GroupVersionKind().Kind
+			var fedContextId string
+			switch cr := obj.(type) {
+			case *v1beta1.Image:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.AvailabilityZone:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.Artefact:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.ApplicationDeployment:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.ApplicationOnboarding:
+				fedContextId = cr.Spec.FederationContextId
+			default:
+				continue
+			}
+			if fedContextId != federationContextId {
+				continue
+			}
+			if HasActiveWatcher(fed.Spec.FederationData.K8sOptions.Namespace, resourceName) {
+				continue
+			}
+			if dynClient == nil {
+				_, dc, err := buildHostClient(ctx, fed, c, scheme)
 				if err != nil {
-					continue
+					return err
 				}
-				resourceName := metaObj.GetName()
-				resourceNamespace := metaObj.GetNamespace()
-				resourceGroup := obj.GetObjectKind().GroupVersionKind().Group
-				resourceVersion := obj.GetObjectKind().GroupVersionKind().Version
-				resourcePlural := obj.GetObjectKind().GroupVersionKind().Kind
-				var fedContextId string
-				// Extract the FederationContextId based on the type of Custom Resource
-				switch cr := obj.(type) {
-				case *v1beta1.Image:
-					fedContextId = cr.Spec.FederationContextId
-				case *v1beta1.AvailabilityZone:
-					fedContextId = cr.Spec.FederationContextId
-				case *v1beta1.Artefact:
-					fedContextId = cr.Spec.FederationContextId
-				case *v1beta1.ApplicationDeployment:
-					fedContextId = cr.Spec.FederationContextId
-				case *v1beta1.ApplicationOnboarding:
-					fedContextId = cr.Spec.FederationContextId
-				default:
-					continue
-				}
-				// Compare the FederationContextId of the CR with the target FederationContextId
-				if fedContextId == federationContextId {
-					StartRemoteResourceWatcher(ctx, dynClient, fed.Spec.FederationData.K8sOptions.Namespace, resourceName, resourceNamespace, resourceGroup, resourceVersion, resourcePlural)
-
-				}
+				dynClient = dc
 			}
+			StartRemoteResourceWatcher(ctx, dynClient, fed.Spec.FederationData.K8sOptions.Namespace, resourceName, resourceNamespace, resourceGroup, resourceVersion, resourcePlural)
 		}
+	}
+
+	if wasStoppedForLock {
 		delete(annotations, WatcherStoppedAnnotation)
 		fed.SetAnnotations(annotations)
 		if err := c.Update(ctx, fed); err != nil {
