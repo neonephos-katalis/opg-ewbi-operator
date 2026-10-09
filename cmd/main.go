@@ -96,6 +96,12 @@ func main() {
 	flag.Parse()
 
 	monitoredNamespace = options.GetNamespace()
+	var cacheOpts cache.Options
+	if !options.IsClusterWide() {
+		cacheOpts.DefaultNamespaces = map[string]cache.Config{
+			monitoredNamespace: {},
+		}
+	}
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -166,9 +172,7 @@ func main() {
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
 
-		Cache: cache.Options{DefaultNamespaces: map[string]cache.Config{
-			monitoredNamespace: {},
-		}},
+		Cache: cacheOpts,
 	})
 
 	if err != nil {

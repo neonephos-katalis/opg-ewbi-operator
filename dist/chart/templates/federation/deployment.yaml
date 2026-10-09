@@ -32,6 +32,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: CONTROLLER_CLUSTER_WIDE
+            value: {{ .Values.clusterWide | quote }}
           - name: HYDRA_BASE_ADDR
             value: "http://{{ .Values.federation.externalServices.hydra.name }}:{{ .Values.federation.externalServices.hydra.port }}"
           - name: CAMARA_LOG_LEVEL

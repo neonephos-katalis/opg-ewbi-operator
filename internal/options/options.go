@@ -7,11 +7,16 @@ import (
 const (
 	namespaceEnvVar        = "NAMESPACE"
 	namespaceEnvVarDefault = "default"
+	clusterWideEnvVar      = "CLUSTER_WIDE"
 )
 
 // GetNamespace returns the namespace from the environment variable NAMESPACE or the default value "default".
 func GetNamespace() string {
 	return getStringFromEnvVar(namespaceEnvVar, namespaceEnvVarDefault)
+}
+
+func IsClusterWide() bool {
+	return getStringFromEnvVar(clusterWideEnvVar, "false") == "true"
 }
 
 // getStringFromEnvVar returns the value of the environment variable with the given name.

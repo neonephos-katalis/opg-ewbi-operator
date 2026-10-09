@@ -22,13 +22,13 @@ const (
 	headerKeyClientID = "X-Client-ID"
 )
 
-func NewServer(apiRoot string, k8sClient client.Client, namespace string) *handler {
+func NewServer(apiRoot string, k8sClient client.Client, namespace string, clusterWide bool) *handler {
 	return &handler{
 		apiRoot:                         apiRoot,
-		depClient:                       deployment.NewClient(k8sClient, namespace),
+		depClient:                       deployment.NewClient(k8sClient, namespace, clusterWide),
 		getRequestClientCredentialsFunc: getRequestClientCredentials,
 		getRequestContextFunc:           getRequestContext,
-		metaStoreClient:                 metastore.NewK8sClient(k8sClient, namespace),
+		metaStoreClient:                 metastore.NewK8sClient(k8sClient, namespace, clusterWide),
 		Client:                          k8sClient,
 	}
 }

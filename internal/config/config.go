@@ -13,7 +13,8 @@ type Camara struct {
 }
 
 type Controller struct {
-	Namespace string `split_words:"true" required:"true"`
+	Namespace   string `split_words:"true" required:"true"`
+	ClusterWide bool   `split_words:"true"`
 }
 
 type Config struct {

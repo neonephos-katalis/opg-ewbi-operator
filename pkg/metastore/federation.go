@@ -8,6 +8,8 @@ import (
 	v1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/pkg/uuid"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8scli "sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,7 +31,7 @@ type Federation struct {
 
 func (c *k8sClient) searchFederation(ctx context.Context, federationContextId string, role string) (*v1beta1.Federation, error) {
 	var fedList v1beta1.FederationList
-	if err := c.kubernetes.List(ctx, &fedList, client.InNamespace(c.namespace)); err != nil {
+	if err := c.kubernetes.List(ctx, &fedList, client.InNamespace(c.getNamespace())); err != nil {
 		return nil, err
 	}
 	if len(fedList.Items) == 0 {
@@ -46,10 +48,18 @@ func (c *k8sClient) searchFederation(ctx context.Context, federationContextId st
 
 func (c *k8sClient) CreateFederation(ctx context.Context, fed *Federation) (*v1beta1.Federation, error) {
 	fedId := uuid.V5(*fed.OrigOPFederationId + *fed.OrigOPCountryCode)
+	namespace := c.namespace
+	if c.clusterWide {
+		namespace = "fedrest-" + fedId
+		ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
+		if err := c.kubernetes.Create(ctx, ns); err != nil && !k8serrors.IsAlreadyExists(err) {
+			return nil, errors.Wrapf(err, "unable to create namespace %s", namespace)
+		}
+	}
 	fedHost := &v1beta1.Federation{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fed-" + fedId,
-			Namespace: c.namespace,
+			Namespace: namespace,
 		},
 		Spec: v1beta1.FederationSpec{
 			FederationData: &v1beta1.FederationData{
