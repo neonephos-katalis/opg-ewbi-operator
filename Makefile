@@ -280,6 +280,67 @@ base-chart: manifests ## build the operator's helm chart
 	helm lint dist/chart
 
 
+define CLUSTER_WIDE_SCRIPT
+set -euo pipefail
+templates=dist/chart/templates
+role=$templates/rbac/role.yaml
+binding=$templates/rbac/role_binding.yaml
+values=dist/chart/values.yaml
+
+for file in "$role" "$binding" "$values"; do
+  if [ ! -f "$file" ]; then
+    echo "error: $file not found" >&2
+    exit 1
+  fi
+done
+if [ "$(grep -c '^kind: Role$' "$role")" != 1 ]; then
+  echo "error: expected exactly one Role in $role" >&2
+  exit 1
+fi
+if ! grep -q '^kind: RoleBinding$' "$binding" || ! grep -q '^  kind: Role$' "$binding" || ! grep -q 'name: opg-ewbi-manager-rolebinding$' "$binding"; then
+  echo "error: expected the manager RoleBinding in $binding" >&2
+  exit 1
+fi
+if grep -q '^clusterWide:' "$values"; then
+  echo "error: clusterWide already set in $values" >&2
+  exit 1
+fi
+
+awk '
+  { lines[NR] = $0 }
+  /^kind: Role$/ { role = NR }
+  END {
+    start = role
+    while (start > 1 && lines[start] != "---") start--
+    end = role
+    while (end <= NR && lines[end] != "rules:") end++
+    for (i = 1; i <= NR; i++) {
+      if (i >= start && i <= end) continue
+      print lines[i]
+      if (lines[i] == "rules:" && !added) {
+        print "- apiGroups:"
+        print "  - \"\""
+        print "  resources:"
+        print "  - namespaces"
+        print "  verbs:"
+        print "  - create"
+        added = 1
+      }
+    }
+  }
+' "$role" > "$role.tmp"
+mv "$role.tmp" "$role"
+sed -i -e 's/^kind: RoleBinding$/kind: ClusterRoleBinding/' -e 's/^  kind: Role$/  kind: ClusterRole/' -e 's/name: opg-ewbi-manager-rolebinding$/name: opg-ewbi-manager-rolebinding-{{ .Release.Namespace }}/' "$binding"
+[ -z "$(tail -c 1 "$values")" ] || echo >> "$values"
+echo "clusterWide: true" >> "$values"
+endef
+export CLUSTER_WIDE_SCRIPT := $(value CLUSTER_WIDE_SCRIPT)
+
+.PHONY: cluster-wide
+cluster-wide: ## turn the namespaced chart in dist/chart into a cluster-wide one
+	bash -c "$$CLUSTER_WIDE_SCRIPT"
+	helm lint dist/chart
+
 chart_yaml := dist/chart/Chart.yaml
 crd_chart_yaml := dist/chart-crd/Chart.yaml
 

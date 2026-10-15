@@ -14,15 +14,19 @@ import (
 )
 
 type k8sClient struct {
-	kubernetes k8scli.Client
-	namespace  string
+	kubernetes  k8scli.Client
+	namespace   string
+	clusterWide bool
 }
 
-func NewK8sClient(c k8scli.Client, namespace string) *k8sClient {
-	return &k8sClient{c, namespace}
+func NewK8sClient(c k8scli.Client, namespace string, clusterWide bool) *k8sClient {
+	return &k8sClient{c, namespace, clusterWide}
 }
 
 func (c *k8sClient) getNamespace() string {
+	if c.clusterWide {
+		return ""
+	}
 	return c.namespace
 }
 
@@ -36,10 +40,11 @@ func (c *k8sClient) AddApplicationDeployment(ctx context.Context, dep *Applicati
 			return nil, errors.Wrap(ErrBadRequest, err.Error())
 		}
 	}
-	if _, err := c.searchFederation(ctx, dep.FederationContextId, "HOST"); err != nil {
+	fed, err := c.searchFederation(ctx, dep.FederationContextId, "HOST")
+	if err != nil {
 		return nil, err
 	}
-	obj, err := dep.k8sCustomResource(c.getNamespace())
+	obj, err := dep.k8sCustomResource(fed.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +80,7 @@ func (c *k8sClient) GetApplication(ctx context.Context, federationContextID, id 
 
 func (c *k8sClient) GetAvailabilityZone(ctx context.Context, federationContextID, id string) (*PartnerAvailabilityZone, error) {
 	obj := &v1beta1.AvailabilityZone{}
-	if err := c.kubernetes.Get(context.TODO(), types.NamespacedName{Name: id, Namespace: c.getNamespace()}, obj, &k8scli.GetOptions{}); err != nil {
+	if err := c.kubernetes.Get(context.TODO(), types.NamespacedName{Name: id, Namespace: c.namespace}, obj, &k8scli.GetOptions{}); err != nil {
 		return nil, errors.Wrapf(err, "unable to find the requested az")
 	}
 	paz, err := partnerAvailabilityZoneFromK8sAvailabilityZone(obj)
@@ -111,10 +116,11 @@ func (c *k8sClient) OnboardApplication(ctx context.Context, app *OnboardApplicat
 			}
 		}
 	}
-	if _, err := c.searchFederation(ctx, app.FederationContextId, "HOST"); err != nil {
+	fed, err := c.searchFederation(ctx, app.FederationContextId, "HOST")
+	if err != nil {
 		return nil, err
 	}
-	obj, err := app.k8sCustomResource(c.getNamespace())
+	obj, err := app.k8sCustomResource(fed.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -126,11 +132,15 @@ func (c *k8sClient) OnboardApplication(ctx context.Context, app *OnboardApplicat
 }
 
 func (c *k8sClient) RemoveApplication(ctx context.Context, federationContextID, id string) error {
+	fed, err := c.searchFederation(ctx, federationContextID, "HOST")
+	if err != nil {
+		return err
+	}
 	appId := k8sCustomResourceNameFromApplicationID(federationContextID, id)
 	if err := c.kubernetes.Delete(context.TODO(), &v1beta1.ApplicationOnboarding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      appId,
-			Namespace: c.getNamespace(),
+			Namespace: fed.Namespace,
 		},
 	}, &k8scli.DeleteOptions{}); err != nil {
 		return errors.Wrapf(err, "unable to remove application")
@@ -139,11 +149,15 @@ func (c *k8sClient) RemoveApplication(ctx context.Context, federationContextID, 
 }
 
 func (c *k8sClient) RemoveApplicationDeployment(ctx context.Context, federationContextID, appInstanceId, appId string) error {
+	fed, err := c.searchFederation(ctx, federationContextID, "HOST")
+	if err != nil {
+		return err
+	}
 	appIns := "appdeploy-" + uuidV5Fn(federationContextID+appId+appInstanceId)
 	if err := c.kubernetes.Delete(context.TODO(), &v1beta1.ApplicationDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      appIns,
-			Namespace: c.getNamespace(),
+			Namespace: fed.Namespace,
 		},
 	}, &k8scli.DeleteOptions{}); err != nil {
 		return errors.Wrapf(err, "unable to remove application instance")
