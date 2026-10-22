@@ -46,6 +46,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: API_CLUSTER_WIDE
+            value: {{ .Values.clusterWide | default false | quote }}
           - name: HYDRA_BASE_ADDR
             value: "http://{{ .Values.federation.externalServices.hydra.name }}:{{ .Values.federation.externalServices.hydra.port }}"
           - name: CAMARA_LOG_LEVEL
@@ -420,6 +422,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CONTROLLER_CLUSTER_WIDE
+              value: {{ .Values.clusterWide | default false | quote }}
           {{- if .Values.controllerManager.container.env }}
             {{- range $key, $value := .Values.controllerManager.container.env }}
             - name: {{ $key }}
@@ -473,6 +477,12 @@ version: 0.0.3
 appVersion: "0.0.5"
 icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
 EOF
+
+case "${CLUSTER_WIDE:-false}" in
+  true) make cluster-wide ;;
+  false) ;;
+  *) echo "error: CLUSTER_WIDE must be true or false, got '${CLUSTER_WIDE}'" >&2; exit 1 ;;
+esac
 
 helm lint dist/chart
 helm lint dist/chart-crd

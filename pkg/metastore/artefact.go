@@ -95,7 +95,8 @@ func (c *k8sClient) searchArtefact(ctx context.Context, federationContextId stri
 }
 
 func (c *k8sClient) UploadArtefact(ctx context.Context, artefact *UploadArtefact) (*v1beta1.Artefact, error) {
-	if _, err := c.searchFederation(ctx, artefact.FederationContextId, "HOST"); err != nil {
+	fed, err := c.searchFederation(ctx, artefact.FederationContextId, "HOST")
+	if err != nil {
 		return nil, err
 	}
 	var callbackLink string
@@ -106,7 +107,7 @@ func (c *k8sClient) UploadArtefact(ctx context.Context, artefact *UploadArtefact
 	artefactHost := &v1beta1.Artefact{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      artefactId,
-			Namespace: c.getNamespace(),
+			Namespace: fed.Namespace,
 		},
 		Spec: v1beta1.ArtefactSpec{
 			RelationType:        string(v1beta1.FederationRelationHost),
