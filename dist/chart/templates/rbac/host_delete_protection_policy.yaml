@@ -1,9 +1,6 @@
-{{- if .Values.rbac.enable }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
-  labels:
-    {{- include "chart.labels" . | nindent 4 }}
   name: opg-ewbi-host-delete-protection-policy-{{ .Release.Namespace }}
 spec:
   failurePolicy: Fail
@@ -48,4 +45,3 @@ spec:
       matchLabels:
         kubernetes.io/metadata.name: {{ .Release.Namespace }}
 {{- end }}
-{{- end -}}

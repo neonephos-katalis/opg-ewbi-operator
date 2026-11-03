@@ -19,9 +19,9 @@ spec:
         {{- include "chart.labels" . | nindent 8 }}
         control-plane: katalis-fm-api
     spec:
-      {{- if .Values.imagePullSecrets }}
+      {{- if .Values.manager.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+        {{- toYaml .Values.manager.imagePullSecrets | nindent 8 }}
       {{- end }}
       containers:
         - name: api
@@ -54,6 +54,6 @@ spec:
             {{- toYaml .Values.federation.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.federation.securityContext | nindent 12 }}
-      serviceAccountName: {{ .Values.federation.serviceAccountName }}
+      serviceAccountName: {{ include "opg-ewbi.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.federation.terminationGracePeriodSeconds }}
 {{- end }}

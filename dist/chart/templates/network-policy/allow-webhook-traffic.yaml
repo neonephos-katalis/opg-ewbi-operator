@@ -1,4 +1,4 @@
-{{- if .Values.networkPolicy.enable }}
+{{- if .Values.networkPolicy.enabled }}
 # This NetworkPolicy allows ingress traffic to your webhook server running
 # as part of the controller-manager from specific namespaces and pods. CR(s) which uses webhooks
 # will only work when applied in namespaces labeled with 'webhook: enabled'
