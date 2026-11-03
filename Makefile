@@ -291,8 +291,8 @@ crd_chart_yaml := dist/chart-crd/Chart.yaml
 
 .PHONY: crd-chart
 crd-chart: base-chart ## build the crd's helm chart
-	mkdir -p dist/chart-crd
-	cp -r config/crd/bases/ dist/chart-crd/templates
+	mkdir -p dist/chart-crd/templates
+	cp -r config/crd/bases dist/chart-crd/templates/
 	if [ ! -e $(crd_chart_yaml) ]; then \
 		cp -n $(chart_yaml) $(crd_chart_yaml);  \
 		sed -i'' 's/^\(name:\).*/\1 opg-ewbi-crd/' $(crd_chart_yaml);  \
