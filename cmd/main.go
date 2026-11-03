@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"os"
@@ -39,6 +40,7 @@ import (
 
 	opgewbiv1beta1 "github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/controller"
+	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/options"
@@ -187,6 +189,11 @@ func main() {
 	}
 	opgClients := opg.NewOPGClientsMap(opgClientOpts...)
 
+	// Field indexers are shared by several controllers and can only be registered once per manager.
+	if err = indexer.GetFederationIndexers(context.Background(), mgr); err != nil {
+		setupLog.Error(err, ">>> [MAIN]Unable to register field indexers")
+		os.Exit(1)
+	}
 	if err = (&controller.FederationReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
@@ -293,6 +300,24 @@ func main() {
 		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, unableToCreateControllerMsg, "controller", "ApplicationDeployment")
+		os.Exit(1)
+	}
+	if err = (&controller.ConsumptionMonitoringReconciler{
+		Client:                 mgr.GetClient(),
+		Scheme:                 mgr.GetScheme(),
+		OPGClientsMapInterface: opgClients,
+		K8sClient: &k8s.ConsumptionMonitoringReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+		RestClient: &rest.ConsumptionMonitoringReconciler{
+			Client:                 mgr.GetClient(),
+			Scheme:                 mgr.GetScheme(),
+			OPGClientsMapInterface: opgClients,
+		},
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, unableToCreateControllerMsg, "controller", "ConsumptionMonitoring")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

@@ -6,4 +6,5 @@ resources:
 - opg.ewbi_v1beta1_artefact.yaml
 - opg.ewbi_v1beta1_application.yaml
 - opg.ewbi_v1beta1_availabilityzone.yaml
+- opg.ewbi_v1beta1_consumptionmonitoring.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

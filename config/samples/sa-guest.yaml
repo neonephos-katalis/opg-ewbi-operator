@@ -10,7 +10,7 @@ metadata:
   name: guest-manager
 rules:
 - apiGroups: ["opg.ewbi.katalis.com"] 
-  resources: ["federations", "federations/status","availabilityzones", "availabilityzones/status", "images", "images/status", "artefacts", "artefacts/status", "applicationdeployments", "applicationdeployments/status", "applicationonboardings", "applicationonboardings/status"] 
+  resources: ["federations", "federations/status","availabilityzones", "availabilityzones/status", "images", "images/status", "artefacts", "artefacts/status", "applicationdeployments", "applicationdeployments/status", "applicationonboardings", "applicationonboardings/status", "consumptionmonitorings", "consumptionmonitorings/status"] 
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

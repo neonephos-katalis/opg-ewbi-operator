@@ -125,7 +125,7 @@ func (r *FederationReconciler) FederationContextIdPolicy(ctx context.Context, ro
 							Rule: admissionregistrationv1.Rule{
 								APIGroups:   []string{"opg.ewbi.katalis.com"},
 								APIVersions: []string{"v1beta1"},
-								Resources:   []string{"images", "artefacts", "applicationonboardings", "applicationdeployments"},
+								Resources:   []string{"images", "artefacts", "applicationonboardings", "applicationdeployments", "consumptionmonitorings"},
 							},
 						},
 					},

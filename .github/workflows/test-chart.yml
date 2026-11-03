@@ -8,6 +8,8 @@ jobs:
   test-e2e:
     name: Run on Ubuntu
     runs-on: ubuntu-latest
+    env:
+      KIND_CLUSTER_NAME: test-chart
     steps:
       - name: Clone the code
         uses: actions/checkout@v4

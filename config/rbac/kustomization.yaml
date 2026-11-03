@@ -40,4 +40,6 @@ resources:
 - applicationinstance_admin_role.yaml
 - applicationinstance_editor_role.yaml
 - applicationinstance_viewer_role.yaml
-
+- consumptionmonitoring_admin_role.yaml
+- consumptionmonitoring_editor_role.yaml
+- consumptionmonitoring_viewer_role.yaml

@@ -41,6 +41,7 @@ var ArtefactRemoteEvents = make(chan event.GenericEvent)
 var ApplicationOnboardingRemoteEvents = make(chan event.GenericEvent)
 var ApplicationDeploymentRemoteEvents = make(chan event.GenericEvent)
 var AvailabilityZoneRemoteEvents = make(chan event.GenericEvent)
+var ConsumptionMonitoringRemoteEvents = make(chan event.GenericEvent)
 
 func StartRemoteResourceWatcher(ctx context.Context, dynClient dynamic.Interface, namespace, localResourceName, localResourceNS string, group, version, resource string) {
 	watchKey := fmt.Sprintf("%s/%s", namespace, localResourceName)
@@ -90,6 +91,8 @@ func StartRemoteResourceWatcher(ctx context.Context, dynClient dynamic.Interface
 				targetChannel = ApplicationOnboardingRemoteEvents
 			case "applicationdeployments":
 				targetChannel = ApplicationDeploymentRemoteEvents
+			case "consumptionmonitorings":
+				targetChannel = ConsumptionMonitoringRemoteEvents
 			default:
 				return
 			}
@@ -190,6 +193,8 @@ func RestartAllRemoteWatcher(ctx context.Context, c client.Client, fed *v1beta1.
 				fedContextId = cr.Spec.FederationContextId
 			case *v1beta1.ApplicationOnboarding:
 				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.ConsumptionMonitoring:
+				fedContextId = cr.Spec.FederationContextId
 			default:
 				continue
 			}
@@ -249,6 +254,8 @@ func StopAllRemoteWatchers(ctx context.Context, c client.Client, fed *v1beta1.Fe
 			case *v1beta1.ApplicationDeployment:
 				fedContextId = cr.Spec.FederationContextId
 			case *v1beta1.ApplicationOnboarding:
+				fedContextId = cr.Spec.FederationContextId
+			case *v1beta1.ConsumptionMonitoring:
 				fedContextId = cr.Spec.FederationContextId
 			default:
 				continue

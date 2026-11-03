@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: opg-ewbi-manager-policy
+  name: opg-ewbi-manager-policy-{{ .Release.Namespace }}
 rules:
 - apiGroups:
     - admissionregistration.k8s.io

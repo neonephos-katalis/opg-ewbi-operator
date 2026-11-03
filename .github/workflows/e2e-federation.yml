@@ -220,8 +220,8 @@ jobs:
           partnerop_crds=$(kubectl --context kind-partnerop     get crds -o name | grep -c 'opg.ewbi.katalis.com' || true)
           originatingop_crds=$(kubectl --context kind-originatingop get crds -o name | grep -c 'opg.ewbi.katalis.com' || true)
           echo "partnerop CRDs: $partnerop_crds  originatingop CRDs: $originatingop_crds"
-          [ "$partnerop_crds"     -eq 6 ] || { echo "::error::expected 6 opg.ewbi.katalis.com CRDs on partnerop, found $partnerop_crds" >&2; exit 1; }
-          [ "$originatingop_crds" -eq 6 ] || { echo "::error::expected 6 opg.ewbi.katalis.com CRDs on originatingop, found $originatingop_crds" >&2; exit 1; }
+          [ "$partnerop_crds"     -eq 7 ] || { echo "::error::expected 7 opg.ewbi.katalis.com CRDs on partnerop, found $partnerop_crds" >&2; exit 1; }
+          [ "$originatingop_crds" -eq 7 ] || { echo "::error::expected 7 opg.ewbi.katalis.com CRDs on originatingop, found $originatingop_crds" >&2; exit 1; }
 
           kubectl --context kind-partnerop     -n partnerop     wait --for=condition=Available deployment \
             -l control-plane=controller-manager --timeout=180s
@@ -238,7 +238,7 @@ jobs:
           kubectl --context kind-originatingop -n originatingop create secret generic kubeconfig-secret \
             --from-file=kubeconfig=/tmp/partnerop-internal.kubeconfig
 
-      - name: Run functional e2e test (Federation -> ... -> ApplicationDeployment)
+      - name: Run functional e2e test (Federation -> ... -> ConsumptionMonitoring)
         run: go test ./test/e2e/... -v -run TestFederationWalkthrough -timeout 20m
 
       - name: Cluster diagnostics on failure
@@ -253,9 +253,9 @@ jobs:
           kubectl --context kind-partnerop     -n partnerop     logs -l control-plane=controller-manager --all-containers --tail=200 || true
           kubectl --context kind-originatingop -n originatingop logs -l control-plane=controller-manager --all-containers --tail=200 || true
           echo "--- resource chain state (partnerop) ---"
-          kubectl --context kind-partnerop     -n partnerop     get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments -o yaml || true
+          kubectl --context kind-partnerop     -n partnerop     get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings -o yaml || true
           echo "--- resource chain state (originatingop) ---"
-          kubectl --context kind-originatingop -n originatingop get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments -o yaml || true
+          kubectl --context kind-originatingop -n originatingop get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings -o yaml || true
 
       - name: Tear down clusters and registry
         if: always()

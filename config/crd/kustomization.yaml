@@ -8,6 +8,7 @@ resources:
 - bases/opg.ewbi.katalis.com_artefacts.yaml
 - bases/opg.ewbi.katalis.com_applicationonboardings.yaml
 - bases/opg.ewbi.katalis.com_availabilityzones.yaml
+- bases/opg.ewbi.katalis.com_consumptionmonitorings.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 # patches:

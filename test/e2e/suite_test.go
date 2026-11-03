@@ -37,6 +37,8 @@ type testContext struct {
 
 	appDeployName string
 	appInstanceID string
+
+	consumptionMonitoringName string
 }
 
 func getenv(key, def string) string {
@@ -90,4 +92,5 @@ func TestFederationWalkthrough(t *testing.T) {
 	t.Run("04_Artefact", func(t *testing.T) { runArtefactStage(t, tc, partneropClient, originatingopClient) })
 	t.Run("05_ApplicationOnboarding", func(t *testing.T) { runAppOnboardingStage(t, tc, partneropClient, originatingopClient) })
 	t.Run("06_ApplicationDeployment", func(t *testing.T) { runAppDeploymentStage(t, tc, partneropClient, originatingopClient) })
+	t.Run("07_ConsumptionMonitoring", func(t *testing.T) { runConsumptionMonitoringStage(t, tc, partneropClient, originatingopClient) })
 }

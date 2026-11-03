@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1"
-	"github.com/neonephos-katalis/opg-ewbi-operator/internal/indexer"
 	k8s "github.com/neonephos-katalis/opg-ewbi-operator/internal/k8s"
 	"github.com/neonephos-katalis/opg-ewbi-operator/internal/opg"
 	rest "github.com/neonephos-katalis/opg-ewbi-operator/internal/rest"
@@ -59,9 +58,6 @@ func (r *ImageReconciler) getExternalClient(isRest bool) ExternalImageClient {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ImageReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	if err := indexer.GetFederationIndexers(context.Background(), mgr); err != nil {
-		return err
-	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.Image{}).
 		Named("image").

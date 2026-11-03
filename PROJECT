@@ -64,4 +64,13 @@ resources:
   kind: AvailabilityZone
   path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
   version: v1beta1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: katalis.com
+  group: opg.ewbi
+  kind: ConsumptionMonitoring
+  path: github.com/neonephos-katalis/opg-ewbi-operator/api/operator/v1beta1
+  version: v1beta1
 version: "3"
