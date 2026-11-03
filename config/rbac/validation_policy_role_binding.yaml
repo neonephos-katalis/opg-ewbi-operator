@@ -1,11 +1,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: opg-ewbi-manager-policybinding-{{ .Release.Namespace }}
+  name: opg-ewbi-manager-policybinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: opg-ewbi-manager-policy-{{ .Release.Namespace }}
+  name: opg-ewbi-manager-policy
 subjects:
 - kind: ServiceAccount
   name: controller-manager

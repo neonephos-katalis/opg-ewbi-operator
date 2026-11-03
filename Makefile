@@ -272,64 +272,19 @@ endef
 .PHONY: helm
 helm: base-chart crd-chart ## build the operator's helm chart
 
-define CLUSTER_WIDE_RBAC_SCRIPT
-set -euo pipefail
-role=dist/chart/templates/rbac/role.yaml
-binding=dist/chart/templates/rbac/role_binding.yaml
-if [ "$(grep -c '^kind: Role$' "$role")" != 1 ] || [ "$(grep -c '^rules:$' "$role")" != 2 ]; then
-  echo "error: expected one ClusterRole and one Role in $role" >&2
-  exit 1
-fi
-if ! grep -q '^kind: RoleBinding$' "$binding" || ! grep -q '^  kind: Role$' "$binding" || ! grep -q 'name: opg-ewbi-manager-rolebinding$' "$binding"; then
-  echo "error: expected the manager RoleBinding in $binding" >&2
-  exit 1
-fi
-
-awk '
-  { lines[NR] = $0 }
-  /^kind: Role$/ { role = NR }
-  END {
-    start = role
-    while (start > 1 && lines[start] != "---") start--
-    end = role
-    while (end <= NR && lines[end] != "rules:") end++
-    for (i = 1; i <= NR; i++) {
-      if (i == start) print "{{- if not .Values.clusterWide }}"
-      print lines[i]
-      if (i == end) print "{{- end }}"
-      if (lines[i] == "rules:" && i < start) {
-        print "{{- if .Values.clusterWide }}"
-        print "- apiGroups:"
-        print "  - \"\""
-        print "  resources:"
-        print "  - namespaces"
-        print "  verbs:"
-        print "  - create"
-        print "{{- end }}"
-      }
-    }
-  }
-' "$role" > "$role.tmp"
-cat "$role.tmp" > "$role"
-rm "$role.tmp"
-sed -i \
-  -e 's/^kind: RoleBinding$/kind: {{ if .Values.clusterWide }}ClusterRoleBinding{{ else }}RoleBinding{{ end }}/' \
-  -e 's/^  kind: Role$/  kind: {{ if .Values.clusterWide }}ClusterRole{{ else }}Role{{ end }}/' \
-  -e 's/name: opg-ewbi-manager-rolebinding$/name: opg-ewbi-manager-rolebinding{{ if .Values.clusterWide }}-{{ .Release.Namespace }}{{ end }}/' \
-  "$binding"
-endef
-export CLUSTER_WIDE_RBAC_SCRIPT := $(value CLUSTER_WIDE_RBAC_SCRIPT)
-
 .PHONY: base-chart
 base-chart: manifests ## build the operator's helm chart
-	kubebuilder edit  --plugins=helm/v1-alpha
-# 	fix the namespace in the role.yaml file otherwise it hardcodes the namespace to "foo"
-	sed -i 's/namespace: foo/namespace: {{ .Release.Namespace }}/g' dist/chart/templates/rbac/role.yaml
-	sed -i 's/name: opg-ewbi-manager-role$$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/' dist/chart/templates/rbac/role.yaml
-	sed -i 's/name: opg-ewbi-manager-role$$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/g' dist/chart/templates/rbac/role_binding.yaml
-	bash -c "$$CLUSTER_WIDE_RBAC_SCRIPT"
+	rm -rf dist/chart
+	kubebuilder edit --plugins=helm/v2-alpha
+	cp config/rbac/host_delete_protection_policy.yaml dist/chart/templates/rbac/
+	sed -i 's/\.Values\.rbac\.namespaced/(not .Values.clusterWide)/' \
+		dist/chart/templates/rbac/manager-role.yaml dist/chart/templates/rbac/manager-rolebinding.yaml
+	sed -i 's/(dict "suffix" "\([^"]*\)" "context" \$$)/(dict "suffix" (printf "%s-%s" "\1" $$.Release.Namespace) "context" $$)/g' \
+		dist/chart/templates/rbac/*.yaml
+	sed -i 's/^\( *\){{- toYaml .Values.manager.env | nindent 10 }}$$/&\n\1- name: CONTROLLER_CLUSTER_WIDE\n\1  value: {{ .Values.clusterWide | default false | quote }}/' \
+		dist/chart/templates/manager/manager.yaml
+	echo 'clusterWide: false' >> dist/chart/values.yaml
 	helm lint dist/chart
-
 
 chart_yaml := dist/chart/Chart.yaml
 crd_chart_yaml := dist/chart-crd/Chart.yaml
@@ -344,3 +299,50 @@ crd-chart: base-chart ## build the crd's helm chart
 		sed -i'' 's/^\(description:\).*/\1 A Helm chart to distribute the opg-ewbi-crd/' $(crd_chart_yaml); \
 	fi
 	helm lint dist/chart-crd
+
+##@ Helm Deployment
+
+## Helm binary to use for deploying the chart
+HELM ?= helm
+## Namespace to deploy the Helm release
+HELM_NAMESPACE ?= opg-ewbi-operator-system
+## Name of the Helm release
+HELM_RELEASE ?= opg-ewbi
+## Path to the Helm chart directory
+HELM_CHART_DIR ?= dist/chart
+## Additional arguments to pass to helm commands
+HELM_EXTRA_ARGS ?=
+
+.PHONY: install-helm
+install-helm: ## Install the latest version of Helm.
+	@command -v $(HELM) >/dev/null 2>&1 || { \
+		echo "Installing Helm..." && \
+		curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash; \
+	}
+
+.PHONY: helm-deploy
+helm-deploy: install-helm ## Deploy manager to the K8s cluster via Helm. Specify an image with IMG.
+	$(HELM) upgrade --install $(HELM_RELEASE) $(HELM_CHART_DIR) \
+		--namespace $(HELM_NAMESPACE) \
+		--create-namespace \
+		--set manager.image.repository=$${IMG%:*} \
+		--set manager.image.tag=$${IMG##*:} \
+		--wait \
+		--timeout 5m \
+		$(HELM_EXTRA_ARGS)
+
+.PHONY: helm-uninstall
+helm-uninstall: ## Uninstall the Helm release from the K8s cluster.
+	$(HELM) uninstall $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+.PHONY: helm-status
+helm-status: ## Show Helm release status.
+	$(HELM) status $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+.PHONY: helm-history
+helm-history: ## Show Helm release history.
+	$(HELM) history $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+.PHONY: helm-rollback
+helm-rollback: ## Rollback to previous Helm release.
+	$(HELM) rollback $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)

@@ -72,9 +72,9 @@ func (r *ApplicationOnboardingReconciler) SetupWithManager(mgr ctrl.Manager) err
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationonboardings,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationonboardings/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationonboardings/finalizers,verbs=update,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationonboardings,verbs=*
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationonboardings/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationonboardings/finalizers,verbs=update
 
 func (r *ApplicationOnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
 	log := ctrl.Log

@@ -59,14 +59,14 @@ kind load docker-image opg-ewbi-api:dev --name federation
 ```sh
 helm upgrade --install federation-host dist/chart \
   --namespace katalis-dev-host --create-namespace \
-  --set controllerManager.container.image.repository=opg-ewbi-operator \
-  --set controllerManager.container.image.tag=dev \
-  --set controllerManager.container.image.pullPolicy=Never \
+  --set manager.image.repository=opg-ewbi-operator \
+  --set manager.image.tag=dev \
+  --set manager.image.pullPolicy=Never \
   --set federation.image.repository=opg-ewbi-api \
   --set federation.image.tag=dev \
   --set federation.image.pullPolicy=Never \
-  --set crd.enable=true \
-  --set controllerManager.container.opgInsecureSkipVerify=true
+  --set crd.enabled=true \
+  --set manager.opgInsecureSkipVerify=true
 
 kubectl -n katalis-dev-host get pods
 ```
@@ -80,14 +80,14 @@ The guest only needs the operator (it makes outbound calls to the host API). Dep
 ```sh
 helm upgrade --install federation-guest dist/chart \
   --namespace katalis-dev-guest --create-namespace \
-  --set controllerManager.container.image.repository=opg-ewbi-operator \
-  --set controllerManager.container.image.tag=dev \
-  --set controllerManager.container.image.pullPolicy=Never \
+  --set manager.image.repository=opg-ewbi-operator \
+  --set manager.image.tag=dev \
+  --set manager.image.pullPolicy=Never \
   --set federation.image.repository=opg-ewbi-api \
   --set federation.image.tag=dev \
   --set federation.image.pullPolicy=Never \
-  --set crd.enable=false \
-  --set controllerManager.container.opgInsecureSkipVerify=true
+  --set crd.enabled=false \
+  --set manager.opgInsecureSkipVerify=true
 
 kubectl -n katalis-dev-guest get pods
 ```

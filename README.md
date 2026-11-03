@@ -124,7 +124,7 @@ Install operator in host namespace, set API nodeport and set CRD to true to also
 ```bash
 helm install federation-manager dist/chart -n federation \
 --set federation.services.federation.nodePort=30080 \
---set crd.enable=true
+--set crd.enabled=true
 ```
 After this command the OPG-EWBI-CONTROLLER and OPG-EWBI-API, if everything goes well, they will be available.
 By running the command kubectl get pods -A, you should see two pods running in the federation namespace with names like nearbyone-federation-api-XXX and opg-ewbi-operator-controller-manager-XXX.
@@ -161,7 +161,7 @@ If you want test in local, you need two helm installation one for the host and o
 ```bash
 helm install federationhost dist/chart -n katalis-dev-host \
   --set federation.services.federation.nodePort=30080 \
-  --set crd.enable=true
+  --set crd.enabled=true
 ```
 
 We set crd to false since we have already installed them
@@ -169,7 +169,7 @@ We set crd to false since we have already installed them
 ```bash
 helm install federationguest dist/chart -n katalis-dev-guest \
 --set federation.services.federation.nodePort=30081 \
---set crd.enable=false
+--set crd.enabled=false
 ```
 **Choose the names you prefer for namespaces and helm; those listed here are provided as examples.**
 

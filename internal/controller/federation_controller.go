@@ -115,10 +115,11 @@ func (r *FederationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=federations,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=federations/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=federations/finalizers,verbs=update,namespace=foo
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=federations,verbs=*
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=federations/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=federations/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=create
 
 func (r *FederationReconciler) Reconcile(
 	ctx context.Context,

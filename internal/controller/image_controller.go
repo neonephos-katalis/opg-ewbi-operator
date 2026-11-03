@@ -70,9 +70,9 @@ func (r *ImageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=images,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=images/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=images/finalizers,verbs=update,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=images,verbs=*
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=images/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=images/finalizers,verbs=update
 
 func (r *ImageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
 	log := ctrl.Log
