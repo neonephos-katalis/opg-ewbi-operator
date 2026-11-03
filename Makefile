@@ -328,8 +328,6 @@ base-chart: manifests ## build the operator's helm chart
 	sed -i 's/name: opg-ewbi-manager-role$$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/' dist/chart/templates/rbac/role.yaml
 	sed -i 's/name: opg-ewbi-manager-role$$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/g' dist/chart/templates/rbac/role_binding.yaml
 	bash -c "$$CLUSTER_WIDE_RBAC_SCRIPT"
-	sed -i 's/name: opg-ewbi-manager-policy$$/name: opg-ewbi-manager-policy-{{ .Release.Namespace }}/' dist/chart/templates/rbac/validation_policy_role.yaml
-	sed -i -e 's/name: opg-ewbi-manager-policybinding$$/name: opg-ewbi-manager-policybinding-{{ .Release.Namespace }}/' -e 's/name: opg-ewbi-manager-policy$$/name: opg-ewbi-manager-policy-{{ .Release.Namespace }}/' dist/chart/templates/rbac/validation_policy_role_binding.yaml
 	sed -i 's/name: opg-ewbi-metrics-auth-role$$/name: opg-ewbi-metrics-auth-role-{{ .Release.Namespace }}/' dist/chart/templates/rbac/metrics_auth_role.yaml
 	sed -i -e 's/name: opg-ewbi-metrics-auth-rolebinding$$/name: opg-ewbi-metrics-auth-rolebinding-{{ .Release.Namespace }}/' -e 's/name: opg-ewbi-metrics-auth-role$$/name: opg-ewbi-metrics-auth-role-{{ .Release.Namespace }}/' dist/chart/templates/rbac/metrics_auth_role_binding.yaml
 	sed -i 's/name: opg-ewbi-metrics-reader$$/name: opg-ewbi-metrics-reader-{{ .Release.Namespace }}/' dist/chart/templates/rbac/metrics_reader_role.yaml

@@ -1,0 +1,1502 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: consumptionmonitorings.opg.ewbi.katalis.com
+spec:
+  group: opg.ewbi.katalis.com
+  names:
+    kind: ConsumptionMonitoring
+    listKind: ConsumptionMonitoringList
+    plural: consumptionmonitorings
+    shortNames:
+    - rcm
+    singular: consumptionmonitoring
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.relationType
+      name: relationType
+      type: string
+    - jsonPath: .spec.federationContextId
+      name: federationContextId
+      type: string
+    - jsonPath: .spec.zoneId
+      name: zoneId
+      type: string
+    - jsonPath: .spec.monType
+      name: monType
+      type: string
+    - jsonPath: .status.state
+      name: state
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              application:
+                properties:
+                  appInstanceId:
+                    pattern: ^[A-Za-z0-9][A-Za-z0-9_]{6,62}[A-Za-z0-9]$
+                    type: string
+                  appProviderId:
+                    pattern: ^[A-Za-z][A-Za-z0-9_]{7,63}$
+                    type: string
+                required:
+                - appInstanceId
+                - appProviderId
+                type: object
+              federationContextId:
+                pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                type: string
+              monType:
+                enum:
+                - edge_resource
+                - app_resource
+                - alarm
+                - all
+                type: string
+              periodicity:
+                properties:
+                  numHours:
+                    format: int32
+                    maximum: 23
+                    minimum: 0
+                    type: integer
+                  numMins:
+                    format: int32
+                    maximum: 59
+                    minimum: 0
+                    type: integer
+                required:
+                - numHours
+                - numMins
+                type: object
+              relationType:
+                enum:
+                - HOST
+                - GUEST
+                type: string
+              resMonNotifLink:
+                format: uri
+                type: string
+              zoneId:
+                pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                type: string
+            required:
+            - federationContextId
+            - monType
+            - relationType
+            type: object
+            x-kubernetes-validations:
+            - message: application is required when monType is app_resource
+              rule: self.monType != 'app_resource' || has(self.application)
+          status:
+            properties:
+              appMetrics:
+                items:
+                  properties:
+                    appZoneMetrics:
+                      items:
+                        properties:
+                          appId:
+                            pattern: ^[A-Za-z][A-Za-z0-9_]{7,63}$
+                            type: string
+                          appInstances:
+                            items:
+                              type: string
+                            minItems: 1
+                            type: array
+                          appProvId:
+                            pattern: ^[A-Za-z][A-Za-z0-9_]{7,63}$
+                            type: string
+                          cpuUtil:
+                            properties:
+                              averageUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              cpuType:
+                                enum:
+                                - edge_resource
+                                - app_resource
+                                - alarm
+                                - all
+                                type: string
+                              effectiveUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageUtilization
+                            - cpuType
+                            - effectiveUtilization
+                            - maxUtilization
+                            - minUtilization
+                            - noOfSamples
+                            type: object
+                          diskUtil:
+                            properties:
+                              averageUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              effectiveUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageUtilization
+                            - maxUtilization
+                            - minUtilization
+                            - noOfSamples
+                            type: object
+                          flavourUtil:
+                            items:
+                              properties:
+                                averageThroughput:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                averageUtilization:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                flavourId:
+                                  type: string
+                                maxUtilization:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                minUtilization:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                noOfSamples:
+                                  type: string
+                              required:
+                              - averageUtilization
+                              - flavourId
+                              - maxUtilization
+                              - minUtilization
+                              - noOfSamples
+                              type: object
+                            minItems: 1
+                            type: array
+                          memUtil:
+                            properties:
+                              averageUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              effectiveUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageUtilization
+                            - maxUtilization
+                            - minUtilization
+                            - noOfSamples
+                            type: object
+                          networkUtil:
+                            properties:
+                              averageThroughput:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              egressUsage:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              ingressUsage:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxThroughput:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minThroughput:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageThroughput
+                            - egressUsage
+                            - ingressUsage
+                            - maxThroughput
+                            - minThroughput
+                            - noOfSamples
+                            type: object
+                          noOfAppInstances:
+                            format: int32
+                            type: integer
+                        required:
+                        - appId
+                        - appInstances
+                        - appProvId
+                        - cpuUtil
+                        - diskUtil
+                        - flavourUtil
+                        - memUtil
+                        - networkUtil
+                        - noOfAppInstances
+                        type: object
+                      minItems: 1
+                      type: array
+                    endTime:
+                      format: date-time
+                      type: string
+                    startTime:
+                      format: date-time
+                      type: string
+                    zoneId:
+                      pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                      type: string
+                  required:
+                  - appZoneMetrics
+                  - endTime
+                  - startTime
+                  - zoneId
+                  type: object
+                type: array
+              edgeMetrics:
+                items:
+                  properties:
+                    edgeMetrics:
+                      items:
+                        properties:
+                          cpuUtil:
+                            properties:
+                              averageUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              cpuType:
+                                enum:
+                                - edge_resource
+                                - app_resource
+                                - alarm
+                                - all
+                                type: string
+                              effectiveUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageUtilization
+                            - cpuType
+                            - effectiveUtilization
+                            - maxUtilization
+                            - minUtilization
+                            - noOfSamples
+                            type: object
+                          diskUtil:
+                            properties:
+                              averageUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              effectiveUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageUtilization
+                            - maxUtilization
+                            - minUtilization
+                            - noOfSamples
+                            type: object
+                          endTime:
+                            format: date-time
+                            type: string
+                          flavourUtil:
+                            items:
+                              properties:
+                                averageThroughput:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                averageUtilization:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                flavourId:
+                                  type: string
+                                maxUtilization:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                minUtilization:
+                                  properties:
+                                    resType:
+                                      enum:
+                                      - CPU
+                                      - MEMORY
+                                      - DISK
+                                      - Network
+                                      - FLAVOUR
+                                      type: string
+                                    unit:
+                                      enum:
+                                      - Percent
+                                      - MBPS
+                                      - GB
+                                      - TB
+                                      - CORES
+                                      - SECONDS
+                                      - MINUTES
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - resType
+                                  - unit
+                                  - value
+                                  type: object
+                                noOfSamples:
+                                  type: string
+                              required:
+                              - averageUtilization
+                              - flavourId
+                              - maxUtilization
+                              - minUtilization
+                              - noOfSamples
+                              type: object
+                            minItems: 1
+                            type: array
+                          memUtil:
+                            properties:
+                              averageUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              effectiveUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minUtilization:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageUtilization
+                            - maxUtilization
+                            - minUtilization
+                            - noOfSamples
+                            type: object
+                          networkUtil:
+                            properties:
+                              averageThroughput:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              egressUsage:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              ingressUsage:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              maxThroughput:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              minThroughput:
+                                properties:
+                                  resType:
+                                    enum:
+                                    - CPU
+                                    - MEMORY
+                                    - DISK
+                                    - Network
+                                    - FLAVOUR
+                                    type: string
+                                  unit:
+                                    enum:
+                                    - Percent
+                                    - MBPS
+                                    - GB
+                                    - TB
+                                    - CORES
+                                    - SECONDS
+                                    - MINUTES
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - resType
+                                - unit
+                                - value
+                                type: object
+                              noOfSamples:
+                                type: string
+                            required:
+                            - averageThroughput
+                            - egressUsage
+                            - ingressUsage
+                            - maxThroughput
+                            - minThroughput
+                            - noOfSamples
+                            type: object
+                          startTime:
+                            format: date-time
+                            type: string
+                          zoneId:
+                            pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                            type: string
+                        required:
+                        - cpuUtil
+                        - diskUtil
+                        - endTime
+                        - flavourUtil
+                        - memUtil
+                        - networkUtil
+                        - startTime
+                        - zoneId
+                        type: object
+                      minItems: 1
+                      type: array
+                    federationContextId:
+                      pattern: ^[A-Za-z0-9][A-Za-z0-9-]*$
+                      type: string
+                    sequenceNum:
+                      format: int64
+                      type: integer
+                  required:
+                  - edgeMetrics
+                  - federationContextId
+                  - sequenceNum
+                  type: object
+                type: array
+              lastUpdated:
+                description: Timestamp of the last status update
+                format: date-time
+                type: string
+              message:
+                description: Message indicating details about the current state
+                type: string
+              sequenceNum:
+                default: 0
+                format: int64
+                type: integer
+              state:
+                default: PENDING
+                enum:
+                - PENDING
+                - AVAILABLE
+                - NOT_AVAILABLE
+                - FAILED
+                type: string
+            required:
+            - sequenceNum
+            - state
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

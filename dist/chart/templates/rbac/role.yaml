@@ -52,6 +52,7 @@ rules:
   - applicationonboardings
   - artefacts
   - availabilityzones
+  - consumptionmonitorings
   - federations
   - images
   verbs:
@@ -63,6 +64,7 @@ rules:
   - applicationonboardings/finalizers
   - artefacts/finalizers
   - availabilityzones/finalizers
+  - consumptionmonitorings/finalizers
   - federations/finalizers
   - images/finalizers
   verbs:
@@ -74,6 +76,7 @@ rules:
   - applicationonboardings/status
   - artefacts/status
   - availabilityzones/status
+  - consumptionmonitorings/status
   - federations/status
   - images/status
   verbs:

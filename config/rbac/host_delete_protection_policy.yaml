@@ -16,6 +16,7 @@ spec:
       - availabilityzones
       - applicationonboardings
       - applicationdeployments
+      - consumptionmonitorings
   matchConditions:
   - name: exclude-controller-manager
     # WARNING update the following line with the correct name for guest's service account
