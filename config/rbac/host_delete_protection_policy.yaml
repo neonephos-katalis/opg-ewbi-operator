@@ -39,7 +39,9 @@ metadata:
 spec:
   policyName: opg-ewbi-host-delete-protection-policy-{{ .Release.Namespace }}
   validationActions: ["Deny"]
+{{- if not .Values.clusterWide }}
   matchResources:
     namespaceSelector:
       matchLabels:
         kubernetes.io/metadata.name: {{ .Release.Namespace }}
+{{- end }}
