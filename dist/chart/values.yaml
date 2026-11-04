@@ -3,8 +3,8 @@ manager:
   enabled: true
   replicas: 1
   image:
-    repository: ghcr.io/neonephos-katalis/opg-ewbi-operator
-    tag: v1.0.0-cb
+    repository: ghcr.io/neonephos-katalis/katalis/fm-operator
+    tag: v1.1.0
     pullPolicy: Always
   args:
     - "--leader-elect"
@@ -41,8 +41,8 @@ federation:
   enable: true
   replicas: 1
   image:
-    repository: ghcr.io/neonephos-katalis/opg-ewbi-api
-    tag: v1.0.0-cb
+    repository: ghcr.io/neonephos-katalis/katalis/fm-api
+    tag: v1.1.0
     pullPolicy: Always
   resources:
     limits:

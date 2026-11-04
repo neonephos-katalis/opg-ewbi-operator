@@ -73,6 +73,8 @@ With `clusterWide: true` the chart installs a ClusterRole/ClusterRoleBinding ins
 - **K8s** technology: resources are created on the host in the namespace set in `spec.federationData.k8sOptions.namespace`, which no longer needs to be the namespace where the host operator is installed.
 - **REST** technology: when a federation is created, the API creates (or reuses) the namespace `fedrest-<id>` (`<id>` is 12 base36 characters derived from the federation id and country code), and all the federation's resources are created there.
 
+**NOTE:** A cluster-wide operator reconciles the resources of every namespace, including those of other releases, and writes cluster-scoped validation policies. Install at most one cluster-wide release per cluster, and don't combine it with namespaced releases on the same cluster. To test host and guest in cluster-wide mode, use two separate clusters. To run multiple releases on one cluster, use namespaced mode.
+
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed.
 
