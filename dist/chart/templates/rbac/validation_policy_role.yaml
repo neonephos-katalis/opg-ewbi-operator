@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: opg-ewbi-manager-policy
+  name: opg-ewbi-manager-policy-{{ .Release.Namespace }}
 rules:
 - apiGroups:
     - admissionregistration.k8s.io

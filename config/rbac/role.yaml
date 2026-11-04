@@ -39,9 +39,9 @@ rules:
   - applicationonboardings
   - artefacts
   - availabilityzones
+  - consumptionmonitorings
   - federations
   - images
-  - consumptionmonitorings
   verbs:
   - '*'
 - apiGroups:
@@ -51,9 +51,9 @@ rules:
   - applicationonboardings/finalizers
   - artefacts/finalizers
   - availabilityzones/finalizers
+  - consumptionmonitorings/finalizers
   - federations/finalizers
   - images/finalizers
-  - consumptionmonitorings/finalizers
   verbs:
   - update
 - apiGroups:
@@ -63,9 +63,9 @@ rules:
   - applicationonboardings/status
   - artefacts/status
   - availabilityzones/status
+  - consumptionmonitorings/status
   - federations/status
   - images/status
-  - consumptionmonitorings/status
   verbs:
   - get
   - patch

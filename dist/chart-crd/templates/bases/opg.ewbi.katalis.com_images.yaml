@@ -215,9 +215,9 @@ spec:
                 description: Current state of the artefact upload
                 enum:
                 - PENDING
-                - UPLOADING
-                - UPLOADED
-                - FAILED
+                - READY
+                - ERROR
+                - UNKNOWN
                 type: string
             type: object
         required:
