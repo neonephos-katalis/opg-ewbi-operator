@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: opg-ewbi-metrics-reader
+  name: opg-ewbi-metrics-reader-{{ .Release.Namespace }}
 rules:
 - nonResourceURLs:
   - "/metrics"

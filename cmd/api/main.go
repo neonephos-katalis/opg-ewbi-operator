@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -73,6 +74,7 @@ func main() {
 
 	scheme := runtime.NewScheme()
 	utilruntime.Must(v1beta1.AddToScheme(scheme))
+	utilruntime.Must(corev1.AddToScheme(scheme))
 
 	config := ctrl.GetConfigOrDie()
 	k8sClient, err := client.New(config, client.Options{
@@ -83,7 +85,7 @@ func main() {
 			Fatal("failed to create k8sclient")
 	}
 
-	h := handler.NewServer(conf.Camara.ApiRoot, k8sClient, conf.Controller.Namespace)
+	h := handler.NewServer(conf.Camara.ApiRoot, k8sClient, conf.Controller.Namespace, conf.Controller.ClusterWide)
 	server.RegisterHandlers(e, h)
 	e.Use(handler.AuthMiddleware(h))
 

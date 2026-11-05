@@ -18,9 +18,9 @@ type Client interface {
 	Uninstall(ctx context.Context, federationContextID, appId, appInstanceId string) error
 }
 
-func NewClient(k8sClient k8scl.Client, namespace string) *client {
+func NewClient(k8sClient k8scl.Client, namespace string, clusterWide bool) *client {
 	return &client{
-		appMetaClient: metastore.NewK8sClient(k8sClient, namespace),
+		appMetaClient: metastore.NewK8sClient(k8sClient, namespace, clusterWide),
 	}
 }
 

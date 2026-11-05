@@ -13,16 +13,26 @@ func V5(s string) string {
 	return uuid.NewSHA1(uuid.Nil, []byte(s)).String()
 }
 
-const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+const base62alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 func Base62(federationContextId, appId, appInstanceId string) string {
+	return BaseN(federationContextId+appId+appInstanceId, base62alphabet)
+}
+
+const base36alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+func Base36(input string) string {
+	return BaseN(input, base36alphabet)
+}
+
+func BaseN(input, alphabet string) string {
 	// Hash deterministico
-	hash := sha256.Sum256([]byte(federationContextId + appId + appInstanceId))
+	hash := sha256.Sum256([]byte(input))
 
 	// Prendi i byte dell'hash e converti in Base62
 	n := new(big.Int).SetBytes(hash[:])
 
-	base := big.NewInt(62)
+	base := big.NewInt(int64(len(alphabet)))
 	var out []byte
 
 	for n.Sign() > 0 {

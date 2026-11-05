@@ -7,6 +7,14 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
   name: opg-ewbi-manager-role-{{ .Release.Namespace }}
 rules:
+{{- if .Values.clusterWide }}
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - create
+{{- end }}
 - apiGroups:
   - admissionregistration.k8s.io
   resources:
@@ -20,6 +28,7 @@ rules:
   - patch
   - update
   - watch
+{{- if not .Values.clusterWide }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -27,6 +36,7 @@ metadata:
   name: opg-ewbi-manager-role-{{ .Release.Namespace }}
   namespace: {{ .Release.Namespace }}
 rules:
+{{- end }}
 - apiGroups:
   - ""
   resources:

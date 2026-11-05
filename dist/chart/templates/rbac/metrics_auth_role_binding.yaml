@@ -4,11 +4,11 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: opg-ewbi-metrics-auth-rolebinding
+  name: opg-ewbi-metrics-auth-rolebinding-{{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: opg-ewbi-metrics-auth-role
+  name: opg-ewbi-metrics-auth-role-{{ .Release.Namespace }}
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.controllerManager.serviceAccountName }}

@@ -5,8 +5,6 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 make generate
-make manifests
-make base-chart
 make crd-chart
 
 mkdir -p dist/chart/templates/federation
@@ -46,6 +44,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: API_CLUSTER_WIDE
+            value: {{ .Values.clusterWide | default false | quote }}
           - name: HYDRA_BASE_ADDR
             value: "http://{{ .Values.federation.externalServices.hydra.name }}:{{ .Values.federation.externalServices.hydra.port }}"
           - name: CAMARA_LOG_LEVEL
@@ -123,53 +123,6 @@ spec:
         - port: 443
           protocol: TCP
 {{- end -}}
-EOF
-
-cat > dist/chart/templates/rbac/host_delete_protection_policy.yaml <<'EOF'
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicy
-metadata:
-  name: opg-ewbi-host-delete-protection-policy-{{ .Release.Namespace }}
-spec:
-  failurePolicy: Fail
-  matchConstraints:
-    resourceRules:
-    - apiGroups: ["opg.ewbi.katalis.com"]
-      apiVersions: ["v1beta1"]
-      operations: ["DELETE"]
-      resources:
-      - federations
-      - images
-      - artefacts
-      - availabilityzones
-      - applicationonboardings
-      - applicationdeployments
-  matchConditions:
-  - name: exclude-controller-manager
-    # WARNING update the following line with the correct name for guest's service account
-    expression: >-
-      request.userInfo.username != "system:serviceaccount:host:guest-sa"
-  validations:
-  - expression: >-
-      !(
-        request.resource.resource == "federations"
-          ? (has(oldObject.spec.federationData) && has(oldObject.spec.federationData.relationType) && oldObject.spec.federationData.relationType == "HOST")
-          : (has(oldObject.spec) && has(oldObject.spec.relationType) && oldObject.spec.relationType == "HOST")
-      )
-    messageExpression: >-
-      "deletion of HOST-relation resources is prohibited except by the controller-manager itself (received identity: '" + request.userInfo.username + "')"
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicyBinding
-metadata:
-  name: opg-ewbi-host-delete-protection-policy-{{ .Release.Namespace }}-binding
-spec:
-  policyName: opg-ewbi-host-delete-protection-policy-{{ .Release.Namespace }}
-  validationActions: ["Deny"]
-  matchResources:
-    namespaceSelector:
-      matchLabels:
-        kubernetes.io/metadata.name: {{ .Release.Namespace }}
 EOF
 
 cat > dist/chart/Chart.yaml <<'EOF'
@@ -303,6 +256,8 @@ certmanager:
 # [NETWORK POLICIES]: To enable NetworkPolicies set true
 networkPolicy:
   enable: false
+
+clusterWide: false
 EOF
 
 cat > dist/chart/templates/_helpers.tpl <<'EOF'
@@ -420,6 +375,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CONTROLLER_CLUSTER_WIDE
+              value: {{ .Values.clusterWide | default false | quote }}
           {{- if .Values.controllerManager.container.env }}
             {{- range $key, $value := .Values.controllerManager.container.env }}
             - name: {{ $key }}
@@ -456,13 +413,6 @@ spec:
         {{- end }}
       {{- end }}
 EOF
-
-sed -i \
-  -e 's/name: opg-ewbi-manager-role$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/' \
-  dist/chart/templates/rbac/role.yaml
-sed -i \
-  's/name: opg-ewbi-manager-role$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/g' \
-  dist/chart/templates/rbac/role_binding.yaml
 
 cat > dist/chart-crd/Chart.yaml <<'EOF'
 apiVersion: v2

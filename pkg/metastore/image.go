@@ -55,7 +55,8 @@ func (c *k8sClient) searchImage(ctx context.Context, federationContextId string,
 }
 
 func (c *k8sClient) UploadImage(ctx context.Context, image *UploadImage) (*v1beta1.Image, error) {
-	if _, err := c.searchFederation(ctx, image.FederationContextId, "HOST"); err != nil {
+	fed, err := c.searchFederation(ctx, image.FederationContextId, "HOST")
+	if err != nil {
 		return nil, err
 	}
 	imageId := "image-" + uu.V5(image.FederationContextId+image.FileId)
@@ -79,7 +80,7 @@ func (c *k8sClient) UploadImage(ctx context.Context, image *UploadImage) (*v1bet
 	obj := &v1beta1.Image{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      imageId,
-			Namespace: c.getNamespace(),
+			Namespace: fed.Namespace,
 		},
 		Spec: v1beta1.ImageSpec{
 			RelationType:        string(host),

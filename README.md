@@ -60,6 +60,21 @@ This code is designed to run on both ARM64 and AMD64 platforms, but to enable th
     - Line 1: ```IMG ?= ghcr.io/neonephos-katalis/opg-ewbi-operator-amd:neonephos```
     - Line 2: ```PLATFORM ?= linux/amd64```
 
+### Configuration: namespaced or cluster-wide
+By default the operator is namespaced: it watches only the namespace where it is installed, and the API creates all the resources in that same namespace.
+
+The operator can also run cluster-wide, watching all namespaces. The mode is chosen at install time with the `clusterWide` value of the helm chart (`false` by default):
+
+```bash
+helm install federation dist/chart -n <namespace> --create-namespace --set clusterWide=true
+```
+
+With `clusterWide: true` the chart installs a ClusterRole/ClusterRoleBinding instead of the Role/RoleBinding, and sets the `CONTROLLER_CLUSTER_WIDE` (operator) and `API_CLUSTER_WIDE` (API) environment variables to `true`. The mode of an existing release can be switched with `helm upgrade --set clusterWide=<true|false>`. In cluster-wide mode:
+- **K8s** technology: resources are created on the host in the namespace set in `spec.federationData.k8sOptions.namespace`, which no longer needs to be the namespace where the host operator is installed.
+- **REST** technology: when a federation is created, the API creates (or reuses) the namespace `fedrest-<id>` (`<id>` is 12 base36 characters derived from the federation id and country code), and all the federation's resources are created there.
+
+**NOTE:** A cluster-wide operator reconciles the resources of every namespace, including those of other releases, and writes cluster-scoped validation policies. Install at most one cluster-wide release per cluster, and don't combine it with namespaced releases on the same cluster. To test host and guest in cluster-wide mode, use two separate clusters. To run multiple releases on one cluster, use namespaced mode.
+
 ## Deploy the federation manager
 Install operator in host namespace, set API nodeport and set CRD to true to also install CRDs NodePorts are exposed in case testing outside of the cluster is needed.
 

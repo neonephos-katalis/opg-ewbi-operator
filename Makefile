@@ -272,11 +272,62 @@ endef
 .PHONY: helm
 helm: base-chart crd-chart ## build the operator's helm chart
 
+define CLUSTER_WIDE_RBAC_SCRIPT
+set -euo pipefail
+role=dist/chart/templates/rbac/role.yaml
+binding=dist/chart/templates/rbac/role_binding.yaml
+if [ "$(grep -c '^kind: Role$' "$role")" != 1 ] || [ "$(grep -c '^rules:$' "$role")" != 2 ]; then
+  echo "error: expected one ClusterRole and one Role in $role" >&2
+  exit 1
+fi
+if ! grep -q '^kind: RoleBinding$' "$binding" || ! grep -q '^  kind: Role$' "$binding" || ! grep -q 'name: opg-ewbi-manager-rolebinding$' "$binding"; then
+  echo "error: expected the manager RoleBinding in $binding" >&2
+  exit 1
+fi
+
+awk '
+  { lines[NR] = $0 }
+  /^kind: Role$/ { role = NR }
+  END {
+    start = role
+    while (start > 1 && lines[start] != "---") start--
+    end = role
+    while (end <= NR && lines[end] != "rules:") end++
+    for (i = 1; i <= NR; i++) {
+      if (i == start) print "{{- if not .Values.clusterWide }}"
+      print lines[i]
+      if (i == end) print "{{- end }}"
+      if (lines[i] == "rules:" && i < start) {
+        print "{{- if .Values.clusterWide }}"
+        print "- apiGroups:"
+        print "  - \"\""
+        print "  resources:"
+        print "  - namespaces"
+        print "  verbs:"
+        print "  - create"
+        print "{{- end }}"
+      }
+    }
+  }
+' "$role" > "$role.tmp"
+cat "$role.tmp" > "$role"
+rm "$role.tmp"
+sed -i \
+  -e 's/^kind: RoleBinding$/kind: {{ if .Values.clusterWide }}ClusterRoleBinding{{ else }}RoleBinding{{ end }}/' \
+  -e 's/^  kind: Role$/  kind: {{ if .Values.clusterWide }}ClusterRole{{ else }}Role{{ end }}/' \
+  -e 's/name: opg-ewbi-manager-rolebinding$/name: opg-ewbi-manager-rolebinding{{ if .Values.clusterWide }}-{{ .Release.Namespace }}{{ end }}/' \
+  "$binding"
+endef
+export CLUSTER_WIDE_RBAC_SCRIPT := $(value CLUSTER_WIDE_RBAC_SCRIPT)
+
 .PHONY: base-chart
 base-chart: manifests ## build the operator's helm chart
 	kubebuilder edit  --plugins=helm/v1-alpha
 # 	fix the namespace in the role.yaml file otherwise it hardcodes the namespace to "foo"
 	sed -i 's/namespace: foo/namespace: {{ .Release.Namespace }}/g' dist/chart/templates/rbac/role.yaml
+	sed -i 's/name: opg-ewbi-manager-role$$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/' dist/chart/templates/rbac/role.yaml
+	sed -i 's/name: opg-ewbi-manager-role$$/name: opg-ewbi-manager-role-{{ .Release.Namespace }}/g' dist/chart/templates/rbac/role_binding.yaml
+	bash -c "$$CLUSTER_WIDE_RBAC_SCRIPT"
 	helm lint dist/chart
 
 

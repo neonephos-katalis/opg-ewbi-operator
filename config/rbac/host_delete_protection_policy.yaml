@@ -16,6 +16,7 @@ spec:
       - availabilityzones
       - applicationonboardings
       - applicationdeployments
+      - consumptionmonitorings
   matchConditions:
   - name: exclude-controller-manager
     # WARNING update the following line with the correct name for guest's service account
@@ -38,7 +39,9 @@ metadata:
 spec:
   policyName: opg-ewbi-host-delete-protection-policy-{{ .Release.Namespace }}
   validationActions: ["Deny"]
+{{- if not .Values.clusterWide }}
   matchResources:
     namespaceSelector:
       matchLabels:
         kubernetes.io/metadata.name: {{ .Release.Namespace }}
+{{- end }}

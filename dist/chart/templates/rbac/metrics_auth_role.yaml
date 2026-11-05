@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: opg-ewbi-metrics-auth-role
+  name: opg-ewbi-metrics-auth-role-{{ .Release.Namespace }}
 rules:
 - apiGroups:
   - authentication.k8s.io

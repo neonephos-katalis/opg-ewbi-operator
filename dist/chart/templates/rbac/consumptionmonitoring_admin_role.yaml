@@ -7,7 +7,7 @@
 # enabling them to delegate specific permissions to other users or groups as needed.
 
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
