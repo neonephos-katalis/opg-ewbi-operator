@@ -1,47 +1,41 @@
 # [MANAGER]: Manager Deployment Configurations
-controllerManager:
+manager:
+  enabled: true
   replicas: 1
-  container:
-    enable: true
-    image:
-      repository: ghcr.io/neonephos-katalis/katalis/fm-operator
-      tag: v1.1.0
-      pullPolicy: Always
-    args:
-      - "--leader-elect"
-      - "--metrics-bind-address=:8443"
-      - "--health-probe-bind-address=:8081"
-    opgInsecureSkipVerify: false
-    resources:
-      limits:
-        cpu: 500m
-        memory: 128Mi
-      requests:
-        cpu: 10m
-        memory: 64Mi
-    livenessProbe:
-      initialDelaySeconds: 15
-      periodSeconds: 20
-      httpGet:
-        path: /healthz
-        port: 8081
-    readinessProbe:
-      initialDelaySeconds: 5
-      periodSeconds: 10
-      httpGet:
-        path: /readyz
-        port: 8081
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-          - "ALL"
+  image:
+    repository: ghcr.io/neonephos-katalis/katalis/fm-operator
+    tag: v1.1.0
+    pullPolicy: Always
+  args:
+    - "--leader-elect"
+  opgInsecureSkipVerify: false
+  env:
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+  imagePullSecrets:
+    - name: opg-registry-secret
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
   securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - "ALL"
+  podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
   terminationGracePeriodSeconds: 10
-  serviceAccountName: opg-ewbi-operator-controller-manager
 
 federation:
   enable: true
@@ -62,7 +56,6 @@ federation:
     capabilities:
       drop:
         - "ALL"
-  serviceAccountName: opg-ewbi-operator-controller-manager
   terminationGracePeriodSeconds: 10
   log:
     level: "info"
@@ -81,18 +74,20 @@ federation:
 
 fullnameOverride: katalis-fm
 
-imagePullSecrets:
-  - name: opg-registry-secret
-
 # [RBAC]: To enable RBAC (Permissions) configurations
 rbac:
-  enable: true
+  namespaced: false
+  helpers:
+    enabled: false
+
+serviceAccount:
+  enabled: true
 
 # [CRDs]: To enable the CRDs
 crd:
   # This option determines whether the CRDs are included
   # in the installation process.
-  enable: false
+  enabled: false
 
   # Enabling this option adds the "helm.sh/resource-policy": keep
   # annotation to the CRD, ensuring it remains installed even when
@@ -102,21 +97,21 @@ crd:
   keep: true
 
 # [METRICS]: Set to true to generate manifests for exporting metrics.
-# To disable metrics export set false, and ensure that the
-# ControllerManager argument "--metrics-bind-address=:8443" is removed.
 metrics:
-  enable: false
+  enabled: false
+  port: 8443
+  secure: true
 
 # [PROMETHEUS]: To enable a ServiceMonitor to export metrics to Prometheus set true
 prometheus:
-  enable: false
+  enabled: false
 
 # [CERT-MANAGER]: To enable cert-manager injection to webhooks set true
-certmanager:
-  enable: false
+certManager:
+  enabled: false
 
 # [NETWORK POLICIES]: To enable NetworkPolicies set true
 networkPolicy:
-  enable: false
+  enabled: false
 
 clusterWide: false

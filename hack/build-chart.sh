@@ -31,9 +31,9 @@ spec:
         {{- include "chart.labels" . | nindent 8 }}
         control-plane: katalis-fm-api
     spec:
-      {{- if .Values.imagePullSecrets }}
+      {{- if .Values.manager.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+        {{- toYaml .Values.manager.imagePullSecrets | nindent 8 }}
       {{- end }}
       containers:
         - name: api
@@ -66,7 +66,7 @@ spec:
             {{- toYaml .Values.federation.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.federation.securityContext | nindent 12 }}
-      serviceAccountName: {{ .Values.federation.serviceAccountName }}
+      serviceAccountName: {{ include "opg-ewbi.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.federation.terminationGracePeriodSeconds }}
 {{- end }}
 EOF
@@ -95,7 +95,7 @@ spec:
 EOF
 
 cat > dist/chart/templates/network-policy/allow-webhook-traffic.yaml <<'EOF'
-{{- if .Values.networkPolicy.enable }}
+{{- if .Values.networkPolicy.enabled }}
 # This NetworkPolicy allows ingress traffic to your webhook server running
 # as part of the controller-manager from specific namespaces and pods. CR(s) which uses webhooks
 # will only work when applied in namespaces labeled with 'webhook: enabled'
@@ -137,55 +137,49 @@ EOF
 
 cat > dist/chart/values.yaml <<'EOF'
 # [MANAGER]: Manager Deployment Configurations
-controllerManager:
+manager:
+  enabled: true
   replicas: 1
-  container:
-    enable: true
-    image:
-      repository: ghcr.io/ipcei-tim-t2/operator/katalis-operator
-      tag: dev-0.0.312
-      pullPolicy: Always
-    args:
-      - "--leader-elect"
-      - "--metrics-bind-address=:8443"
-      - "--health-probe-bind-address=:8081"
-    opgInsecureSkipVerify: false
-    resources:
-      limits:
-        cpu: 500m
-        memory: 128Mi
-      requests:
-        cpu: 10m
-        memory: 64Mi
-    livenessProbe:
-      initialDelaySeconds: 15
-      periodSeconds: 20
-      httpGet:
-        path: /healthz
-        port: 8081
-    readinessProbe:
-      initialDelaySeconds: 5
-      periodSeconds: 10
-      httpGet:
-        path: /readyz
-        port: 8081
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-          - "ALL"
+  image:
+    repository: ghcr.io/neonephos-katalis/opg-ewbi-operator
+    tag: dev-0.0.312
+    pullPolicy: Always
+  args:
+    - "--leader-elect"
+  opgInsecureSkipVerify: false
+  env:
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+  imagePullSecrets:
+    - name: opg-registry-secret
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
   securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - "ALL"
+  podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
   terminationGracePeriodSeconds: 10
-  serviceAccountName: opg-ewbi-operator-controller-manager
 
 federation:
   enable: true
   replicas: 1
   image:
-    repository: ghcr.io/ipcei-tim-t2/operator/katalis-api
+    repository: ghcr.io/neonephos-katalis/opg-ewbi-api
     tag: dev-0.0.312
     pullPolicy: Always
   resources:
@@ -200,7 +194,6 @@ federation:
     capabilities:
       drop:
         - "ALL"
-  serviceAccountName: opg-ewbi-operator-controller-manager
   terminationGracePeriodSeconds: 10
   log:
     level: "info"
@@ -219,18 +212,20 @@ federation:
 
 fullnameOverride: katalis-fm
 
-imagePullSecrets:
-  - name: opg-registry-secret
-
 # [RBAC]: To enable RBAC (Permissions) configurations
 rbac:
-  enable: true
+  namespaced: false
+  helpers:
+    enabled: false
+
+serviceAccount:
+  enabled: true
 
 # [CRDs]: To enable the CRDs
 crd:
   # This option determines whether the CRDs are included
   # in the installation process.
-  enable: false
+  enabled: false
 
   # Enabling this option adds the "helm.sh/resource-policy": keep
   # annotation to the CRD, ensuring it remains installed even when
@@ -240,27 +235,27 @@ crd:
   keep: true
 
 # [METRICS]: Set to true to generate manifests for exporting metrics.
-# To disable metrics export set false, and ensure that the
-# ControllerManager argument "--metrics-bind-address=:8443" is removed.
 metrics:
-  enable: false
+  enabled: false
+  port: 8443
+  secure: true
 
 # [PROMETHEUS]: To enable a ServiceMonitor to export metrics to Prometheus set true
 prometheus:
-  enable: false
+  enabled: false
 
 # [CERT-MANAGER]: To enable cert-manager injection to webhooks set true
-certmanager:
-  enable: false
+certManager:
+  enabled: false
 
 # [NETWORK POLICIES]: To enable NetworkPolicies set true
 networkPolicy:
-  enable: false
+  enabled: false
 
 clusterWide: false
 EOF
 
-cat > dist/chart/templates/_helpers.tpl <<'EOF'
+cat > dist/chart/templates/_katalis.tpl <<'EOF'
 {{- define "chart.name" -}}
 {{- if .Chart }}
   {{- if .Chart.Name }}
@@ -324,95 +319,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 EOF
 
-cat > dist/chart/templates/manager/manager.yaml <<'EOF'
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "katalis.fullname" (list . "ewbi-operator-manager") }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "chart.labels" . | nindent 4 }}
-    control-plane: controller-manager
-spec:
-  replicas:  {{ .Values.controllerManager.replicas }}
-  selector:
-    matchLabels:
-      {{- include "chart.selectorLabels" . | nindent 6 }}
-      control-plane: controller-manager
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: manager
-      labels:
-        {{- include "chart.labels" . | nindent 8 }}
-        control-plane: controller-manager
-        {{- if and .Values.controllerManager.pod .Values.controllerManager.pod.labels }}
-        {{- range $key, $value := .Values.controllerManager.pod.labels }}
-        {{ $key }}: {{ $value }}
-        {{- end }}
-        {{- end }}
-    spec:
-      imagePullSecrets:
-        {{- if .Values.imagePullSecrets }}
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
-        {{- end }}
-      containers:
-        {{- if .Values.controllerManager.container.enable }}
-        - name: manager
-          args:
-            {{- range .Values.controllerManager.container.args }}
-            - {{ . }}
-            {{- end }}
-            {{- if .Values.controllerManager.container.opgInsecureSkipVerify }}
-            - --opg-insecure-skip-verify
-             {{- end }}
-          command:
-            - /manager
-          image: {{ .Values.controllerManager.container.image.repository }}:{{ .Values.controllerManager.container.image.tag }}
-          imagePullPolicy: {{ .Values.controllerManager.container.image.pullPolicy | default "Always" }}
-          env:
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: CONTROLLER_CLUSTER_WIDE
-              value: {{ .Values.clusterWide | default false | quote }}
-          {{- if .Values.controllerManager.container.env }}
-            {{- range $key, $value := .Values.controllerManager.container.env }}
-            - name: {{ $key }}
-              value: {{ $value }}
-            {{- end }}
-          {{- end }}
-          livenessProbe:
-            {{- toYaml .Values.controllerManager.container.livenessProbe | nindent 12 }}
-          readinessProbe:
-            {{- toYaml .Values.controllerManager.container.readinessProbe | nindent 12 }}
-          resources:
-            {{- toYaml .Values.controllerManager.container.resources | nindent 12 }}
-          securityContext:
-            {{- toYaml .Values.controllerManager.container.securityContext | nindent 12 }}
-          {{- if and .Values.certmanager.enable (or .Values.webhook.enable .Values.metrics.enable) }}
-          volumeMounts:
-            {{- if and .Values.metrics.enable .Values.certmanager.enable }}
-            - name: metrics-certs
-              mountPath: /tmp/k8s-metrics-server/metrics-certs
-              readOnly: true
-            {{- end }}
-          {{- end }}
-        {{- end }}
-      securityContext:
-        {{- toYaml .Values.controllerManager.securityContext | nindent 8 }}
-      serviceAccountName: {{ .Values.controllerManager.serviceAccountName }}
-      terminationGracePeriodSeconds: {{ .Values.controllerManager.terminationGracePeriodSeconds }}
-      {{- if and .Values.certmanager.enable (or .Values.webhook.enable .Values.metrics.enable) }}
-      volumes:
-        {{- if and .Values.metrics.enable .Values.certmanager.enable }}
-        - name: metrics-certs
-          secret:
-            secretName: metrics-server-cert
-        {{- end }}
-      {{- end }}
-EOF
+sed -i \
+  -e 's/^\( *image: \)"\(.*\)"$/\1\2/' \
+  -e 's/^\( *\){{- range .Values.manager.args }}$/\1{{- if .Values.manager.opgInsecureSkipVerify }}\n\1- --opg-insecure-skip-verify\n\1{{- end }}\n&/' \
+  dist/chart/templates/manager/manager.yaml
 
 cat > dist/chart-crd/Chart.yaml <<'EOF'
 apiVersion: v2

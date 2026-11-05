@@ -69,9 +69,9 @@ func (r *ConsumptionMonitoringReconciler) SetupWithManager(mgr ctrl.Manager) err
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=consumptionmonitorings,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=consumptionmonitorings/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=consumptionmonitorings/finalizers,verbs=update,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=consumptionmonitorings,verbs=*
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=consumptionmonitorings/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=consumptionmonitorings/finalizers,verbs=update
 
 func (r *ConsumptionMonitoringReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
 	log := ctrl.Log

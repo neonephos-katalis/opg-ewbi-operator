@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "opg-ewbi.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "leader-election-rolebinding" $.Release.Namespace) "context" $) }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "leader-election-role" $.Release.Namespace) "context" $) }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "opg-ewbi.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}

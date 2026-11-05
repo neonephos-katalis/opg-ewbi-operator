@@ -1,0 +1,11 @@
+{{- if and .Values.metrics.enabled .Values.metrics.secure }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "metrics-reader" $.Release.Namespace) "context" $) }}
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+{{- end }}

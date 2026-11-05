@@ -72,9 +72,9 @@ func (r *ZoneReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=availabilityzones,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=availabilityzones/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=availabilityzones/finalizers,verbs=update,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=availabilityzones,verbs=*
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=availabilityzones/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=availabilityzones/finalizers,verbs=update
 
 func (r *ZoneReconciler) Reconcile(
 	ctx context.Context,

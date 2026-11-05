@@ -1,0 +1,27 @@
+{{- if .Values.rbac.helpers.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: opg-ewbi
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "artefact-viewer-role" $.Release.Namespace) "context" $) }}
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - artefacts
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - artefacts/status
+  verbs:
+  - get
+{{- end }}

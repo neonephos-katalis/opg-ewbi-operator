@@ -1,0 +1,77 @@
+apiVersion: rbac.authorization.k8s.io/v1
+{{- if (not .Values.clusterWide) }}
+kind: Role
+{{- else }}
+kind: ClusterRole
+{{- end }}
+metadata:
+{{- if (not .Values.clusterWide) }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "manager-role" $.Release.Namespace) "context" $) }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingadmissionpolicies
+  - validatingadmissionpolicybindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - applicationdeployments
+  - applicationonboardings
+  - artefacts
+  - availabilityzones
+  - consumptionmonitorings
+  - federations
+  - images
+  verbs:
+  - '*'
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - applicationdeployments/finalizers
+  - applicationonboardings/finalizers
+  - artefacts/finalizers
+  - availabilityzones/finalizers
+  - consumptionmonitorings/finalizers
+  - federations/finalizers
+  - images/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - opg.ewbi.katalis.com
+  resources:
+  - applicationdeployments/status
+  - applicationonboardings/status
+  - artefacts/status
+  - availabilityzones/status
+  - consumptionmonitorings/status
+  - federations/status
+  - images/status
+  verbs:
+  - get
+  - patch
+  - update

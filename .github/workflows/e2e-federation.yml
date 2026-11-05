@@ -170,8 +170,8 @@ jobs:
       - name: Point dist/chart's image values at the local registry
         run: |
           for old in \
-            "repository: ghcr.io/ipcei-tim-t2/operator/katalis-operator" \
-            "repository: ghcr.io/ipcei-tim-t2/operator/katalis-api"; do
+            "repository: ghcr.io/neonephos-katalis/opg-ewbi-operator" \
+            "repository: ghcr.io/neonephos-katalis/opg-ewbi-api"; do
             grep -qF "$old" dist/chart/values.yaml || {
               echo "::error::expected line not found in dist/chart/values.yaml: $old" >&2
               exit 1
@@ -179,8 +179,8 @@ jobs:
           done
 
           sed -i \
-            -e "s#repository: ghcr.io/ipcei-tim-t2/operator/katalis-operator#repository: localhost:${REGISTRY_PORT}/operator/katalis-operator#" \
-            -e "s#repository: ghcr.io/ipcei-tim-t2/operator/katalis-api#repository: localhost:${REGISTRY_PORT}/operator/katalis-api#" \
+            -e "s#repository: ghcr.io/neonephos-katalis/opg-ewbi-operator#repository: localhost:${REGISTRY_PORT}/operator/katalis-operator#" \
+            -e "s#repository: ghcr.io/neonephos-katalis/opg-ewbi-api#repository: localhost:${REGISTRY_PORT}/operator/katalis-api#" \
             dist/chart/values.yaml
 
           helm lint dist/chart
@@ -188,7 +188,7 @@ jobs:
       - name: Verify the chart renders images from the local registry
         run: |
           for ns in partnerop originatingop; do
-            rendered=$(helm template federation dist/chart -n "$ns" --set crd.enable=true)
+            rendered=$(helm template federation dist/chart -n "$ns" --set crd.enabled=true)
             for image in "$OP_IMAGE" "$API_IMAGE"; do
               echo "$rendered" | grep -qF "image: $image" || {
                 echo "::error::expected 'image: $image' in $ns render, not found" >&2
@@ -208,12 +208,12 @@ jobs:
       - name: Install federation chart on partnerop cluster
         run: |
           helm --kube-context kind-partnerop install federation dist/chart \
-            -n partnerop --create-namespace --set crd.enable=true
+            -n partnerop --create-namespace --set crd.enabled=true
 
       - name: Install federation chart on originatingop cluster
         run: |
           helm --kube-context kind-originatingop install federation dist/chart \
-            -n originatingop --create-namespace --set crd.enable=true
+            -n originatingop --create-namespace --set crd.enabled=true
 
       - name: Verify CRDs and manager rollout on both clusters
         run: |
