@@ -234,6 +234,12 @@ jobs:
       - name: Create kubeconfig secret for cross-cluster federation
         run: |
           kind get kubeconfig --internal --name partnerop > /tmp/partnerop-internal.kubeconfig
+          # Use the node IP instead of the container hostname (partnerop-control-plane): from inside the
+          # pods the hostname goes through the DNS search domains first, and on some hosts (e.g. WSL on a
+          # corporate network) one of them answers 127.0.0.1. The node IP is part of the API server cert SANs.
+          partnerop_ip=$(docker inspect -f '{{ (index .NetworkSettings.Networks "kind").IPAddress }}' partnerop-control-plane)
+          sed -i "s#https://partnerop-control-plane:6443#https://${partnerop_ip}:6443#" /tmp/partnerop-internal.kubeconfig
+          echo "partnerop API server for the guest: $(grep -m1 'server:' /tmp/partnerop-internal.kubeconfig | awk '{print $2}')"
           kubectl --context kind-originatingop -n originatingop delete secret kubeconfig-secret --ignore-not-found
           kubectl --context kind-originatingop -n originatingop create secret generic kubeconfig-secret \
             --from-file=kubeconfig=/tmp/partnerop-internal.kubeconfig
