@@ -256,18 +256,39 @@ jobs:
 
       - name: Verify cross-cluster EWBI API reachability (pod -> NodePort on the other cluster)
         run: |
-          check() {  # check <from-cluster> <url> <label>
-            code=$(kubectl --context "kind-$1" -n "$1" run "api-probe-$RANDOM" --rm -i --restart=Never --quiet \
-              --image=curlimages/curl:8.10.1 -- \
-              curl -s -o /dev/null --max-time 5 -w '%{http_code}' "$2/" 2>/dev/null || true)
-            if [ -z "$code" ] || [ "$code" = "000" ]; then
-              echo "::error title=Network::$3 is NOT reachable ($2)" >&2
-              return 1
-            fi
-            echo "$3: HTTP $code ($2)"
+          # The probe runs as a pod and its result is read from the pod logs (no `kubectl run -i`:
+          # with a short-lived container the attach can miss the output). Retried for ~1 minute.
+          probe() {  # probe <from-cluster> <to-cluster> <url> <label>
+            local from=$1 to=$2 url=$3 label=$4 pod code
+            for attempt in 1 2 3 4 5 6; do
+              pod="api-probe-$RANDOM"
+              kubectl --context "kind-$from" -n "$from" run "$pod" --restart=Never \
+                --image=curlimages/curl:8.10.1 --command -- \
+                sh -c "curl -s -o /dev/null --max-time 5 -w '%{http_code}' '$url/'; echo" >/dev/null
+              kubectl --context "kind-$from" -n "$from" wait pod "$pod" \
+                --for=jsonpath='{.status.phase}'=Succeeded --timeout=60s >/dev/null || true
+              code=$(kubectl --context "kind-$from" -n "$from" logs "$pod" 2>/dev/null | tr -d '[:space:]')
+              kubectl --context "kind-$from" -n "$from" delete pod "$pod" --wait=false >/dev/null 2>&1 || true
+              if [ -n "$code" ] && [ "$code" != "000" ]; then
+                echo "$label: HTTP $code ($url)"
+                return 0
+              fi
+              echo "$label: attempt $attempt/6 failed (http_code='${code:-<empty>}'), retrying in 10s..."
+              sleep 10
+            done
+            echo "::error title=Network::$label is NOT reachable ($url)" >&2
+            echo "::group::[$to] API service, endpoints and pods"
+            kubectl --context "kind-$to" -n "$to" get svc,endpoints -o wide || true
+            kubectl --context "kind-$to" -n "$to" get pods -l control-plane=katalis-fm-api -o wide || true
+            echo "::endgroup::"
+            echo "::group::[$from] last probe pod"
+            kubectl --context "kind-$from" -n "$from" get pods -o wide | grep api-probe || true
+            kubectl --context "kind-$from" -n "$from" get events --sort-by=.lastTimestamp | tail -20 || true
+            echo "::endgroup::"
+            return 1
           }
-          check originatingop "$E2E_PARTNEROP_API_URL"     "originatingop pod -> partnerop API"
-          check partnerop     "$E2E_ORIGINATINGOP_API_URL" "partnerop pod -> originatingop API"
+          probe originatingop partnerop "$E2E_PARTNEROP_API_URL"     "originatingop pod -> partnerop API"
+          probe partnerop originatingop "$E2E_ORIGINATINGOP_API_URL" "partnerop pod -> originatingop API"
 
       - name: Run functional REST e2e test (Federation -> Image -> Artefact -> ApplicationOnboarding -> ApplicationDeployment)
         run: |
