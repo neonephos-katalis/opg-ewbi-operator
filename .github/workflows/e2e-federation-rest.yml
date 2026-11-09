@@ -1,4 +1,10 @@
-name: E2E Federation
+name: E2E Federation (REST)
+
+# Same two-cluster scenario as e2e-federation-k8s.yml (K8s technology), but the originating OP
+# federates with the partner OP through the EWBI REST API:
+#   originatingop controller -> partnerop API      (tokenUrl)
+#   partnerop controller     -> originatingop API  (partnerStatusLink, *NotifLink, *CallbackLink)
+# Both APIs are exposed with a fixed NodePort and reached through the kind docker network.
 
 on:
   push:
@@ -6,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: e2e-federation-${{ github.ref }}
+  group: e2e-federation-rest-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -19,10 +25,12 @@ env:
   REGISTRY_NAME: kind-registry
   REGISTRY_PORT: "5011"
   VERSION: dev-0.0.312
+  PARTNEROP_API_NODEPORT: "30080"
+  ORIGINATINGOP_API_NODEPORT: "30081"
 
 jobs:
-  provision-clusters:
-    name: Provision partnerop + originatingop kind clusters
+  e2e-rest:
+    name: REST federation walkthrough (partnerop + originatingop kind clusters)
     runs-on: ubuntu-latest
     steps:
       - name: Clone the code
@@ -130,19 +138,22 @@ jobs:
           kubectl --context kind-partnerop     get nodes -o wide
           kubectl --context kind-originatingop get nodes -o wide
 
-      - name: Verify cross-cluster network reachability
+      - name: Compute cross-cluster EWBI API URLs
         run: |
           partnerop_ip=$(docker inspect -f '{{ (index .NetworkSettings.Networks "kind").IPAddress }}' partnerop-control-plane)
           originatingop_ip=$(docker inspect -f '{{ (index .NetworkSettings.Networks "kind").IPAddress }}' originatingop-control-plane)
-          echo "partnerop control-plane:     $partnerop_ip"
-          echo "originatingop control-plane: $originatingop_ip"
+          [ -n "$partnerop_ip" ] && [ -n "$originatingop_ip" ] || {
+            echo "::error title=Network::could not read the kind network IPs of the control-plane nodes" >&2
+            exit 1
+          }
 
-          docker run --rm --network kind curlimages/curl:8.10.1 \
-            -sk --max-time 5 -o /dev/null -w 'originatingop -> partnerop api-server: HTTP %{http_code}\n' \
-            "https://${partnerop_ip}:6443/livez"
-          docker run --rm --network kind curlimages/curl:8.10.1 \
-            -sk --max-time 5 -o /dev/null -w 'partnerop -> originatingop api-server: HTTP %{http_code}\n' \
-            "https://${originatingop_ip}:6443/livez"
+          E2E_PARTNEROP_API_URL="http://${partnerop_ip}:${PARTNEROP_API_NODEPORT}"
+          E2E_ORIGINATINGOP_API_URL="http://${originatingop_ip}:${ORIGINATINGOP_API_NODEPORT}"
+          echo "E2E_PARTNEROP_API_URL=$E2E_PARTNEROP_API_URL"         >> "$GITHUB_ENV"
+          echo "E2E_ORIGINATINGOP_API_URL=$E2E_ORIGINATINGOP_API_URL" >> "$GITHUB_ENV"
+
+          echo "partnerop API (tokenUrl):                    $E2E_PARTNEROP_API_URL"
+          echo "originatingop API (partnerStatusLink/notif): $E2E_ORIGINATINGOP_API_URL"
 
       - name: Setup authentication for private Go modules
         run: |
@@ -169,26 +180,32 @@ jobs:
 
       - name: Point dist/chart's image values at the local registry
         run: |
-          for old in \
-            "repository: ghcr.io/neonephos-katalis/opg-ewbi-operator" \
-            "repository: ghcr.io/neonephos-katalis/opg-ewbi-api"; do
-            grep -qF "$old" dist/chart/values.yaml || {
-              echo "::error::expected line not found in dist/chart/values.yaml: $old" >&2
-              exit 1
-            }
-          done
+          # Match the operator and API repositories whatever their registry/name in values.yaml
+          # (they differ between chart versions), and detect the CRD toggle key (crd.enable / crd.enabled).
+          values=dist/chart/values.yaml
+          grep -Eq '^\s+repository: \S*operator\s*$' "$values" || { echo "::error::operator image repository not found in $values" >&2; exit 1; }
+          grep -Eq '^\s+repository: \S*api\s*$'      "$values" || { echo "::error::API image repository not found in $values" >&2; exit 1; }
 
-          sed -i \
-            -e "s#repository: ghcr.io/neonephos-katalis/opg-ewbi-operator#repository: localhost:${REGISTRY_PORT}/operator/katalis-operator#" \
-            -e "s#repository: ghcr.io/neonephos-katalis/opg-ewbi-api#repository: localhost:${REGISTRY_PORT}/operator/katalis-api#" \
-            dist/chart/values.yaml
+          sed -i -E \
+            -e "s#^(\s+repository: )\S*operator\s*\$#\1localhost:${REGISTRY_PORT}/operator/katalis-operator#" \
+            -e "s#^(\s+repository: )\S*api\s*\$#\1localhost:${REGISTRY_PORT}/operator/katalis-api#" \
+            "$values"
+          grep -n 'repository:' "$values"
+
+          if helm show values dist/chart | sed -n '/^crd:/,/^[^ #]/p' | grep -Eq '^\s+enabled:'; then
+            CRD_FLAG=crd.enabled
+          else
+            CRD_FLAG=crd.enable
+          fi
+          echo "CRD_FLAG=$CRD_FLAG" >> "$GITHUB_ENV"
+          echo "CRD toggle: --set ${CRD_FLAG}=true"
 
           helm lint dist/chart
 
       - name: Verify the chart renders images from the local registry
         run: |
           for ns in partnerop originatingop; do
-            rendered=$(helm template federation dist/chart -n "$ns" --set crd.enabled=true)
+            rendered=$(helm template federation dist/chart -n "$ns" --set "${CRD_FLAG}=true")
             for image in "$OP_IMAGE" "$API_IMAGE"; do
               echo "$rendered" | grep -qF "image: $image" || {
                 echo "::error::expected 'image: $image' in $ns render, not found" >&2
@@ -205,17 +222,19 @@ jobs:
           docker exec originatingop-control-plane crictl pull "$OP_IMAGE"
           docker exec originatingop-control-plane crictl pull "$API_IMAGE"
 
-      - name: Install federation chart on partnerop cluster
+      - name: Install federation chart on partnerop cluster (API on NodePort ${{ env.PARTNEROP_API_NODEPORT }})
         run: |
           helm --kube-context kind-partnerop install federation dist/chart \
-            -n partnerop --create-namespace --set crd.enabled=true
+            -n partnerop --create-namespace --set "${CRD_FLAG}=true" \
+            --set federation.services.federation.nodePort="${PARTNEROP_API_NODEPORT}"
 
-      - name: Install federation chart on originatingop cluster
+      - name: Install federation chart on originatingop cluster (API on NodePort ${{ env.ORIGINATINGOP_API_NODEPORT }})
         run: |
           helm --kube-context kind-originatingop install federation dist/chart \
-            -n originatingop --create-namespace --set crd.enabled=true
+            -n originatingop --create-namespace --set "${CRD_FLAG}=true" \
+            --set federation.services.federation.nodePort="${ORIGINATINGOP_API_NODEPORT}"
 
-      - name: Verify CRDs and manager rollout on both clusters
+      - name: Verify CRDs, manager and API rollout on both clusters
         run: |
           partnerop_crds=$(kubectl --context kind-partnerop     get crds -o name | grep -c 'opg.ewbi.katalis.com' || true)
           originatingop_crds=$(kubectl --context kind-originatingop get crds -o name | grep -c 'opg.ewbi.katalis.com' || true)
@@ -223,39 +242,91 @@ jobs:
           [ "$partnerop_crds"     -eq 7 ] || { echo "::error::expected 7 opg.ewbi.katalis.com CRDs on partnerop, found $partnerop_crds" >&2; exit 1; }
           [ "$originatingop_crds" -eq 7 ] || { echo "::error::expected 7 opg.ewbi.katalis.com CRDs on originatingop, found $originatingop_crds" >&2; exit 1; }
 
-          kubectl --context kind-partnerop     -n partnerop     wait --for=condition=Available deployment \
-            -l control-plane=controller-manager --timeout=180s
-          kubectl --context kind-originatingop -n originatingop wait --for=condition=Available deployment \
-            -l control-plane=controller-manager --timeout=180s
+          for c in partnerop originatingop; do
+            for app in controller-manager katalis-fm-api; do
+              kubectl --context "kind-$c" -n "$c" wait --for=condition=Available deployment \
+                -l control-plane="$app" --timeout=180s || {
+                echo "::error title=Rollout::$app is not Available on $c" >&2
+                kubectl --context "kind-$c" -n "$c" get pods -o wide
+                exit 1
+              }
+            done
+            kubectl --context "kind-$c" -n "$c" get pods -o wide
+          done
 
-          kubectl --context kind-partnerop     -n partnerop     get pods -l control-plane=controller-manager -o wide
-          kubectl --context kind-originatingop -n originatingop get pods -l control-plane=controller-manager -o wide
-
-      - name: Create kubeconfig secret for cross-cluster federation
+      - name: Verify cross-cluster EWBI API reachability (pod -> NodePort on the other cluster)
         run: |
-          kind get kubeconfig --internal --name partnerop > /tmp/partnerop-internal.kubeconfig
-          kubectl --context kind-originatingop -n originatingop delete secret kubeconfig-secret --ignore-not-found
-          kubectl --context kind-originatingop -n originatingop create secret generic kubeconfig-secret \
-            --from-file=kubeconfig=/tmp/partnerop-internal.kubeconfig
+          check() {  # check <from-cluster> <url> <label>
+            code=$(kubectl --context "kind-$1" -n "$1" run "api-probe-$RANDOM" --rm -i --restart=Never --quiet \
+              --image=curlimages/curl:8.10.1 -- \
+              curl -s -o /dev/null --max-time 5 -w '%{http_code}' "$2/" 2>/dev/null || true)
+            if [ -z "$code" ] || [ "$code" = "000" ]; then
+              echo "::error title=Network::$3 is NOT reachable ($2)" >&2
+              return 1
+            fi
+            echo "$3: HTTP $code ($2)"
+          }
+          check originatingop "$E2E_PARTNEROP_API_URL"     "originatingop pod -> partnerop API"
+          check partnerop     "$E2E_ORIGINATINGOP_API_URL" "partnerop pod -> originatingop API"
 
-      - name: Run functional e2e test (Federation -> ... -> ConsumptionMonitoring)
-        run: go test ./test/e2e/... -v -run TestFederationWalkthrough -timeout 20m
+      - name: Run functional REST e2e test (Federation -> Image -> Artefact -> ApplicationOnboarding -> ApplicationDeployment)
+        run: |
+          set -o pipefail
+          go test ./test/e2e/... -v -count=1 -run TestRestFederationWalkthrough -timeout 20m 2>&1 | tee /tmp/e2e-rest.log
+
+      - name: Test summary
+        if: always()
+        run: |
+          log=/tmp/e2e-rest.log
+          {
+            echo "## E2E Federation (REST)"
+            echo
+            echo "| Stage | Result |"
+            echo "|---|---|"
+            if [ -f "$log" ]; then
+              grep -E -- '--- (PASS|FAIL|SKIP): TestRestFederationWalkthrough/' "$log" | \
+                sed -E 's#.*--- (PASS|FAIL|SKIP): TestRestFederationWalkthrough/([^ ]+).*#| \2 | \1 |#'
+            else
+              echo "| (test not executed) | - |"
+            fi
+            echo
+            echo "- partnerop API: \`${E2E_PARTNEROP_API_URL:-n/a}\`"
+            echo "- originatingop API: \`${E2E_ORIGINATINGOP_API_URL:-n/a}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "$log" ]; then
+            grep -E -- '--- FAIL: TestRestFederationWalkthrough/' "$log" | while read -r line; do
+              stage=$(echo "$line" | sed -E 's#.*TestRestFederationWalkthrough/([^ ]+).*#\1#')
+              echo "::error title=REST e2e stage failed::$stage"
+            done
+          fi
 
       - name: Cluster diagnostics on failure
         if: failure()
         run: |
           kind export logs /tmp/kind-logs --name partnerop     || true
           kind export logs /tmp/kind-logs --name originatingop || true
+          echo "::group::docker containers and registry"
           docker ps -a
           docker logs "${REGISTRY_NAME}" || true
-          kubectl --context kind-partnerop     -n partnerop     get pods,events -o wide || true
-          kubectl --context kind-originatingop -n originatingop get pods,events -o wide || true
-          kubectl --context kind-partnerop     -n partnerop     logs -l control-plane=controller-manager --all-containers --tail=200 || true
-          kubectl --context kind-originatingop -n originatingop logs -l control-plane=controller-manager --all-containers --tail=200 || true
-          echo "--- resource chain state (partnerop) ---"
-          kubectl --context kind-partnerop     -n partnerop     get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings -o yaml || true
-          echo "--- resource chain state (originatingop) ---"
-          kubectl --context kind-originatingop -n originatingop get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings -o yaml || true
+          echo "::endgroup::"
+          for c in partnerop originatingop; do
+            echo "::group::[$c] pods and events"
+            kubectl --context "kind-$c" -n "$c" get pods,svc,events -o wide || true
+            echo "::endgroup::"
+            echo "::group::[$c] controller-manager logs"
+            kubectl --context "kind-$c" -n "$c" logs -l control-plane=controller-manager --all-containers --tail=300 || true
+            echo "::endgroup::"
+            echo "::group::[$c] EWBI API logs"
+            kubectl --context "kind-$c" -n "$c" logs -l control-plane=katalis-fm-api --all-containers --tail=300 || true
+            echo "::endgroup::"
+            echo "::group::[$c] resource chain state"
+            kubectl --context "kind-$c" -n "$c" get federations,images,artefacts,applicationonboardings,applicationdeployments -o yaml || true
+            echo "::endgroup::"
+            echo "::group::[$c] federationContextId validation policies"
+            kubectl --context "kind-$c" get validatingadmissionpolicies -o yaml || true
+            echo "::endgroup::"
+          done
 
       - name: Tear down clusters and registry
         if: always()
