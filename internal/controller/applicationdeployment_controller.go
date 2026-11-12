@@ -71,9 +71,9 @@ func (r *ApplicationDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) err
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationdeployments,verbs=*,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationdeployments/status,verbs=get;update;patch,namespace=foo
-// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationdeployments/finalizers,verbs=update,namespace=foo
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationdeployments,verbs=*
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationdeployments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=opg.ewbi.katalis.com,resources=applicationdeployments/finalizers,verbs=update
 
 func (r *ApplicationDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
 	log := ctrl.Log

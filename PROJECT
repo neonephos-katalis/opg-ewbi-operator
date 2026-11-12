@@ -6,7 +6,9 @@ domain: katalis.com
 layout:
 - go.kubebuilder.io/v4
 plugins:
-  helm.kubebuilder.io/v1-alpha: {}
+  helm.kubebuilder.io/v2-alpha:
+    manifests: dist/install.yaml
+    output: dist
 projectName: opg-ewbi
 repo: github.com/neonephos-katalis/opg-ewbi-operator
 resources:

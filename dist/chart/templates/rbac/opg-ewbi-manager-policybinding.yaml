@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: RoleBinding
+{{- else }}
+kind: ClusterRoleBinding
+{{- end }}
+metadata:
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "opg-ewbi-manager-policybinding" $.Release.Namespace) "context" $) }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  {{- if .Values.rbac.namespaced }}
+  kind: Role
+  {{- else }}
+  kind: ClusterRole
+  {{- end }}
+  name: {{ include "opg-ewbi.resourceName" (dict "suffix" (printf "%s-%s" "opg-ewbi-manager-policy" $.Release.Namespace) "context" $) }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "opg-ewbi.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
