@@ -147,11 +147,7 @@ manager:
   args:
     - "--leader-elect"
   opgInsecureSkipVerify: false
-  env:
-    - name: NAMESPACE
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.namespace
+  env: []
   imagePullSecrets:
     - name: opg-registry-secret
   resources:
