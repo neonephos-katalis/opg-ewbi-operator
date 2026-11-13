@@ -281,7 +281,8 @@ base-chart: manifests ## build the operator's helm chart
 		dist/chart/templates/rbac/manager-role.yaml dist/chart/templates/rbac/manager-rolebinding.yaml
 	sed -i 's/(dict "suffix" "\([^"]*\)" "context" \$$)/(dict "suffix" (printf "%s-%s" "\1" $$.Release.Namespace) "context" $$)/g' \
 		dist/chart/templates/rbac/*.yaml
-	sed -i 's/^\( *\){{- toYaml .Values.manager.env | nindent 10 }}$$/&\n\1- name: CONTROLLER_CLUSTER_WIDE\n\1  value: {{ .Values.clusterWide | default false | quote }}/' \
+	sed -i -e 's/^\( *\)env:$$/&\n\1  - name: NAMESPACE\n\1    valueFrom:\n\1      fieldRef:\n\1        fieldPath: metadata.namespace\n\1  - name: CONTROLLER_CLUSTER_WIDE\n\1    value: {{ .Values.clusterWide | default false | quote }}/' \
+		-e '/^ *\[\]$$/d' \
 		dist/chart/templates/manager/manager.yaml
 	echo 'clusterWide: false' >> dist/chart/values.yaml
 	helm lint dist/chart
