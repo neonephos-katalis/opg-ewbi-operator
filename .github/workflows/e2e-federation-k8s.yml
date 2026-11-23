@@ -1,5 +1,10 @@
 name: E2E Federation
 
+# Two kind clusters, partnerop (HOST) and originatingop (GUEST), federated with the K8s technology.
+# Namespaced mode (clusterWide=false): the resources live in the release namespaces
+# (originatingop on originatingop, partnerop on partnerop).
+# The cluster-wide variant of this workflow is e2e-federation-k8s-cw.yml.
+
 on:
   push:
   pull_request:
@@ -24,6 +29,13 @@ jobs:
   provision-clusters:
     name: Provision partnerop + originatingop kind clusters
     runs-on: ubuntu-latest
+    env:
+      CLUSTER_WIDE: "false"
+      # namespace of the GUEST resources created by the test on originatingop
+      GUEST_RESOURCES_NS: 'originatingop'
+      # namespace on partnerop where the originatingop controller creates the HOST copies (k8sOptions.namespace)
+      HOST_RESOURCES_NS: 'partnerop'
+      CRS: federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
@@ -205,15 +217,15 @@ jobs:
           docker exec originatingop-control-plane crictl pull "$OP_IMAGE"
           docker exec originatingop-control-plane crictl pull "$API_IMAGE"
 
-      - name: Install federation chart on partnerop cluster
+      - name: Install federation chart on partnerop cluster (clusterWide=${{ env.CLUSTER_WIDE }})
         run: |
           helm --kube-context kind-partnerop install federation dist/chart \
-            -n partnerop --create-namespace --set crd.enabled=true
+            -n partnerop --create-namespace --set crd.enabled=true --set clusterWide="${CLUSTER_WIDE}"
 
-      - name: Install federation chart on originatingop cluster
+      - name: Install federation chart on originatingop cluster (clusterWide=${{ env.CLUSTER_WIDE }})
         run: |
           helm --kube-context kind-originatingop install federation dist/chart \
-            -n originatingop --create-namespace --set crd.enabled=true
+            -n originatingop --create-namespace --set crd.enabled=true --set clusterWide="${CLUSTER_WIDE}"
 
       - name: Verify CRDs and manager rollout on both clusters
         run: |
@@ -231,6 +243,19 @@ jobs:
           kubectl --context kind-partnerop     -n partnerop     get pods -l control-plane=controller-manager -o wide
           kubectl --context kind-originatingop -n originatingop get pods -l control-plane=controller-manager -o wide
 
+      - name: Verify the install mode (namespaced)
+        run: |
+          chmod +x ./test/e2e/scripts/check-install-mode.sh
+          ./test/e2e/scripts/check-install-mode.sh install partnerop     partnerop
+          ./test/e2e/scripts/check-install-mode.sh install originatingop originatingop
+
+      - name: Create the resource namespaces (${{ env.GUEST_RESOURCES_NS }} on originatingop, ${{ env.HOST_RESOURCES_NS }} on partnerop)
+        run: |
+          kubectl --context kind-originatingop create namespace "$GUEST_RESOURCES_NS" --dry-run=client -o yaml \
+            | kubectl --context kind-originatingop apply -f -
+          kubectl --context kind-partnerop create namespace "$HOST_RESOURCES_NS" --dry-run=client -o yaml \
+            | kubectl --context kind-partnerop apply -f -
+
       - name: Create kubeconfig secret for cross-cluster federation
         run: |
           kind get kubeconfig --internal --name partnerop > /tmp/partnerop-internal.kubeconfig
@@ -240,28 +265,76 @@ jobs:
           partnerop_ip=$(docker inspect -f '{{ (index .NetworkSettings.Networks "kind").IPAddress }}' partnerop-control-plane)
           sed -i "s#https://partnerop-control-plane:6443#https://${partnerop_ip}:6443#" /tmp/partnerop-internal.kubeconfig
           echo "partnerop API server for the guest: $(grep -m1 'server:' /tmp/partnerop-internal.kubeconfig | awk '{print $2}')"
-          kubectl --context kind-originatingop -n originatingop delete secret kubeconfig-secret --ignore-not-found
-          kubectl --context kind-originatingop -n originatingop create secret generic kubeconfig-secret \
+          # The controller reads the secret from the namespace of the GUEST Federation.
+          kubectl --context kind-originatingop -n "$GUEST_RESOURCES_NS" delete secret kubeconfig-secret --ignore-not-found
+          kubectl --context kind-originatingop -n "$GUEST_RESOURCES_NS" create secret generic kubeconfig-secret \
             --from-file=kubeconfig=/tmp/partnerop-internal.kubeconfig
 
       - name: Run functional e2e test (Federation -> ... -> ConsumptionMonitoring)
-        run: go test ./test/e2e/... -v -run TestFederationWalkthrough -timeout 20m
+        env:
+          E2E_CLUSTER_WIDE: ${{ env.CLUSTER_WIDE }}
+          E2E_ORIGINATINGOP_NAMESPACE: ${{ env.GUEST_RESOURCES_NS }}
+          E2E_PARTNEROP_NAMESPACE: ${{ env.HOST_RESOURCES_NS }}
+        run: |
+          set -o pipefail
+          go test ./test/e2e/... -v -count=1 -run TestFederationWalkthrough -timeout 20m 2>&1 | tee /tmp/e2e-k8s.log
+
+      - name: Verify where the resources were created (namespaced)
+        run: |
+          ./test/e2e/scripts/check-install-mode.sh placement originatingop "^${GUEST_RESOURCES_NS}\$"
+          ./test/e2e/scripts/check-install-mode.sh placement partnerop     "^${HOST_RESOURCES_NS}\$"
+
+      - name: Test summary
+        if: always()
+        run: |
+          log=/tmp/e2e-k8s.log
+          {
+            echo "## E2E Federation (K8s, namespaced)"
+            echo
+            echo "| Stage | Result |"
+            echo "|---|---|"
+            if [ -f "$log" ]; then
+              grep -E -- '--- (PASS|FAIL|SKIP): TestFederationWalkthrough/' "$log" | \
+                sed -E 's#.*--- (PASS|FAIL|SKIP): TestFederationWalkthrough/([^ ]+).*#| \2 | \1 |#'
+            else
+              echo "| (test not executed) | - |"
+            fi
+            echo
+            echo "- clusterWide: \`${CLUSTER_WIDE}\`"
+            echo "- originatingop resources namespace: \`${GUEST_RESOURCES_NS}\`"
+            echo "- partnerop HOST resources namespace: \`${HOST_RESOURCES_NS}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "$log" ]; then
+            grep -E -- '--- FAIL: TestFederationWalkthrough/' "$log" | while read -r line; do
+              stage=$(echo "$line" | sed -E 's#.*TestFederationWalkthrough/([^ ]+).*#\1#')
+              echo "::error title=K8s e2e stage failed (namespaced)::$stage"
+            done
+          fi
 
       - name: Cluster diagnostics on failure
         if: failure()
         run: |
           kind export logs /tmp/kind-logs --name partnerop     || true
           kind export logs /tmp/kind-logs --name originatingop || true
+          echo "::group::docker containers and registry"
           docker ps -a
           docker logs "${REGISTRY_NAME}" || true
-          kubectl --context kind-partnerop     -n partnerop     get pods,events -o wide || true
-          kubectl --context kind-originatingop -n originatingop get pods,events -o wide || true
-          kubectl --context kind-partnerop     -n partnerop     logs -l control-plane=controller-manager --all-containers --tail=200 || true
-          kubectl --context kind-originatingop -n originatingop logs -l control-plane=controller-manager --all-containers --tail=200 || true
-          echo "--- resource chain state (partnerop) ---"
-          kubectl --context kind-partnerop     -n partnerop     get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings -o yaml || true
-          echo "--- resource chain state (originatingop) ---"
-          kubectl --context kind-originatingop -n originatingop get federations,availabilityzones,images,artefacts,applicationonboardings,applicationdeployments,consumptionmonitorings -o yaml || true
+          echo "::endgroup::"
+          for c in partnerop originatingop; do
+            echo "::group::[$c] pods and events"
+            kubectl --context "kind-$c" -n "$c" get pods,events -o wide || true
+            echo "::endgroup::"
+            echo "::group::[$c] controller-manager logs"
+            kubectl --context "kind-$c" -n "$c" logs -l control-plane=controller-manager --all-containers --tail=300 || true
+            echo "::endgroup::"
+            echo "::group::[$c] resource chain state (all namespaces)"
+            kubectl --context "kind-$c" get "$CRS" -A -o yaml || true
+            echo "::endgroup::"
+            echo "::group::[$c] federationContextId validation policies"
+            kubectl --context "kind-$c" get validatingadmissionpolicies -o yaml || true
+            echo "::endgroup::"
+          done
 
       - name: Tear down clusters and registry
         if: always()

@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +15,10 @@ import (
 // restDefaultZoneID is the zone used by ApplicationOnboarding / ApplicationDeployment on the
 // REST path: zones are not registered over REST, so the zone id is only carried in the specs.
 const restDefaultZoneID = "2a8fffaf-50de-4f93-8c6f-05f1c84b5a5f"
+
+// restClusterWideNamespacePrefix is the prefix of the namespace where a cluster-wide partnerop API
+// creates a HOST Federation (pkg/metastore/federation.go, CreateFederation).
+const restClusterWideNamespacePrefix = "fedrest-"
 
 func runRestFederationStage(t *testing.T, tc *testContext, rc *restContext, partneropClient, originatingopClient client.Client) {
 	ctx := context.Background()
@@ -33,8 +38,15 @@ func runRestFederationStage(t *testing.T, tc *testContext, rc *restContext, part
 	t.Logf("Federation %q %s (technologyType=%s, tokenUrl=%s).",
 		tc.federationName, reusedLabel(reused), fed.Spec.FederationData.TechnologyType, rc.partneropAPIURL)
 
+	// Namespaced: the partnerop API creates the HOST Federation in its release namespace.
+	// Cluster-wide: it creates it in a new namespace fedrest-<id>, so look in all namespaces.
+	searchNamespace := tc.partneropNamespace
+	if tc.clusterWide {
+		searchNamespace = ""
+	}
+
 	partneropList := &opv1beta1.FederationList{}
-	found := findObject(t, ctx, partneropClient, partneropList, tc.partneropNamespace,
+	found := findObject(t, ctx, partneropClient, partneropList, searchNamespace,
 		"Federation (origOPFederationId="+tc.origOPFederationID+")",
 		func(obj client.Object) bool {
 			f := obj.(*opv1beta1.Federation)
@@ -46,8 +58,18 @@ func runRestFederationStage(t *testing.T, tc *testContext, rc *restContext, part
 		5*time.Minute,
 	)
 	partneropFed := found.(*opv1beta1.Federation)
-	t.Logf("Found partnerop Federation %q created by the partnerop API (technologyType=%s).",
-		partneropFed.Name, partneropFed.Spec.FederationData.TechnologyType)
+	t.Logf("Found partnerop Federation %s/%s created by the partnerop API (technologyType=%s).",
+		partneropFed.Namespace, partneropFed.Name, partneropFed.Spec.FederationData.TechnologyType)
+
+	if tc.clusterWide {
+		if !strings.HasPrefix(partneropFed.Namespace, restClusterWideNamespacePrefix) {
+			t.Fatalf("cluster-wide: expected the partnerop HOST Federation in a %s<id> namespace, found it in %q",
+				restClusterWideNamespacePrefix, partneropFed.Namespace)
+		}
+		// Every following HOST resource is created by the API in the namespace of its Federation.
+		tc.partneropNamespace = partneropFed.Namespace
+		t.Logf("cluster-wide: partnerop HOST resources namespace is %s", tc.partneropNamespace)
+	}
 
 	if partneropFed.Spec.FederationData.TechnologyType != string(opv1beta1.FederationTechnologyRest) {
 		t.Fatalf("expected partnerop Federation technologyType REST, got %s", partneropFed.Spec.FederationData.TechnologyType)

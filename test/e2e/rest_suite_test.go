@@ -22,6 +22,10 @@ import (
 //	E2E_PARTNEROP_API_URL      base URL of the partnerop EWBI API, reachable from originatingop pods
 //	E2E_ORIGINATINGOP_API_URL  base URL of the originatingop EWBI API, reachable from partnerop pods
 //
+// With E2E_CLUSTER_WIDE=true the partnerop API creates the HOST Federation (and then every HOST
+// resource) in a namespace of its own, fedrest-<id>: the test looks it up in all namespaces and
+// follows the next resources there.
+//
 // AvailabilityZone and ConsumptionMonitoring are not implemented on the REST path
 // (internal/rest/availabilityzones_rest.go, internal/rest/consumptionmonitoring_rest.go),
 // so those stages are reported as SKIP.
@@ -39,6 +43,7 @@ func TestRestFederationWalkthrough(t *testing.T) {
 		originatingopNamespace: getenv("E2E_ORIGINATINGOP_NAMESPACE", "originatingop"),
 		partneropNamespace:     getenv("E2E_PARTNEROP_NAMESPACE", "partnerop"),
 		partneropContextName:   partneropContext,
+		clusterWide:            getenvBool(t, "E2E_CLUSTER_WIDE"),
 	}
 	rc := &restContext{
 		partneropAPIURL:     partneropAPIURL,
@@ -47,6 +52,7 @@ func TestRestFederationWalkthrough(t *testing.T) {
 
 	t.Logf("partnerop API URL:     %s", rc.partneropAPIURL)
 	t.Logf("originatingop API URL: %s", rc.originatingopAPIURL)
+	t.Logf("cluster-wide: %t, originatingop resources namespace: %s", tc.clusterWide, tc.originatingopNamespace)
 
 	partneropClient := buildClient(t, partneropContext)
 	originatingopClient := buildClient(t, originatingopContext)

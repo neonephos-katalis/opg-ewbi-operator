@@ -132,25 +132,58 @@ e2e-local-clean: ## Remove leftovers of previous local e2e runs (kind clusters, 
 		echo "  sudo sysctl -w fs.inotify.max_user_instances=8192 fs.inotify.max_user_watches=1048576"; \
 	fi
 
+# One workflow per technology and install mode (.github/workflows/e2e-federation-<name>.yml):
+#   k8s, rest        namespaced   (clusterWide=false)
+#   k8s-cw, rest-cw  cluster-wide (clusterWide=true)
+# Each one has its own target, e2e-<name>-local. They all use the same kind cluster names, so they are
+# run one at a time. The log of each run is saved in $(E2E_LOG_DIR)/e2e-<name>.log.
+E2E_WORKFLOWS ?= k8s rest k8s-cw rest-cw
+E2E_LOG_DIR ?= $(LOCALBIN)/e2e-logs
+
+# act_e2e <name>: run .github/workflows/e2e-federation-<name>.yml with act
+define act_e2e
+	@mkdir -p $(E2E_LOG_DIR)
+	@echo "==> e2e $(1): .github/workflows/e2e-federation-$(1).yml, log in $(E2E_LOG_DIR)/e2e-$(1).log"
+	$(ACT) $(ACT_EVENT) -W .github/workflows/e2e-federation-$(1).yml $(ACT_FLAGS) \
+		-s GITHUB_TOKEN="$${GITHUB_TOKEN:-}" 2>&1 | tee $(E2E_LOG_DIR)/e2e-$(1).log
+endef
+
 .PHONY: e2e-k8s-local
-e2e-k8s-local: act-check e2e-local-clean ## Run the K8s e2e workflow (.github/workflows/e2e-federation-k8s.yml) locally with act
-	$(ACT) $(ACT_EVENT) -W .github/workflows/e2e-federation-k8s.yml $(ACT_FLAGS) -s GITHUB_TOKEN="$${GITHUB_TOKEN:-}"
+e2e-k8s-local: act-check e2e-local-clean ## Run e2e-federation-k8s.yml locally (K8s, namespaced)
+	$(call act_e2e,k8s)
 
 .PHONY: e2e-rest-local
-e2e-rest-local: act-check e2e-local-clean ## Run the REST e2e workflow (.github/workflows/e2e-federation-rest.yml) locally with act
-	$(ACT) $(ACT_EVENT) -W .github/workflows/e2e-federation-rest.yml $(ACT_FLAGS) -s GITHUB_TOKEN="$${GITHUB_TOKEN:-}"
+e2e-rest-local: act-check e2e-local-clean ## Run e2e-federation-rest.yml locally (REST, namespaced)
+	$(call act_e2e,rest)
+
+.PHONY: e2e-k8s-cw-local
+e2e-k8s-cw-local: act-check e2e-local-clean ## Run e2e-federation-k8s-cw.yml locally (K8s, cluster-wide)
+	$(call act_e2e,k8s-cw)
+
+.PHONY: e2e-rest-cw-local
+e2e-rest-cw-local: act-check e2e-local-clean ## Run e2e-federation-rest-cw.yml locally (REST, cluster-wide)
+	$(call act_e2e,rest-cw)
+
+.PHONY: e2e-namespaced-local
+e2e-namespaced-local: ## Run the K8s and the REST namespaced workflows locally and print a summary
+	@$(MAKE) --no-print-directory e2e-local E2E_WORKFLOWS="k8s rest"
+
+.PHONY: e2e-cw-local
+e2e-cw-local: ## Run the K8s and the REST cluster-wide workflows locally and print a summary
+	@$(MAKE) --no-print-directory e2e-local E2E_WORKFLOWS="k8s-cw rest-cw"
 
 .PHONY: e2e-local
-e2e-local: act-check ## Run the K8s and the REST e2e workflows locally, one after the other, and print a summary
-	@k8s=PASSED; rest=PASSED; \
-	$(MAKE) --no-print-directory e2e-k8s-local  || k8s=FAILED; \
-	$(MAKE) --no-print-directory e2e-rest-local || rest=FAILED; \
+e2e-local: act-check ## Run every workflow of E2E_WORKFLOWS locally, one after the other, and print a summary
+	@summary=""; rc=0; \
+	for w in $(E2E_WORKFLOWS); do \
+		if $(MAKE) --no-print-directory e2e-$$w-local; then r=PASSED; else r=FAILED; rc=1; fi; \
+		summary="$$summary$$(printf '  %-32s : %s   (log: %s)' e2e-federation-$$w.yml $$r $(E2E_LOG_DIR)/e2e-$$w.log)\n"; \
+	done; \
 	echo ""; \
-	echo "==================== E2E SUMMARY ===================="; \
-	echo "  K8s  (e2e-federation-k8s.yml)  : $$k8s"; \
-	echo "  REST (e2e-federation-rest.yml) : $$rest"; \
-	echo "====================================================="; \
-	[ "$$k8s" = PASSED ] && [ "$$rest" = PASSED ]
+	echo "========================= E2E SUMMARY ========================="; \
+	printf "$$summary"; \
+	echo "==============================================================="; \
+	exit $$rc
 
 ##@ Build
 

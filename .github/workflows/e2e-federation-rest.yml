@@ -5,6 +5,10 @@ name: E2E Federation (REST)
 #   originatingop controller -> partnerop API      (tokenUrl)
 #   partnerop controller     -> originatingop API  (partnerStatusLink, *NotifLink, *CallbackLink)
 # Both APIs are exposed with a fixed NodePort and reached through the kind docker network.
+#
+# Namespaced mode (clusterWide=false): the resources live in the release namespaces
+# (originatingop on originatingop, partnerop on partnerop).
+# The cluster-wide variant of this workflow is e2e-federation-rest-cw.yml.
 
 on:
   push:
@@ -32,6 +36,13 @@ jobs:
   e2e-rest:
     name: REST federation walkthrough (partnerop + originatingop kind clusters)
     runs-on: ubuntu-latest
+    env:
+      CLUSTER_WIDE: "false"
+      # namespace of the GUEST resources created by the test on originatingop
+      GUEST_RESOURCES_NS: 'originatingop'
+      # namespace(s) of the HOST resources created by the partnerop API (regex)
+      HOST_RESOURCES_NS_REGEX: '^partnerop$'
+      CRS: federations,images,artefacts,applicationonboardings,applicationdeployments
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
@@ -222,16 +233,16 @@ jobs:
           docker exec originatingop-control-plane crictl pull "$OP_IMAGE"
           docker exec originatingop-control-plane crictl pull "$API_IMAGE"
 
-      - name: Install federation chart on partnerop cluster (API on NodePort ${{ env.PARTNEROP_API_NODEPORT }})
+      - name: Install federation chart on partnerop cluster (API on NodePort ${{ env.PARTNEROP_API_NODEPORT }}, clusterWide=${{ env.CLUSTER_WIDE }})
         run: |
           helm --kube-context kind-partnerop install federation dist/chart \
-            -n partnerop --create-namespace --set "${CRD_FLAG}=true" \
+            -n partnerop --create-namespace --set "${CRD_FLAG}=true" --set clusterWide="${CLUSTER_WIDE}" \
             --set federation.services.federation.nodePort="${PARTNEROP_API_NODEPORT}"
 
-      - name: Install federation chart on originatingop cluster (API on NodePort ${{ env.ORIGINATINGOP_API_NODEPORT }})
+      - name: Install federation chart on originatingop cluster (API on NodePort ${{ env.ORIGINATINGOP_API_NODEPORT }}, clusterWide=${{ env.CLUSTER_WIDE }})
         run: |
           helm --kube-context kind-originatingop install federation dist/chart \
-            -n originatingop --create-namespace --set "${CRD_FLAG}=true" \
+            -n originatingop --create-namespace --set "${CRD_FLAG}=true" --set clusterWide="${CLUSTER_WIDE}" \
             --set federation.services.federation.nodePort="${ORIGINATINGOP_API_NODEPORT}"
 
       - name: Verify CRDs, manager and API rollout on both clusters
@@ -253,6 +264,17 @@ jobs:
             done
             kubectl --context "kind-$c" -n "$c" get pods -o wide
           done
+
+      - name: Verify the install mode (namespaced)
+        run: |
+          chmod +x ./test/e2e/scripts/check-install-mode.sh
+          ./test/e2e/scripts/check-install-mode.sh install partnerop     partnerop
+          ./test/e2e/scripts/check-install-mode.sh install originatingop originatingop
+
+      - name: Create the GUEST resources namespace (${{ env.GUEST_RESOURCES_NS }} on originatingop)
+        run: |
+          kubectl --context kind-originatingop create namespace "$GUEST_RESOURCES_NS" --dry-run=client -o yaml \
+            | kubectl --context kind-originatingop apply -f -
 
       - name: Verify cross-cluster EWBI API reachability (pod -> NodePort on the other cluster)
         run: |
@@ -291,16 +313,24 @@ jobs:
           probe partnerop originatingop "$E2E_ORIGINATINGOP_API_URL" "partnerop pod -> originatingop API"
 
       - name: Run functional REST e2e test (Federation -> Image -> Artefact -> ApplicationOnboarding -> ApplicationDeployment)
+        env:
+          E2E_CLUSTER_WIDE: ${{ env.CLUSTER_WIDE }}
+          E2E_ORIGINATINGOP_NAMESPACE: ${{ env.GUEST_RESOURCES_NS }}
         run: |
           set -o pipefail
           go test ./test/e2e/... -v -count=1 -run TestRestFederationWalkthrough -timeout 20m 2>&1 | tee /tmp/e2e-rest.log
+
+      - name: Verify where the resources were created (namespaced)
+        run: |
+          ./test/e2e/scripts/check-install-mode.sh placement originatingop "^${GUEST_RESOURCES_NS}\$"
+          ./test/e2e/scripts/check-install-mode.sh placement partnerop     "${HOST_RESOURCES_NS_REGEX}"
 
       - name: Test summary
         if: always()
         run: |
           log=/tmp/e2e-rest.log
           {
-            echo "## E2E Federation (REST)"
+            echo "## E2E Federation (REST, namespaced)"
             echo
             echo "| Stage | Result |"
             echo "|---|---|"
@@ -313,12 +343,15 @@ jobs:
             echo
             echo "- partnerop API: \`${E2E_PARTNEROP_API_URL:-n/a}\`"
             echo "- originatingop API: \`${E2E_ORIGINATINGOP_API_URL:-n/a}\`"
+            echo "- clusterWide: \`${CLUSTER_WIDE}\`"
+            echo "- originatingop resources namespace: \`${GUEST_RESOURCES_NS}\`"
+            echo "- partnerop HOST resources namespace: \`${HOST_RESOURCES_NS_REGEX}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ -f "$log" ]; then
             grep -E -- '--- FAIL: TestRestFederationWalkthrough/' "$log" | while read -r line; do
               stage=$(echo "$line" | sed -E 's#.*TestRestFederationWalkthrough/([^ ]+).*#\1#')
-              echo "::error title=REST e2e stage failed::$stage"
+              echo "::error title=REST e2e stage failed (namespaced)::$stage"
             done
           fi
 
@@ -341,8 +374,8 @@ jobs:
             echo "::group::[$c] EWBI API logs"
             kubectl --context "kind-$c" -n "$c" logs -l control-plane=katalis-fm-api --all-containers --tail=300 || true
             echo "::endgroup::"
-            echo "::group::[$c] resource chain state"
-            kubectl --context "kind-$c" -n "$c" get federations,images,artefacts,applicationonboardings,applicationdeployments -o yaml || true
+            echo "::group::[$c] resource chain state (all namespaces)"
+            kubectl --context "kind-$c" get "$CRS" -A -o yaml || true
             echo "::endgroup::"
             echo "::group::[$c] federationContextId validation policies"
             kubectl --context "kind-$c" get validatingadmissionpolicies -o yaml || true

@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,6 +18,10 @@ type testContext struct {
 	originatingopNamespace string
 	partneropNamespace     string
 	partneropContextName   string
+
+	// clusterWide is true when both operators are installed with clusterWide=true
+	// (E2E_CLUSTER_WIDE=true): the resources then live outside the release namespaces.
+	clusterWide bool
 
 	federationName      string
 	federationContextID string
@@ -46,6 +51,19 @@ func getenv(key, def string) string {
 		return v
 	}
 	return def
+}
+
+func getenvBool(t *testing.T, key string) bool {
+	t.Helper()
+	v := os.Getenv(key)
+	if v == "" {
+		return false
+	}
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		t.Fatalf("invalid value %q for %s: %v", v, key, err)
+	}
+	return b
 }
 
 func newScheme() *runtime.Scheme {
@@ -81,7 +99,10 @@ func TestFederationWalkthrough(t *testing.T) {
 		originatingopNamespace: getenv("E2E_ORIGINATINGOP_NAMESPACE", "originatingop"),
 		partneropNamespace:     getenv("E2E_PARTNEROP_NAMESPACE", "partnerop"),
 		partneropContextName:   partneropContext,
+		clusterWide:            getenvBool(t, "E2E_CLUSTER_WIDE"),
 	}
+	t.Logf("cluster-wide: %t, originatingop resources namespace: %s, partnerop HOST resources namespace: %s",
+		tc.clusterWide, tc.originatingopNamespace, tc.partneropNamespace)
 
 	partneropClient := buildClient(t, partneropContext)
 	originatingopClient := buildClient(t, originatingopContext)
