@@ -12,7 +12,9 @@ name: E2E Federation (REST)
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -45,10 +47,10 @@ jobs:
       CRS: federations,images,artefacts,applicationonboardings,applicationdeployments
     steps:
       - name: Clone the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.3.0
         with:
           go-version-file: go.mod
 
@@ -61,7 +63,7 @@ jobs:
 
       - name: Install Helm
         run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
       - name: Build dist/chart and dist/chart-crd
@@ -167,8 +169,11 @@ jobs:
           echo "originatingop API (partnerStatusLink/notif): $E2E_ORIGINATINGOP_API_URL"
 
       - name: Setup authentication for private Go modules
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "machine github.com login ${{ github.actor }} password ${{ secrets.GITHUB_TOKEN }}" > "$HOME/.netrc"
+          echo "machine github.com login $GH_ACTOR password $GH_TOKEN" > "$HOME/.netrc"
           chmod 600 "$HOME/.netrc"
 
       - name: Build and push operator/API images to the local registry

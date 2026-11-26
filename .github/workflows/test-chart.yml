@@ -2,97 +2,85 @@ name: Test Chart
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: test-chart-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test-e2e:
     name: Run on Ubuntu
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       KIND_CLUSTER_NAME: test-chart
+      KIND_VERSION: v0.26.0
+      KIND_NODE_IMAGE: kindest/node:v1.32.0
     steps:
       - name: Clone the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.3.0
         with:
           go-version-file: go.mod
 
-      - name: Install the latest version of kind
+      - name: Install kind
         run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-$(go env GOARCH)
+          curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-$(go env GOARCH)"
           chmod +x ./kind
           sudo mv ./kind /usr/local/bin/kind
-
-      - name: Verify kind installation
-        run: kind version
+          kind version
 
       - name: Create kind cluster
-        run: kind create cluster
+        run: |
+          kind create cluster --name "${KIND_CLUSTER_NAME}" --image "${KIND_NODE_IMAGE}" --wait 120s
 
       - name: Setup authentication for private Go modules
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "machine github.com login ${{ github.actor }} password ${{ secrets.GITHUB_TOKEN }}" > $HOME/.netrc
-          chmod 600 $HOME/.netrc
-          git config --global url."https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          echo "machine github.com login $GH_ACTOR password $GH_TOKEN" > "$HOME/.netrc"
+          chmod 600 "$HOME/.netrc"
+          git config --global url."https://${GH_ACTOR}:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Prepare opg-ewbi
         run: |
           go mod tidy
           make docker-build IMG=opg-ewbi:v0.1.0 PLATFORM=linux/amd64
-          kind load docker-image opg-ewbi:v0.1.0
+          kind load docker-image opg-ewbi:v0.1.0 --name "${KIND_CLUSTER_NAME}"
 
       - name: Install Helm
         run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-      - name: Verify Helm installation
-        run: helm version
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
 
       - name: Lint Helm Chart
         run: |
           helm lint ./dist/chart
 
-
-#      - name: Install cert-manager via Helm
-#        run: |
-#          helm repo add jetstack https://charts.jetstack.io
-#          helm repo update
-#          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set crds.enabled=true
-#
-#      - name: Wait for cert-manager to be ready
-#        run: |
-#          kubectl wait --namespace cert-manager --for=condition=available --timeout=300s deployment/cert-manager
-#          kubectl wait --namespace cert-manager --for=condition=available --timeout=300s deployment/cert-manager-cainjector
-#          kubectl wait --namespace cert-manager --for=condition=available --timeout=300s deployment/cert-manager-webhook
-
-# TODO: Uncomment if Prometheus is enabled
-#      - name: Install Prometheus Operator CRDs
-#        run: |
-#          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-#          helm repo update
-#          helm install prometheus-crds prometheus-community/prometheus-operator-crds
-#
-#      - name: Install Prometheus via Helm
-#        run: |
-#          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-#          helm repo update
-#          helm install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
-#
-#      - name: Wait for Prometheus to be ready
-#        run: |
-#          kubectl wait --namespace monitoring --for=condition=available --timeout=300s deployment/prometheus-server
-
       - name: Install Helm chart for project
         run: |
-          helm install my-release ./dist/chart --create-namespace --namespace opg-ewbi-system
+          helm install my-release ./dist/chart \
+            --create-namespace \
+            --namespace opg-ewbi-system \
+            --set crd.enabled=true \
+            --set crd.enable=true
 
       - name: Check Helm release status
         run: |
           helm status my-release --namespace opg-ewbi-system
 
-# TODO: Uncomment if prometheus.enabled is set to true to confirm that the ServiceMonitor gets created
-#      - name: Check Presence of ServiceMonitor
-#        run: |
-#          kubectl wait --namespace opg-ewbi-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/opg-ewbi-controller-manager-metrics-monitor
+      - name: Tear down kind cluster
+        if: always()
+        run: |
+          kind delete cluster --name "${KIND_CLUSTER_NAME}" || true
