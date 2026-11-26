@@ -69,10 +69,16 @@ func findObject(
 ) client.Object {
 	t.Helper()
 
+	// An empty namespace lists the objects in all namespaces.
+	where := "namespace " + namespace
+	if namespace == "" {
+		where = "all namespaces"
+	}
+
 	deadline := time.Now().Add(timeout)
 	for {
 		if err := c.List(ctx, list, client.InNamespace(namespace)); err != nil {
-			t.Fatalf("listing %s in namespace %s: %v", label, namespace, err)
+			t.Fatalf("listing %s in %s: %v", label, where, err)
 		}
 
 		items, err := apimeta.ExtractList(list)
@@ -91,10 +97,10 @@ func findObject(
 		}
 
 		if time.Now().After(deadline) {
-			t.Fatalf("timed out after %s waiting for a matching %s in namespace %s", timeout, label, namespace)
+			t.Fatalf("timed out after %s waiting for a matching %s in %s", timeout, label, where)
 		}
 
-		t.Logf("polling for %s in namespace %s...", label, namespace)
+		t.Logf("polling for %s in %s...", label, where)
 		time.Sleep(pollInterval)
 	}
 }
